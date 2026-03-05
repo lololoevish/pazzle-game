@@ -333,7 +333,6 @@ class MenuScene:
             
     def select_option(self):
         """Выбор опции меню"""
-        print(f"[MENU] select_option: {self.selected_option}")
         if self.selected_option == 0:
             # Запуск игры
             self.start_transition_out()
@@ -345,7 +344,6 @@ class MenuScene:
             
     def start_transition_out(self):
         """Запуск перехода для выхода из меню"""
-        print("[MENU] start_transition_out called!")
         self.is_transitioning = True
         self.transition_direction = 'out'
         self._transition_out_triggered = True
@@ -353,7 +351,6 @@ class MenuScene:
     def is_transition_complete(self):
         """Проверка завершения перехода"""
         result = self._transition_out_triggered and self.transition_progress <= 0
-        print(f"[MENU] is_transition_complete: triggered={self._transition_out_triggered}, progress={self.transition_progress}, result={result}")
         return result
         
     def get_result(self):

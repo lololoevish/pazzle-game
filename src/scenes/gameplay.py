@@ -19,7 +19,7 @@ class Switch:
         self.y = y
         self.width = 40
         self.height = 40
-        self.rect = pygame.Rect(x, y, width, height)
+        self.rect = pygame.Rect(x, y, self.width, self.height)
         self.switch_id = switch_id
         self.correct_order = correct_order
         self.activated = False
@@ -154,6 +154,13 @@ class GameplayScene:
         # Игрок
         self.player = Player(50, 300, 30, 30)
         
+        # Система здоровья
+        self.max_health = 100
+        self.current_health = 100
+        self.invulnerable = False
+        self.invulnerable_timer = 0
+        self.damage_flash = 0
+        
         # Предметы для сбора
         self.items = []
         
@@ -256,57 +263,34 @@ class GameplayScene:
         self.platforms = []
         self.player_on_ground = False
         
+        # Атрибуты для новых головоломок
+        self.maze_puzzle = None
+        self.wordsearch_puzzle = None
+        self.pattern_puzzle = None
+        
         if level == 1:
-            # Уровень 1: Простая головоломка (3 предмета)
-            self.puzzle_type = PUZZLE_TYPE_COLLECT
-            self.items = [
-                Item(200, 200, 25, 25, "Ключ", "Старинный железный ключ"),
-                Item(400, 300, 25, 25, "Сундук", "Запертый сундук с сокровищами"),
-                Item(600, 150, 25, 25, "Артефакт", "Таинственный артефакт")
-            ]
-            self.hint_text = "Соберите все предметы, подходя к ним"
+            # Уровень 1: Лабиринт
+            from scenes.puzzle_types import MazePuzzle
+            self.puzzle_type = "maze"
+            self.maze_puzzle = MazePuzzle(self.screen_width, self.screen_height)
+            self.items = []
+            self.hint_text = "Пройдите лабиринт от старта до финиша (WASD)"
             
         elif level == 2:
-            # Уровень 2: Средняя сложность (переключатели + предметы)
-            self.puzzle_type = PUZZLE_TYPE_SWITCHES
-            # Создаем переключатели в случайном порядке
-            switch_positions = [
-                (150, 200), (300, 150), (450, 250), (600, 180)
-            ]
-            correct_sequence = [1, 2, 3, 4]  # Правильная последовательность
+            # Уровень 2: Поиск слов
+            from scenes.puzzle_types import WordSearchPuzzle
+            self.puzzle_type = "wordsearch"
+            self.wordsearch_puzzle = WordSearchPuzzle(self.screen_width, self.screen_height)
+            self.items = []
+            self.hint_text = "Найдите все слова в сетке (кликайте на буквы)"
             
-            for i, pos in enumerate(switch_positions):
-                switch = Switch(pos[0], pos[1], i + 1, correct_sequence)
-                self.switches.append(switch)
-            
-            # Предметы появляются после активации переключателей
-            self.items = [
-                Item(350, 400, 25, 25, "Сокровище", "Драгоценный кристалл")
-            ]
-            self.hint_text = "Активируйте переключатели в порядке 1-2-3-4"
-            
-        elif level >= 3:
-            # Уровень 3: Сложная головоломка с таймером
-            self.puzzle_type = PUZZLE_TYPE_TIMED
-            self.time_limit = 45  # 45 секунд
-            self.time_remaining = self.time_limit
-            self.timer_active = True
-            
-            # Движущиеся препятствия
-            self.moving_obstacles = [
-                MovingObstacle(200, 100, 60, 40, 80, 'x', 2),
-                MovingObstacle(400, 250, 60, 40, 60, 'y', 2.5),
-                MovingObstacle(550, 150, 60, 40, 70, 'x', 1.8),
-                MovingObstacle(300, 350, 60, 40, 90, 'y', 2.2)
-            ]
-            
-            # Предметы
-            self.items = [
-                Item(150, 400, 25, 25, "Ключ", "Ключ от сундука"),
-                Item(700, 100, 25, 25, "Медальон", "Древний магический медальон"),
-                Item(400, 500, 25, 25, "Сфера", "Энергетическая сфера")
-            ]
-            self.hint_text = "У вас есть 45 секунд! Избегайте препятствий и собирайте предметы"
+        elif level == 3:
+            # Уровень 3: Головоломка с паттернами (память)
+            from scenes.puzzle_types import PatternPuzzle
+            self.puzzle_type = "pattern"
+            self.pattern_puzzle = PatternPuzzle(self.screen_width, self.screen_height)
+            self.items = []
+            self.hint_text = "Запомните и повторите последовательность (кликайте на кнопки)"
             
         elif level == 4:
             # Уровень 4: Головоломка на память
@@ -362,14 +346,26 @@ class GameplayScene:
             self.time_remaining = self.time_limit
             self.timer_active = True
             
-            # Множество движущихся препятствий
+            # Множество движущихся препятствий - АДСКАЯ СЛОЖНОСТЬ!
             self.moving_obstacles = [
-                MovingObstacle(100, 100, 50, 50, 100, 'x', 3),
-                MovingObstacle(300, 200, 50, 50, 80, 'y', 2.5),
-                MovingObstacle(500, 150, 50, 50, 120, 'x', 2),
-                MovingObstacle(200, 350, 50, 50, 90, 'y', 3),
-                MovingObstacle(600, 300, 50, 50, 70, 'x', 2.8),
-                MovingObstacle(450, 400, 50, 50, 60, 'y', 2.2)
+                # Первый слой - горизонтальные
+                MovingObstacle(50, 80, 70, 70, 180, 'x', 7),
+                MovingObstacle(150, 150, 70, 70, 200, 'x', 6.5),
+                MovingObstacle(100, 220, 70, 70, 220, 'x', 7.2),
+                MovingObstacle(200, 290, 70, 70, 190, 'x', 6.8),
+                MovingObstacle(50, 360, 70, 70, 210, 'x', 7.5),
+                MovingObstacle(150, 430, 70, 70, 180, 'x', 6.3),
+                MovingObstacle(100, 500, 70, 70, 200, 'x', 7),
+                # Второй слой - вертикальные
+                MovingObstacle(250, 50, 70, 70, 200, 'y', 6.5),
+                MovingObstacle(350, 100, 70, 70, 180, 'y', 7),
+                MovingObstacle(450, 80, 70, 70, 220, 'y', 6.8),
+                MovingObstacle(550, 120, 70, 70, 190, 'y', 7.2),
+                MovingObstacle(650, 90, 70, 70, 210, 'y', 6.6),
+                # Третий слой - диагональные (чередование)
+                MovingObstacle(300, 250, 70, 70, 160, 'x', 8),
+                MovingObstacle(400, 300, 70, 70, 140, 'y', 7.8),
+                MovingObstacle(500, 350, 70, 70, 150, 'x', 8.2)
             ]
             
             # Множество предметов
@@ -466,7 +462,7 @@ class GameplayScene:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.interact_with_nearby_items()
-                elif event.key == pygame.K_h or event.key == pygame.K_rus_h:
+                elif event.key == pygame.K_h:
                     # Показать подсказку
                     self.show_hint = True
                     self.hint_timer = 180  # 3 секунды при 60 FPS
@@ -474,25 +470,33 @@ class GameplayScene:
                     # Взаимодействие с рычагом
                     self.interact_with_lever()
                     
-            # Обработка кликов мыши для переключателей
+            # Обработка кликов мыши
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Левая кнопка
                     mx, my = pygame.mouse.get_pos()
-                    self.handle_switch_click(mx, my)
-                    # Проверка клика на рычаг
-                    if self.lever_rect and self.lever_rect.collidepoint(mx, my):
-                        self.interact_with_lever()
-                    # Проверка клика на кнопки памяти
-                    if self.puzzle_type == PUZZLE_TYPE_MEMORY and not self.memory_showing_sequence:
-                        for btn in self.memory_buttons:
-                            btn_rect = pygame.Rect(btn['x'], btn['y'], 80, 60)
-                            if btn_rect.collidepoint(mx, my):
-                                self.handle_memory_click(btn['id'])
+                    
+                    # Обработка кликов для новых головоломок
+                    if self.puzzle_type == "wordsearch":
+                        self.wordsearch_puzzle.handle_click((mx, my))
+                    elif self.puzzle_type == "pattern":
+                        self.pattern_puzzle.handle_click((mx, my))
+                    else:
+                        # Старая логика для переключателей
+                        self.handle_switch_click(mx, my)
+                        # Проверка клика на рычаг
+                        if self.lever_rect and self.lever_rect.collidepoint(mx, my):
+                            self.interact_with_lever()
+                        # Проверка клика на кнопки памяти
+                        if self.puzzle_type == PUZZLE_TYPE_MEMORY and not self.memory_showing_sequence:
+                            for btn in self.memory_buttons:
+                                btn_rect = pygame.Rect(btn['x'], btn['y'], 80, 60)
+                                if btn_rect.collidepoint(mx, my):
+                                    self.handle_memory_click(btn['id'])
                         
     def interact_with_lever(self):
         """Взаимодействие с рычагом"""
         # Рычаг можно активировать только после решения головоломки
-        if self.puzzle_solved and not self.lever_activated:
+        if self.puzzle_solved and not self.lever_activated and self.lever_rect:
             self.lever_activated = True
             self.lever_pulled = True
             
@@ -548,24 +552,65 @@ class GameplayScene:
 
     def update(self, keys_pressed):
         """Обновление состояния сцены"""
-        # Обновление игрока
-        self.player.update(keys_pressed)
+        # Обновление неуязвимости
+        if self.invulnerable:
+            self.invulnerable_timer -= 1
+            if self.invulnerable_timer <= 0:
+                self.invulnerable = False
+                
+        # Обновление вспышки урона
+        if self.damage_flash > 0:
+            self.damage_flash -= 1
         
-        # Проверка столкновений с движущимися препятствиями (уровень 3)
-        if self.current_level >= 3:
+        # Обновление новых головоломок
+        if self.puzzle_type == "maze":
+            self.maze_puzzle.handle_input(keys_pressed)
+            if self.maze_puzzle.solved:
+                self.puzzle_solved = True
+        elif self.puzzle_type == "wordsearch":
+            if self.wordsearch_puzzle.solved:
+                self.puzzle_solved = True
+        elif self.puzzle_type == "pattern":
+            self.pattern_puzzle.update()
+            if self.pattern_puzzle.solved:
+                self.puzzle_solved = True
+        else:
+            # Старая логика для остальных уровней
+            # Обновление игрока
+            self.player.update(keys_pressed)
+            
+            # Проверка столкновений с движущимися препятствиями
             for obstacle in self.moving_obstacles:
                 obstacle.update()
-                if self.player.rect.colliderect(obstacle.rect):
-                    # Столкновение - сброс игрока
-                    self.player.set_position(50, 300)
-                    self.time_remaining = max(0, self.time_remaining - 5)  # Штраф 5 секунд
-        
-        # Обновление предметов
-        for item in self.items:
-            item.update()
+                if self.player.rect.colliderect(obstacle.rect) and not self.invulnerable:
+                    # Столкновение - ОГРОМНЫЙ УРОН!
+                    self.take_damage(40)  # Увеличен урон до 40 (2.5 удара до смерти!)
+                    # Отбрасывание игрока
+                    if obstacle.axis == 'x':
+                        self.player.x = self.player.x - 50 if obstacle.direction > 0 else self.player.x + 50
+                    else:
+                        self.player.y = self.player.y - 50 if obstacle.direction > 0 else self.player.y + 50
+                    self.player.x = max(0, min(self.player.x, self.screen_width - self.player.width))
+                    self.player.y = max(0, min(self.player.y, self.screen_height - self.player.height))
+                    self.player.rect.x = int(self.player.x)
+                    self.player.rect.y = int(self.player.y)
             
-        # Проверка столкновений с предметами
-        self.check_item_collisions()
+            # Проверка смерти
+            if self.current_health <= 0:
+                # Перезапуск уровня
+                self.current_health = self.max_health
+                self.player.set_position(50, 300)
+                self.collected_items = []
+                self.activated_switches = []
+                if self.timer_active:
+                    self.time_remaining = self.time_limit
+            
+            # Обновление предметов
+            for item in self.items:
+                item.update()
+                
+            # Проверка столкновений с предметами
+            self.check_item_collisions()
         
         # Обновление системы частиц
         self.particle_system.update()
@@ -611,6 +656,22 @@ class GameplayScene:
         # Анимация победы
         if self.win_animation:
             self.update_win_animation()
+    
+    def take_damage(self, amount):
+        """Получить урон"""
+        if not self.invulnerable:
+            self.current_health -= amount
+            self.current_health = max(0, self.current_health)
+            self.invulnerable = True
+            self.invulnerable_timer = 20  # 0.33 секунды неуязвимости (было 30)
+            self.damage_flash = 20
+            
+            # Эффект урона
+            self.particle_system.emit(
+                self.player.rect.centerx,
+                self.player.rect.centery,
+                (255, 0, 0), 40, 7, 50
+            )
 
     def update_visual_hints(self):
         """Обновление визуальных подсказок для объектов"""
@@ -701,6 +762,12 @@ class GameplayScene:
 
     def draw(self, screen):
         """Отрисовка сцены"""
+        # Вспышка урона
+        if self.damage_flash > 0:
+            flash_surf = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
+            flash_surf.fill((255, 0, 0, 50))
+            screen.blit(flash_surf, (0, 0))
+        
         # 1. Рисуем фон
         screen.blit(self.background, (0, 0))
         
@@ -710,44 +777,86 @@ class GameplayScene:
         # 3. Рисуем частицы (задний план)
         self.particle_system.draw(screen)
         
-        # 4. Отрисовка движущихся препятствий (уровень 3)
-        for obstacle in self.moving_obstacles:
-            obstacle.draw(screen)
-        
-        # 5. Отрисовка переключателей (уровень 2)
-        if self.puzzle_type == PUZZLE_TYPE_SWITCHES:
-            next_switch = len(self.activated_switches) + 1
-            for switch in self.switches:
-                is_active = switch.switch_id == next_switch
-                switch.draw(screen, is_active)
-        
-        # 6. Отрисовка предметов
-        for item in self.items:
-            item.draw(screen)
+        # 4. Отрисовка новых головоломок
+        if self.puzzle_type == "maze":
+            self.maze_puzzle.draw(screen)
+        elif self.puzzle_type == "wordsearch":
+            self.wordsearch_puzzle.draw(screen)
+        elif self.puzzle_type == "pattern":
+            self.pattern_puzzle.draw(screen)
+        else:
+            # Старая логика для остальных уровней
+            # 4. Отрисовка движущихся препятствий (уровень 3)
+            for obstacle in self.moving_obstacles:
+                obstacle.draw(screen)
             
-        # 7. Отрисовка игрока
-        self.player.draw(screen)
+            # 5. Отрисовка переключателей (уровень 2)
+            if self.puzzle_type == PUZZLE_TYPE_SWITCHES:
+                next_switch = len(self.activated_switches) + 1
+                for switch in self.switches:
+                    is_active = switch.switch_id == next_switch
+                    switch.draw(screen, is_active)
+            
+            # 6. Отрисовка предметов
+            for item in self.items:
+                item.draw(screen)
+                
+            # 7. Отрисовка игрока (с мерцанием при неуязвимости)
+            if not self.invulnerable or (self.invulnerable_timer // 5) % 2 == 0:
+                self.player.draw(screen)
+            
+            # 8. Отрисовка рычага (после решения головоломки)
+            if self.puzzle_solved and self.lever_rect:
+                self.draw_lever(screen)
+            
+            # 9. Отрисовка платформ (уровень 5)
+            if self.puzzle_type == PUZZLE_TYPE_PLATFORM:
+                self.draw_platforms(screen)
+            
+            # 10. Отрисовка кнопок памяти (уровень 4)
+            if self.puzzle_type == PUZZLE_TYPE_MEMORY:
+                self.draw_memory_buttons(screen)
+            
+            # 11. Отрисовка визуальных подсказок
+            self.draw_visual_hints(screen)
         
-        # 8. Отрисовка рычага (после решения головоломки)
-        if self.puzzle_solved and self.lever_rect:
-            self.draw_lever(screen)
+        # 12. Отрисовка полоски здоровья
+        self.draw_health_bar(screen)
         
-        # 9. Отрисовка платформ (уровень 5)
-        if self.puzzle_type == PUZZLE_TYPE_PLATFORM:
-            self.draw_platforms(screen)
-        
-        # 10. Отрисовка кнопок памяти (уровень 4)
-        if self.puzzle_type == PUZZLE_TYPE_MEMORY:
-            self.draw_memory_buttons(screen)
-        
-        # 11. Отрисовка визуальных подсказок
-        self.draw_visual_hints(screen)
-        
-        # 9. Отрисовка анимации победы/поражения
+        # 13. Отрисовка анимации победы/поражения
         if self.win_animation:
             self.draw_win_animation(screen)
         elif self.lose_animation:
             self.draw_lose_screen(screen)
+    
+    def draw_health_bar(self, screen):
+        """Отрисовка полоски здоровья"""
+        bar_width = 200
+        bar_height = 20
+        bar_x = 10
+        bar_y = 10
+        
+        # Фон
+        pygame.draw.rect(screen, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height), border_radius=5)
+        
+        # Здоровье
+        health_width = int((self.current_health / self.max_health) * bar_width)
+        if health_width > 0:
+            # Цвет от зелёного к красному
+            t = self.current_health / self.max_health
+            r = int(255 * (1 - t))
+            g = int(255 * t)
+            pygame.draw.rect(screen, (r, g, 50), (bar_x, bar_y, health_width, bar_height), border_radius=5)
+        
+        # Рамка
+        pygame.draw.rect(screen, (200, 200, 200), (bar_x, bar_y, bar_width, bar_height), 2, border_radius=5)
+        
+        # Текст
+        font = pygame.font.SysFont('arial', 14, bold=True)
+        text = f"HP: {int(self.current_health)}/{self.max_health}"
+        text_surf = font.render(text, True, (255, 255, 255))
+        text_rect = text_surf.get_rect(center=(bar_x + bar_width // 2, bar_y + bar_height // 2))
+        screen.blit(text_surf, text_rect)
             
         # 10. Отображение UI
         self.draw_ui(screen)
@@ -821,7 +930,13 @@ class GameplayScene:
         
         # Отображение типа головоломки
         puzzle_name = ""
-        if self.puzzle_type == PUZZLE_TYPE_COLLECT:
+        if self.puzzle_type == "maze":
+            puzzle_name = "Лабиринт"
+        elif self.puzzle_type == "wordsearch":
+            puzzle_name = "Поиск слов"
+        elif self.puzzle_type == "pattern":
+            puzzle_name = "Память"
+        elif self.puzzle_type == PUZZLE_TYPE_COLLECT:
             puzzle_name = "Сбор предметов"
         elif self.puzzle_type == PUZZLE_TYPE_SWITCHES:
             puzzle_name = "Переключатели"
@@ -841,8 +956,26 @@ class GameplayScene:
             time_text = font_large.render(f"Время: {int(self.time_remaining)}с", True, time_color)
             screen.blit(time_text, (self.screen_width - 150, 12))
         
+        # Прогресс для новых головоломок
+        if self.puzzle_type == "maze":
+            if hasattr(self, 'maze_puzzle'):
+                progress = "Пройдено!" if self.maze_puzzle.solved else "Найдите выход"
+                text = font.render(progress, True, self.ui_colors['success'] if self.maze_puzzle.solved else self.ui_colors['text'])
+                screen.blit(text, (12, 65))
+        elif self.puzzle_type == "wordsearch":
+            if hasattr(self, 'wordsearch_puzzle'):
+                found = len(self.wordsearch_puzzle.found_words)
+                total = len(self.wordsearch_puzzle.words)
+                progress = f"Найдено слов: {found}/{total}"
+                text = font.render(progress, True, self.ui_colors['text'])
+                screen.blit(text, (12, 65))
+        elif self.puzzle_type == "pattern":
+            if hasattr(self, 'pattern_puzzle'):
+                progress = f"Раунд: {self.pattern_puzzle.current_round}/{self.pattern_puzzle.max_rounds}"
+                text = font.render(progress, True, self.ui_colors['text'])
+                screen.blit(text, (12, 65))
         # Прогресс (для уровней 1 и 3)
-        if self.puzzle_type in [PUZZLE_TYPE_COLLECT, PUZZLE_TYPE_TIMED]:
+        elif self.puzzle_type in [PUZZLE_TYPE_COLLECT, PUZZLE_TYPE_TIMED]:
             if len(self.items) > 0:
                 progress = f"Собрано: {len(self.collected_items)}/{len(self.items)}"
                 text = font.render(progress, True, self.ui_colors['text'])

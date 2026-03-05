@@ -3,13 +3,16 @@
 <div align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
+![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)
 ![Pygame](https://img.shields.io/badge/Pygame-2.5.2-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/Version-1.1.0-orange.svg)
+![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)
 
 **Приключенческая игра с головоломками и элементами визуальной новеллы**
 
-[Скачать EXE](https://github.com/lololoevish/pazzle-game/releases/latest) • [Документация](НАВИГАЦИЯ.md) • [Примеры](ПРИМЕРЫ_МОДИФИКАЦИЙ.md)
+**Доступно 2 версии: Python (Pygame) и Rust (macroquad)**
+
+[Скачать EXE](https://github.com/lololoevish/pazzle-game/releases/latest) • [Документация](НАВИГАЦИЯ.md) • [Rust-версия](RUST_ВЕРСИЯ.md)
 
 </div>
 
@@ -20,24 +23,33 @@
 
 ## ✨ Особенности
 
-- 🎯 **6 уровней** с уникальными головоломками
+- 🎯 **6 уровней** с уникальными головоломками:
+  - 🧩 Лабиринт (процедурная генерация)
+  - 🔤 Поиск слов (русские слова)
+  - 🎨 Память/Паттерны (Simon Says)
+  - 🧠 Головоломка на память
+  - 🏃 Платформер с прыжками
+  - ⚡ Финальный уровень с таймером
 - 🏘️ **Город-хаб** для выбора уровней
 - 🎲 **NPC с мини-играми** (угадай число, камень-ножницы-бумага, викторина)
 - 💰 **Система инвентаря** (золото, предметы, награды)
 - 💾 **Автосохранение** прогресса
 - 🎨 **Красивое анимированное меню** с эффектами
+- 📖 **Система диалогов** с портретами персонажей
 - 🎵 **Готово к добавлению** звуков и музыки
 - 📦 **Сборка в .exe** - одним кликом!
 
 ## 🚀 Быстрый старт
 
-### Для игроков
+### Python-версия (оригинал)
+
+#### Для игроков
 
 1. Запустите `ЗАПУСК_СБОРКИ.bat`
 2. Дождитесь окончания сборки
 3. Играйте! Файл будет в `dist/AdventurePuzzleGame.exe`
 
-### Для разработчиков
+#### Для разработчиков
 
 ```bash
 # Установка зависимостей
@@ -48,6 +60,29 @@ python src/main.py
 
 # Сборка в exe
 pyinstaller AdventurePuzzleGame.spec
+```
+
+### 🦀 Rust-версия (новая!)
+
+#### Установка Rust
+```bash
+# Windows
+winget install Rustlang.Rustup
+
+# Или скачайте с https://rustup.rs/
+```
+
+#### Сборка и запуск
+```bash
+# Быстрый способ
+BUILD_RUST.bat
+
+# Или вручную
+cargo build --release
+./target/release/game.exe
+```
+
+**Подробнее**: [RUST_ВЕРСИЯ.md](RUST_ВЕРСИЯ.md)
 ```
 
 ## 🎮 Управление

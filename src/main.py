@@ -122,12 +122,11 @@ while running:
     
     # Логика переключения состояний
     if current_state == STATE_MENU:
-        logger.info("Состояние: MENU")
         # Обновление меню
         current_scene.handle_events(events)
         current_scene.update(keys_pressed)
         
-        # Проверка завершения перехода
+        # Проверка завершения перехода (только один раз!)
         if current_scene.is_transition_complete():
             logger.info("Переход из меню завершен!")
             if current_scene.get_result() == 'play':
