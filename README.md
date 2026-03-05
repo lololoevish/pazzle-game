@@ -1,6 +1,19 @@
 # 🎮 Adventure Puzzle Game
 
-Приключенческая игра с головоломками на Python + Pygame
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)
+![Pygame](https://img.shields.io/badge/Pygame-2.5.2-green.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Version](https://img.shields.io/badge/Version-1.1.0-orange.svg)
+
+**Приключенческая игра с головоломками и элементами визуальной новеллы**
+
+[Скачать EXE](https://github.com/lololoevish/pazzle-game/releases/latest) • [Документация](НАВИГАЦИЯ.md) • [Примеры](ПРИМЕРЫ_МОДИФИКАЦИЙ.md)
+
+</div>
+
+---
 
 > 📖 **Новичок?** Начните с файла **[БЫСТРЫЙ_СТАРТ.txt](БЫСТРЫЙ_СТАРТ.txt)**  
 > 🗺️ **Ищете что-то конкретное?** Смотрите **[НАВИГАЦИЯ.md](НАВИГАЦИЯ.md)**
@@ -143,3 +156,60 @@ pyinstaller AdventurePuzzleGame.spec
 **Сделано с ❤️ на Python + Pygame**
 
 🎮 **Приятной игры!** ✨
+
+
+## 🚀 Быстрый старт
+
+### Для игроков
+
+**Вариант 1: Скачать только EXE (рекомендуется)**
+
+1. Перейдите на страницу [Releases](https://github.com/lololoevish/pazzle-game/releases/latest)
+2. Скачайте файл `AdventurePuzzleGame.exe` из раздела "Assets"
+3. Запустите скачанный файл
+4. Играйте! (Python не требуется)
+
+**Вариант 2: Скачать полный архив**
+
+1. Скачайте последний [релиз](https://github.com/lololoevish/pazzle-game/releases)
+2. Распакуйте архив
+3. Запустите `AdventurePuzzleGame.exe`
+
+> ⚠️ **Примечание**: Windows может показать предупреждение SmartScreen. Это нормально для новых приложений. Нажмите "Подробнее" → "Выполнить в любом случае".
+
+### Для разработчиков
+
+```bash
+# Клонировать репозиторий
+git clone https://github.com/lololoevish/pazzle-game.git
+cd pazzle-game
+
+# Установить зависимости
+pip install -r requirements.txt
+
+# Запустить игру
+python src/main.py
+
+# Собрать в exe
+pyinstaller AdventurePuzzleGame.spec
+```
+
+## 🎮 Управление
+
+| Действие | Клавиши |
+|----------|---------|
+| Движение | ↑↓←→ или WASD |
+| Выбор в меню | ↑↓ или W/S |
+| Подтверждение | Enter или Пробел |
+| Взаимодействие | Мышь |
+| Назад/Выход | ESC |
+
+## 🎭 Новое в версии 1.1.0
+
+### Система визуальной новеллы
+- Диалоговые окна с анимацией текста
+- Портреты персонажей с плавным появлением
+- 4 готовые сюжетные сцены
+- Система триггеров для автоматического показа сюжета
+
+Подробнее: [ВИЗУАЛЬНАЯ_НОВЕЛЛА.md](ВИЗУАЛЬНАЯ_НОВЕЛЛА.md)
