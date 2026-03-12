@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)
+![Version](https://img.shields.io/badge/Version-1.3.0--dev-orange.svg)
 ![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -31,6 +31,8 @@
 - **Город-хаб** для взаимодействия с NPC.
 - **Мини-игры** и система инвентаря.
 - **Портативность**: Один exe-файл (Rust-версия).
+
+Текущая Rust-ветка уже включает все 6 основных уровней. Следующий этап разработки: NPC-мини-игры, диалоги, звук и визуальная полировка.
 
 ## 📚 Документация
 - [🏗 Архитектура и структура кода](docs/README.md)

@@ -1,19 +1,19 @@
-# 🏗️ Adventure Puzzle Game - System Patterns
+# Adventure Puzzle Game - System Patterns
 
 ## 🎯 Архитектура
 
 ### Общая архитектура
 
-Проект использует **модульную архитектуру** с разделением на слои:
+Проект использует модульную архитектуру с двумя историческими ветками реализации, где основной исполняемой веткой сейчас является Rust:
 
 ```
-Игровой движок (main.py / main.rs)
+Игровой цикл (main.py / main.rs)
     ↓
 Сцены (scenes/)
     ├── Меню (menu.py / menu.rs)
     ├── Город (town.py / town.rs)
     ├── Геймплей (gameplay.py / gameplay.rs)
-    └── Мини-игры (minigames.py / minigames.rs)
+    └── Головоломки / мини-игры
     ↓
 Данные прогресса и сохранения
     └── GameProgress / save_system.py
@@ -44,57 +44,19 @@ trait Scene {
 }
 ```
 
-**Применение**: Управление состояниями игры (меню, город, игра, мини-игры)
+**Применение**: управление состояниями игры и переключение между `Menu`, `Town`, `Playing`, `Quit`.
 
-#### 2. Component Pattern (Компоненты)
+#### 2. Модульная изоляция головоломок
 
-**Python**:
-```python
-class Player:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.speed = 5
-        self.inventory = []
-```
+Каждая Rust-головоломка живёт в отдельном модуле и подключается в `GameplayScene` по номеру уровня.
 
-**Rust**: в текущей версии не выделен в отдельный модуль сущностей; логика сосредоточена в сценах и головоломках.
+**Применение**: локализация логики уровня, упрощение поддержки и расширения.
 
-**Применение**: Разделение логики на независимые компоненты
+#### 3. Одноразовый сигнал завершения уровня
 
-#### 3. Observer Pattern (Наблюдатель)
+Трейт `Scene` содержит `take_completed_level()`, чтобы сцена один раз сообщила главному циклу о завершении уровня.
 
-**Python**:
-```python
-class Game:
-    def __init__(self):
-        self.observers = []
-    
-    def add_observer(self, observer):
-        self.observers.append(observer)
-    
-    def notify_observers(self, event):
-        for observer in self.observers:
-            observer.update(event)
-```
-
-**Применение**: Система событий и переходов между сценами
-
-#### 4. Singleton Pattern (Одиночка)
-
-**Python**:
-```python
-class SaveSystem:
-    _instance = None
-    
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-```
-
-**Применение**: Система сохранений (один глобальный доступ)
+**Применение**: синхронизация прогресса без постоянного опроса внутреннего состояния пазла.
 
 ## 📁 Структура файловой системы
 
@@ -149,21 +111,14 @@ src_rust/
 
 ### Игровой цикл
 
-```
-1. Инициализация
-   ↓
-2. Загрузка сохранения
-   ↓
-3. Создание начальной сцены
-   ↓
-4. Игровой цикл
-   ├─ Обработка ввода
-   ├─ Обновление состояния
-   ├─ Отрисовка
-   └─ Проверка смены сцены
-   ↓
-5. Сохранение при выходе
-```
+`main.rs` загружает сохранение, создаёт активную сцену и в цикле вызывает:
+
+1. `handle_input()`
+2. `update()`
+3. `take_completed_level()`
+4. сохранение прогресса при необходимости
+5. `draw()`
+6. переход между сценами при наличии `get_next_state()`
 
 ### Обработка ввода
 
@@ -207,32 +162,29 @@ next_frame().await
 GameState
 ├── Menu
 ├── Town (экран выбора уровней)
-├── Playing (Игровой процесс)
-│   ├── Maze (Лабиринт)
-│   ├── MemoryMatch (Пары карточек)
-│   ├── Platformer (Прыжки и сбор кристаллов)
-│   ├── FinalChallenge (Таймер, ловушки, артефакты)
-│   ├── WordSearch (Поиск слов)
-│   └── Pattern (Память)
+├── Playing(level)
+│   ├── 1 -> Maze
+│   ├── 2 -> WordSearch
+│   ├── 3 -> Pattern
+│   ├── 4 -> MemoryMatch
+│   ├── 5 -> Platformer
+│   └── 6 -> FinalChallenge
 └── Quit
 ```
 
 ### Система сохранений
 
-**Формат**: JSON  
-**Расположение**: Рядом с exe или в корне проекта  
+**Формат**: JSON
+**Расположение**: в рабочей директории приложения
 **Содержимое**:
 ```json
 {
   "levels": {
-    "1": {"completed": true, "lever_pulled": false},
-    "2": {"completed": false, "lever_pulled": false}
+    "1": {"completed": true},
+    "2": {"completed": false}
   },
-  "inventory": {
-    "gold": 100,
-    "items": [],
-    "won_minigames": []
-  }
+  "gold": 100,
+  "items": []
 }
 ```
 
@@ -242,18 +194,10 @@ GameState
 2. Активная сцена одноразово сообщает о завершённом уровне через `take_completed_level()`
 3. Главный цикл обновляет `GameProgress` и сохраняет `savegame.json`
 4. `TownScene` перечитывает этот прогресс при новом создании и отражает статусы уровней в UI
-5. Уровень помечается как пройденный
-6. Доступны новые уровни
+5. `TownScene` показывает новый статус уровня
+6. Следующий доступный уровень разблокируется по правилам прогрессии
 
 ## 🛠️ Технические решения
-
-### Python
-
-- **Язык**: Python 3.12
-- **Движок**: Pygame 2.5.2
-- **Сборка**: PyInstaller 6.5.0
-- **Формат сохранений**: JSON
-- **Логирование**: logging
 
 ### Rust
 
@@ -262,6 +206,7 @@ GameState
 - **Сериализация**: serde + serde_json
 - **Рандом**: rand 0.8
 - **Формат сохранений**: JSON
+- **Ключевая модель**: `Scene` trait + `GameState` enum + отдельные puzzle modules
 
 ## 📊 Сравнение подходов
 
@@ -276,32 +221,16 @@ GameState
 
 ## 🎯 Паттерны использования
 
-### Добавление нового уровня
+### Добавление нового уровня в Rust
 
-1. Создать файл в `src/scenes/puzzles/` (Python) или `src_rust/scenes/puzzles/` (Rust)
-2. Реализовать методы: `new()`, `handle_input()`, `update()`, `draw()`, `is_solved()`
-3. Добавить в `gameplay.py` или `gameplay.rs`
-4. Обновить `game_state.rs` (Rust) или `save_system.py` (Python)
+1. Создать модуль в `src_rust/scenes/puzzles/`
+2. Реализовать `new()`, `handle_input()`, `update()`, `draw()`, `is_solved()`
+3. Подключить модуль в `src_rust/scenes/puzzles/mod.rs`
+4. Добавить выбор пазла в `src_rust/scenes/gameplay.rs`
+5. При необходимости обновить тексты и доступность уровня в `src_rust/scenes/town.rs`
 
-### Добавление нового NPC
+### Добавление NPC-логики в Rust
 
-1. Создать класс в `src/entities/` (Python) или новый специализированный модуль в `src_rust/scenes/`/`src_rust/` (Rust)
-2. Добавить отрисовку в `town.py` или `town.rs`
-3. Реализовать взаимодействие
-
-### Добавление звуков
-
-**Python**:
-```python
-pygame.mixer.init()
-sound = pygame.mixer.Sound("sound.wav")
-sound.play()
-```
-
-**Rust**:
-```rust
-use macroquad::audio::*;
-
-let sound = load_sound("sound.wav").await.unwrap();
-play_sound_once(sound);
-```
+1. Расширить `TownScene` визуальным и интерактивным объектом
+2. Добавить отдельный модуль сцены или мини-игры
+3. Зафиксировать новые маршруты в `docs/README.md` и `memory_bank/`

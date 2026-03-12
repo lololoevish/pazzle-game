@@ -1,14 +1,15 @@
-# 🛠️ Adventure Puzzle Game - Tech Context
+# Adventure Puzzle Game - Tech Context
 
 ## 🖥️ Окружение
 
 ### Разработка
 
 - **ОС**: Windows (win32)
-- **Shell**: bash
+- **Shell**: PowerShell
 - **Python**: 3.12
 - **Rust**: 1.70+
 - **IDE**: VS Code
+- **Git-ветка**: `main`
 
 ### Зависимости
 
@@ -33,20 +34,19 @@ rand = "0.8"
 
 ### Python
 
-```bash
+```powershell
 # Установка зависимостей
 pip install -r requirements.txt
 
 # Сборка в exe
 pyinstaller AdventurePuzzleGame.spec
 
-# Или через скрипт
-ЗАПУСК_СБОРКИ.bat
+# Или через bat-скрипты проекта
 ```
 
 ### Rust
 
-```bash
+```powershell
 # Установка Rust
 winget install Rustlang.Rustup
 
@@ -64,7 +64,7 @@ BUILD_RUST.bat
 
 ### Python
 
-```bash
+```powershell
 # Из исходников
 python src/main.py
 
@@ -74,7 +74,7 @@ dist/AdventurePuzzleGame.exe
 
 ### Rust
 
-```bash
+```powershell
 # Из исходников
 cargo run --release
 
@@ -99,12 +99,15 @@ pazzle-game/
 │   └── scenes/           # Сцены и головоломки
 ├── assets/                # Ресурсы
 │   └── sprites/          # Спрайты
-├── dist/                  # Готовые exe
+├── docs/                  # Архитектура и ТЗ
+├── memory_bank/           # Операционная документация
+├── plans/                 # Плановые материалы
+├── scripts/               # Вспомогательные скрипты и эксперименты
+├── dist/                  # Готовые exe (если собраны локально)
 ├── requirements.txt       # Python зависимости
 ├── Cargo.toml            # Rust конфигурация
 ├── Cargo.lock            # Зафиксированные версии Rust-зависимостей
-├── BUILD_RUST.bat        # Скрипт сборки Rust
-└── memory_bank/          # Документация (Memory Bank)
+└── BUILD_RUST.bat        # Скрипт сборки Rust
 ```
 
 ## 🔧 Настройки
@@ -123,6 +126,7 @@ pazzle-game/
 - **Формат сохранений**: JSON
 - **Профиль релиза**: opt-level = 3, lto = true
 - **Cargo.lock**: хранится в репозитории, так как это исполняемое приложение, а не библиотека
+- **Основная проверка корректности**: `cargo check --bin game`
 
 ## 🌐 Кросс-платформенность
 
@@ -174,6 +178,7 @@ pazzle-game/
 ### Текущее состояние
 
 - ✅ Ручная сборка через .bat скрипты
+- ✅ Проверка через локальные команды `cargo build` / `cargo check`
 - 🚧 Автоматическая сборка (не настроена)
 - 🚧 Автоматические тесты (не настроены)
 
@@ -199,6 +204,7 @@ pazzle-game/
 - **serde_json**: JSON
 - **rand**: Генератор случайных чисел
 - **cargo**: Менеджер пакетов
+- **rustfmt / cargo fmt**: форматирование Rust-кода при необходимости
 
 ## 📚 Документация
 
@@ -223,15 +229,15 @@ pazzle-game/
 
 ### Rust
 
-- Время сборки 1-2 минуты (первая)
-- Сложность кода выше, чем в Python
-- Требуется установка Rust
+- Время первой сборки заметно выше Python-версии
+- Требуется локальная установка toolchain Rust
+- Полноценный CI пока отсутствует
 
 ## 🚀 Быстрый старт для разработчиков
 
 ### Установка
 
-```bash
+```powershell
 # Клонировать репозиторий
 git clone https://github.com/lololoevish/pazzle-game.git
 cd pazzle-game
@@ -245,7 +251,7 @@ winget install Rustlang.Rustup
 
 ### Запуск
 
-```bash
+```powershell
 # Python
 python src/main.py
 
@@ -255,7 +261,7 @@ cargo run --release
 
 ### Сборка
 
-```bash
+```powershell
 # Python
 pyinstaller AdventurePuzzleGame.spec
 
