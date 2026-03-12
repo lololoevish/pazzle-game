@@ -5,8 +5,7 @@ use std::fs;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum GameState {
     Menu,
-    Village,
-    Room(u8),
+    Town,
     Playing(u8),
     Quit,
 }

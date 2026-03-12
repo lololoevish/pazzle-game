@@ -2,11 +2,9 @@ use macroquad::prelude::*;
 
 mod game_state;
 mod scenes;
-mod entities;
-mod utils;
 
 use game_state::{GameState, GameProgress};
-use scenes::{Scene, MenuScene, VillageScene, RoomScene, GameplayScene};
+use scenes::{Scene, MenuScene, TownScene, GameplayScene};
 
 const SCREEN_WIDTH: f32 = 800.0;
 const SCREEN_HEIGHT: f32 = 600.0;
@@ -21,8 +19,6 @@ async fn main() {
     
     // Начальная сцена - меню
     let mut current_scene: Box<dyn Scene> = Box::new(MenuScene::new());
-    let mut game_state = GameState::Menu;
-    
     loop {
         clear_background(BLACK);
         
@@ -34,15 +30,17 @@ async fn main() {
         
         // Отрисовка
         current_scene.draw();
+
+        if let Some(completed_level) = current_scene.take_completed_level() {
+            game_progress.complete_level(completed_level);
+            game_progress.save().ok();
+        }
         
         // Проверка смены сцены
         if let Some(next_state) = current_scene.get_next_state() {
-            game_state = next_state;
-            
-            current_scene = match game_state {
+            current_scene = match next_state {
                 GameState::Menu => Box::new(MenuScene::new()),
-                GameState::Village => Box::new(VillageScene::new(game_progress.clone())),
-                GameState::Room(room_id) => Box::new(RoomScene::new(room_id, game_progress.clone())),
+                GameState::Town => Box::new(TownScene::new(game_progress.clone())),
                 GameState::Playing(level) => Box::new(GameplayScene::new(level)),
                 GameState::Quit => break,
             };

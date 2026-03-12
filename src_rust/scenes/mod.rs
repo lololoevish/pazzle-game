@@ -3,15 +3,11 @@ use crate::game_state::GameState;
 pub mod menu;
 pub mod town;
 pub mod gameplay;
-pub mod village;
-pub mod room;
 pub mod puzzles;
 
 pub use menu::MenuScene;
 pub use town::TownScene;
 pub use gameplay::GameplayScene;
-pub use village::VillageScene;
-pub use room::RoomScene;
 
 /// Трейт для всех игровых сцен
 pub trait Scene {
@@ -26,4 +22,9 @@ pub trait Scene {
     
     /// Получить следующее состояние (если нужно сменить сцену)
     fn get_next_state(&self) -> Option<GameState>;
+
+    /// Забрать завершённый уровень для обновления сохранения.
+    fn take_completed_level(&mut self) -> Option<u8> {
+        None
+    }
 }

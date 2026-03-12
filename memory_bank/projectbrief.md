@@ -67,14 +67,13 @@ pazzle-game/
 ├── src_rust/              # Rust код
 │   ├── main.rs           # Точка входа
 │   ├── game_state.rs     # Состояние игры
-│   ├── scenes/           # Сцены
-│   ├── entities/         # Сущности
-│   └── utils/            # Утилиты
+│   └── scenes/           # Сцены и головоломки
 ├── assets/                # Ресурсы
 │   └── sprites/          # Спрайты
 ├── dist/                  # Готовые exe
 ├── requirements.txt       # Python зависимости
 ├── Cargo.toml            # Rust конфигурация
+├── Cargo.lock            # Зафиксированные версии Rust-зависимостей
 └── BUILD_RUST.bat        # Скрипт сборки Rust
 ```
 

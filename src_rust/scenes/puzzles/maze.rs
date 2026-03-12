@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use rand::Rng;
+use ::rand::{thread_rng, Rng};
 
 pub struct MazePuzzle {
     width: usize,
@@ -31,7 +31,7 @@ impl MazePuzzle {
     
     fn generate_maze(&mut self) {
         // Простая генерация лабиринта (DFS)
-        let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
         let mut stack = vec![(1, 1)];
         self.grid[1][1] = false;
         

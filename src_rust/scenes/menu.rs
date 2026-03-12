@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 use crate::game_state::GameState;
 use super::Scene;
+use ::rand::random;
 
 pub struct MenuScene {
     selected_option: usize,
@@ -92,14 +93,14 @@ impl Scene for MenuScene {
         self.animation_time += get_frame_time();
         
         // Генерация частиц
-        if rand::random::<f32>() < 0.1 {
+        if random::<f32>() < 0.1 {
             self.particles.push(Particle {
-                x: rand::random::<f32>() * screen_width(),
+                x: random::<f32>() * screen_width(),
                 y: screen_height() + 10.0,
-                vx: (rand::random::<f32>() - 0.5) * 2.0,
-                vy: -rand::random::<f32>() * 3.0 - 1.0,
+                vx: (random::<f32>() - 0.5) * 2.0,
+                vy: -random::<f32>() * 3.0 - 1.0,
                 life: 100.0,
-                size: rand::random::<f32>() * 3.0 + 2.0,
+                size: random::<f32>() * 3.0 + 2.0,
             });
         }
         

@@ -68,3 +68,6 @@ game.log
 # Build artifacts (keep spec file)
 build/
 dist/
+
+# Rust
+target/

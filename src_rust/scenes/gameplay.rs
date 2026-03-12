@@ -1,17 +1,24 @@
 use macroquad::prelude::*;
 use crate::game_state::GameState;
 use super::Scene;
-use super::puzzles::{MazePuzzle, WordSearchPuzzle, PatternPuzzle};
+use super::puzzles::{
+    FinalChallengePuzzle, MazePuzzle, MemoryMatchPuzzle, PatternPuzzle, PlatformerPuzzle,
+    WordSearchPuzzle,
+};
 
 pub struct GameplayScene {
     level: u8,
     next_state: Option<GameState>,
     puzzle_solved: bool,
+    completed_level_reported: bool,
     
     // Головоломки
     maze_puzzle: Option<MazePuzzle>,
     wordsearch_puzzle: Option<WordSearchPuzzle>,
     pattern_puzzle: Option<PatternPuzzle>,
+    memory_match_puzzle: Option<MemoryMatchPuzzle>,
+    platformer_puzzle: Option<PlatformerPuzzle>,
+    final_challenge_puzzle: Option<FinalChallengePuzzle>,
 }
 
 impl GameplayScene {
@@ -20,9 +27,13 @@ impl GameplayScene {
             level,
             next_state: None,
             puzzle_solved: false,
+            completed_level_reported: false,
             maze_puzzle: None,
             wordsearch_puzzle: None,
             pattern_puzzle: None,
+            memory_match_puzzle: None,
+            platformer_puzzle: None,
+            final_challenge_puzzle: None,
         };
         
         scene.setup_level();
@@ -40,6 +51,15 @@ impl GameplayScene {
             3 => {
                 self.pattern_puzzle = Some(PatternPuzzle::new());
             }
+            4 => {
+                self.memory_match_puzzle = Some(MemoryMatchPuzzle::new());
+            }
+            5 => {
+                self.platformer_puzzle = Some(PlatformerPuzzle::new());
+            }
+            6 => {
+                self.final_challenge_puzzle = Some(FinalChallengePuzzle::new());
+            }
             _ => {}
         }
     }
@@ -55,21 +75,42 @@ impl Scene for GameplayScene {
         // Обработка ввода для головоломок
         if let Some(maze) = &mut self.maze_puzzle {
             maze.handle_input();
-            if maze.is_solved() {
+            if !self.puzzle_solved && maze.is_solved() {
                 self.puzzle_solved = true;
             }
         }
         
         if let Some(wordsearch) = &mut self.wordsearch_puzzle {
             wordsearch.handle_input();
-            if wordsearch.is_solved() {
+            if !self.puzzle_solved && wordsearch.is_solved() {
                 self.puzzle_solved = true;
             }
         }
         
         if let Some(pattern) = &mut self.pattern_puzzle {
             pattern.handle_input();
-            if pattern.is_solved() {
+            if !self.puzzle_solved && pattern.is_solved() {
+                self.puzzle_solved = true;
+            }
+        }
+
+        if let Some(memory_match) = &mut self.memory_match_puzzle {
+            memory_match.handle_input();
+            if !self.puzzle_solved && memory_match.is_solved() {
+                self.puzzle_solved = true;
+            }
+        }
+
+        if let Some(platformer) = &mut self.platformer_puzzle {
+            platformer.handle_input();
+            if !self.puzzle_solved && platformer.is_solved() {
+                self.puzzle_solved = true;
+            }
+        }
+
+        if let Some(final_challenge) = &mut self.final_challenge_puzzle {
+            final_challenge.handle_input();
+            if !self.puzzle_solved && final_challenge.is_solved() {
                 self.puzzle_solved = true;
             }
         }
@@ -87,6 +128,18 @@ impl Scene for GameplayScene {
         
         if let Some(pattern) = &mut self.pattern_puzzle {
             pattern.update();
+        }
+
+        if let Some(memory_match) = &mut self.memory_match_puzzle {
+            memory_match.update();
+        }
+
+        if let Some(platformer) = &mut self.platformer_puzzle {
+            platformer.update();
+        }
+
+        if let Some(final_challenge) = &mut self.final_challenge_puzzle {
+            final_challenge.update();
         }
     }
     
@@ -109,6 +162,18 @@ impl Scene for GameplayScene {
         
         if let Some(pattern) = &self.pattern_puzzle {
             pattern.draw();
+        }
+
+        if let Some(memory_match) = &self.memory_match_puzzle {
+            memory_match.draw();
+        }
+
+        if let Some(platformer) = &self.platformer_puzzle {
+            platformer.draw();
+        }
+
+        if let Some(final_challenge) = &self.final_challenge_puzzle {
+            final_challenge.draw();
         }
         
         // Сообщение о победе
@@ -147,5 +212,14 @@ impl Scene for GameplayScene {
     
     fn get_next_state(&self) -> Option<GameState> {
         self.next_state
+    }
+
+    fn take_completed_level(&mut self) -> Option<u8> {
+        if self.puzzle_solved && !self.completed_level_reported {
+            self.completed_level_reported = true;
+            Some(self.level)
+        } else {
+            None
+        }
     }
 }

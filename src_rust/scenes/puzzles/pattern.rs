@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use rand::Rng;
+use ::rand::{thread_rng, Rng};
 
 pub struct PatternPuzzle {
     buttons: Vec<Button>,
@@ -80,7 +80,7 @@ impl PatternPuzzle {
     }
     
     fn generate_sequence(&mut self) {
-        let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
         self.sequence.clear();
         
         for _ in 0..(2 + self.current_round) {

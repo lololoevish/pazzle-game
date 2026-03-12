@@ -15,14 +15,8 @@
     ├── Геймплей (gameplay.py / gameplay.rs)
     └── Мини-игры (minigames.py / minigames.rs)
     ↓
-Сущности (entities/)
-    ├── Игрок (player.py / mod.rs)
-    └── Предметы (item.py / mod.rs)
-    ↓
-Утилиты (utils/)
-    ├── Помощники (helpers.py / mod.rs)
-    ├── Эффекты (visual_effects.py / mod.rs)
-    └── Сохранения (save_system.py / mod.rs)
+Данные прогресса и сохранения
+    └── GameProgress / save_system.py
 ```
 
 ### Паттерны проектирования
@@ -46,6 +40,7 @@ trait Scene {
     fn update(&mut self);
     fn draw(&self);
     fn get_next_state(&self) -> Option<GameState>;
+    fn take_completed_level(&mut self) -> Option<u8> { None }
 }
 ```
 
@@ -63,15 +58,7 @@ class Player:
         self.inventory = []
 ```
 
-**Rust**:
-```rust
-struct Player {
-    x: f32,
-    y: f32,
-    speed: f32,
-    inventory: Vec<String>,
-}
-```
+**Rust**: в текущей версии не выделен в отдельный модуль сущностей; логика сосредоточена в сценах и головоломках.
 
 **Применение**: Разделение логики на независимые компоненты
 
@@ -143,23 +130,19 @@ src/
 src_rust/
 ├── main.rs                    # Точка входа
 ├── game_state.rs              # Состояние игры, сохранения
-├── entities/                  # Игровые объекты
-│   └── mod.rs                # Игрок, предметы, NPC
 ├── scenes/                    # Игровые сцены
 │   ├── mod.rs                # Трейт Scene
 │   ├── menu.rs               # Главное меню
 │   ├── town.rs               # Город-хаб
-│   ├── village.rs            # Деревня
-│   ├── room.rs               # Комната
 │   ├── gameplay.rs           # Игровой процесс
 │   └── puzzles/              # Головоломки
 │       ├── mod.rs
 │       ├── maze.rs           # Лабиринт
+│       ├── memory_match.rs   # Поиск пар карточек
+│       ├── platformer.rs     # Платформер со сбором кристаллов
+│       ├── final_challenge.rs # Финальное испытание на время
 │       ├── wordsearch.rs     # Поиск слов
-│       ├── pattern.rs        # Память
-│       └── wordsearch.rs     # Поиск слов
-└── utils/                     # Вспомогательные функции
-    └── mod.rs
+│       └── pattern.rs        # Память
 ```
 
 ## 🔄 Потоки данных
@@ -223,10 +206,12 @@ next_frame().await
 ```
 GameState
 ├── Menu
-├── Village (Город-хаб)
-├── Room (Комната)
+├── Town (экран выбора уровней)
 ├── Playing (Игровой процесс)
 │   ├── Maze (Лабиринт)
+│   ├── MemoryMatch (Пары карточек)
+│   ├── Platformer (Прыжки и сбор кристаллов)
+│   ├── FinalChallenge (Таймер, ловушки, артефакты)
 │   ├── WordSearch (Поиск слов)
 │   └── Pattern (Память)
 └── Quit
@@ -254,9 +239,11 @@ GameState
 ### Система прогрессии
 
 1. Игрок проходит уровень
-2. Прогресс сохраняется
-3. Уровень помечается как пройденный
-4. Доступны новые уровни
+2. Активная сцена одноразово сообщает о завершённом уровне через `take_completed_level()`
+3. Главный цикл обновляет `GameProgress` и сохраняет `savegame.json`
+4. `TownScene` перечитывает этот прогресс при новом создании и отражает статусы уровней в UI
+5. Уровень помечается как пройденный
+6. Доступны новые уровни
 
 ## 🛠️ Технические решения
 
@@ -298,7 +285,7 @@ GameState
 
 ### Добавление нового NPC
 
-1. Создать класс в `src/entities/` (Python) или в `src_rust/entities/mod.rs` (Rust)
+1. Создать класс в `src/entities/` (Python) или новый специализированный модуль в `src_rust/scenes/`/`src_rust/` (Rust)
 2. Добавить отрисовку в `town.py` или `town.rs`
 3. Реализовать взаимодействие
 
