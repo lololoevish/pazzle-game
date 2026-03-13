@@ -1057,7 +1057,7 @@ impl Scene for GameplayScene {
                     self.next_state = if self.level < 6 {
                         Some(GameState::Playing(self.level + 1))
                     } else {
-                        Some(GameState::Town)
+                        Some(GameState::Victory)
                     };
                 } else {
                     self.status_message =

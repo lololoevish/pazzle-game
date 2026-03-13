@@ -124,13 +124,7 @@ impl TownScene {
     }
 
     fn current_objective_level(&self) -> u8 {
-        for level in 1..=6 {
-            if self.progress.is_level_unlocked(level) && !self.progress.is_lever_pulled(level) {
-                return level;
-            }
-        }
-
-        6
+        self.progress.current_objective_level()
     }
 
     fn opened_seal_count(&self) -> usize {
@@ -755,7 +749,11 @@ impl Scene for TownScene {
             Color::from_rgba(255, 232, 180, 255),
         );
         draw_wrapped_game_text(
-            "Отсюда начинается один непрерывный спуск. Следующая пещера встречается не в меню, а за открытой дверью внутри предыдущей.",
+            if self.progress.is_expedition_complete() {
+                "Подземная цепочка полностью раскрыта. Теперь деревня живёт без печатного замка, а вы можете спускаться повторно ради отдельных испытаний."
+            } else {
+                "Отсюда начинается один непрерывный спуск. Следующая пещера встречается не в меню, а за открытой дверью внутри предыдущей."
+            },
             52.0,
             78.0,
             screen_width() - 104.0,
@@ -779,12 +777,20 @@ impl Scene for TownScene {
             2.0,
             Color::from_rgba(108, 162, 208, 120),
         );
-        let objective_text = format!(
-            "Цель экспедиции: уровень {} | Открыто печатей: {}/6 | Решено: {}/6",
-            self.current_objective_level(),
-            self.opened_seal_count(),
-            self.progress.completed_count()
-        );
+        let objective_text = if self.progress.is_expedition_complete() {
+            format!(
+                "Экспедиция завершена | Открыто печатей: {}/6 | Решено: {}/6",
+                self.opened_seal_count(),
+                self.progress.completed_count()
+            )
+        } else {
+            format!(
+                "Цель экспедиции: уровень {} | Открыто печатей: {}/6 | Решено: {}/6",
+                self.current_objective_level(),
+                self.opened_seal_count(),
+                self.progress.completed_count()
+            )
+        };
         draw_wrapped_game_text(
             &objective_text,
             objective_panel.x + 16.0,

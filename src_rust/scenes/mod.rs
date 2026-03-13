@@ -4,10 +4,12 @@ pub mod gameplay;
 pub mod menu;
 pub mod puzzles;
 pub mod town;
+pub mod victory;
 
 pub use gameplay::GameplayScene;
 pub use menu::MenuScene;
 pub use town::TownScene;
+pub use victory::VictoryScene;
 
 /// Трейт для всех игровых сцен
 pub trait Scene {

@@ -7,6 +7,7 @@ pub enum GameState {
     Menu,
     Town,
     Playing(u8),
+    Victory,
     ResetGame,
     Quit,
 }
@@ -116,6 +117,10 @@ impl GameProgress {
         6
     }
 
+    pub fn is_expedition_complete(&self) -> bool {
+        self.is_lever_pulled(6)
+    }
+
     pub fn complete_level(&mut self, level: u8) {
         if let Some(progress) = self.levels.get_mut(&level) {
             progress.completed = true;
@@ -191,5 +196,21 @@ mod tests {
 
         assert!(progress.is_lever_pulled(1));
         assert!(progress.is_level_unlocked(2));
+    }
+
+    #[test]
+    fn expedition_is_complete_only_after_final_lever() {
+        let mut progress = GameProgress::default();
+        for level in 1..=5 {
+            progress.complete_level(level);
+            progress.set_lever_pulled(level, true);
+        }
+
+        assert!(!progress.is_expedition_complete());
+
+        progress.complete_level(6);
+        progress.set_lever_pulled(6, true);
+
+        assert!(progress.is_expedition_complete());
     }
 }

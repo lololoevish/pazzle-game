@@ -139,6 +139,10 @@ impl MenuScene {
     }
 
     fn objective_label(&self) -> &'static str {
+        if self.progress.is_expedition_complete() {
+            return "Экспедиция завершена";
+        }
+
         match self.progress.current_objective_level() {
             1 => "Лабиринт молчаливых стен",
             2 => "Архивная пещера печатей",
@@ -314,6 +318,15 @@ impl Scene for MenuScene {
                 Color::from_rgba(255, 214, 126, 255)
             },
         );
+        if self.progress.is_expedition_complete() {
+            draw_game_text(
+                "Финал открыт",
+                progress_panel.x + 16.0,
+                progress_panel.y - 6.0,
+                16.0,
+                Color::from_rgba(182, 236, 166, 255),
+            );
+        }
 
         let menu_start_y = 316.0;
         let option_height = 70.0;

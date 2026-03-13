@@ -7,7 +7,7 @@ mod ui_text;
 mod visual_assets;
 
 use game_state::{GameProgress, GameState};
-use scenes::{GameplayScene, MenuScene, Scene, TownScene};
+use scenes::{GameplayScene, MenuScene, Scene, TownScene, VictoryScene};
 
 const SCREEN_WIDTH: f32 = 800.0;
 const SCREEN_HEIGHT: f32 = 600.0;
@@ -25,6 +25,7 @@ fn build_scene(state: GameState, progress: &GameProgress) -> Box<dyn Scene> {
         GameState::Playing(level) => {
             Box::new(GameplayScene::new(level, progress.level_progress(level)))
         }
+        GameState::Victory => Box::new(VictoryScene::new(progress.clone())),
         GameState::ResetGame => Box::new(MenuScene::new(progress.clone())),
         GameState::Quit => Box::new(MenuScene::new(progress.clone())),
     }
