@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use ::rand::{thread_rng, Rng};
+use macroquad::prelude::*;
 use std::collections::HashSet;
 
 #[derive(Clone)]
@@ -180,7 +180,8 @@ impl WordSearchPuzzle {
             }
         }
 
-        self.status_message = "Это не подходит. Выделяйте слово по горизонтали или вертикали".to_string();
+        self.status_message =
+            "Это не подходит. Выделяйте слово по горизонтали или вертикали".to_string();
         self.current_selection.clear();
     }
 
@@ -212,7 +213,8 @@ impl WordSearchPuzzle {
     pub fn draw(&self) {
         let (offset_x, offset_y, cell_size) = self.grid_origin();
 
-        let selected_cells: HashSet<(usize, usize)> = self.current_selection.iter().copied().collect();
+        let selected_cells: HashSet<(usize, usize)> =
+            self.current_selection.iter().copied().collect();
         let mut found_cells = HashSet::new();
         for placement in &self.placements {
             if self.found_words.contains(&placement.word) {
@@ -268,7 +270,13 @@ impl WordSearchPuzzle {
 
         let progress = format!("Найдено: {}/{}", self.found_words.len(), self.words.len());
         draw_text(&progress, 20.0, 60.0, 20.0, WHITE);
-        draw_text(&self.status_message, 20.0, screen_height() - 45.0, 18.0, LIGHTGRAY);
+        draw_text(
+            &self.status_message,
+            20.0,
+            screen_height() - 45.0,
+            18.0,
+            LIGHTGRAY,
+        );
     }
 
     pub fn is_solved(&self) -> bool {

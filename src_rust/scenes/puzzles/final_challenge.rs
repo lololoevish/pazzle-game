@@ -26,16 +26,40 @@ impl FinalChallengePuzzle {
             player: Rect::new(70.0, 500.0, 28.0, 28.0),
             spawn: vec2(70.0, 500.0),
             hazards: vec![
-                Hazard { rect: Rect::new(130.0, 130.0, 70.0, 18.0), velocity: vec2(180.0, 0.0) },
-                Hazard { rect: Rect::new(520.0, 210.0, 18.0, 70.0), velocity: vec2(0.0, 170.0) },
-                Hazard { rect: Rect::new(210.0, 360.0, 80.0, 18.0), velocity: vec2(-210.0, 0.0) },
-                Hazard { rect: Rect::new(620.0, 420.0, 18.0, 80.0), velocity: vec2(0.0, -190.0) },
+                Hazard {
+                    rect: Rect::new(130.0, 130.0, 70.0, 18.0),
+                    velocity: vec2(180.0, 0.0),
+                },
+                Hazard {
+                    rect: Rect::new(520.0, 210.0, 18.0, 70.0),
+                    velocity: vec2(0.0, 170.0),
+                },
+                Hazard {
+                    rect: Rect::new(210.0, 360.0, 80.0, 18.0),
+                    velocity: vec2(-210.0, 0.0),
+                },
+                Hazard {
+                    rect: Rect::new(620.0, 420.0, 18.0, 80.0),
+                    velocity: vec2(0.0, -190.0),
+                },
             ],
             artifacts: vec![
-                Artifact { pos: vec2(150.0, 90.0), collected: false },
-                Artifact { pos: vec2(660.0, 150.0), collected: false },
-                Artifact { pos: vec2(240.0, 300.0), collected: false },
-                Artifact { pos: vec2(620.0, 500.0), collected: false },
+                Artifact {
+                    pos: vec2(150.0, 90.0),
+                    collected: false,
+                },
+                Artifact {
+                    pos: vec2(660.0, 150.0),
+                    collected: false,
+                },
+                Artifact {
+                    pos: vec2(240.0, 300.0),
+                    collected: false,
+                },
+                Artifact {
+                    pos: vec2(620.0, 500.0),
+                    collected: false,
+                },
             ],
             time_left: 45.0,
             failed: false,
@@ -83,8 +107,14 @@ impl FinalChallengePuzzle {
             self.player.y += speed;
         }
 
-        self.player.x = self.player.x.clamp(20.0, screen_width() - self.player.w - 20.0);
-        self.player.y = self.player.y.clamp(80.0, screen_height() - self.player.h - 30.0);
+        self.player.x = self
+            .player
+            .x
+            .clamp(20.0, screen_width() - self.player.w - 20.0);
+        self.player.y = self
+            .player
+            .y
+            .clamp(80.0, screen_height() - self.player.h - 30.0);
     }
 
     pub fn update(&mut self) {
@@ -121,7 +151,10 @@ impl FinalChallengePuzzle {
             }
         }
 
-        let player_center = vec2(self.player.x + self.player.w / 2.0, self.player.y + self.player.h / 2.0);
+        let player_center = vec2(
+            self.player.x + self.player.w / 2.0,
+            self.player.y + self.player.h / 2.0,
+        );
         for artifact in &mut self.artifacts {
             if !artifact.collected && artifact.pos.distance(player_center) < 24.0 {
                 artifact.collected = true;
@@ -131,25 +164,78 @@ impl FinalChallengePuzzle {
 
     pub fn draw(&self) {
         let arena = Rect::new(20.0, 90.0, screen_width() - 40.0, screen_height() - 130.0);
-        draw_rectangle_lines(arena.x, arena.y, arena.w, arena.h, 3.0, Color::from_rgba(255, 210, 120, 255));
+        draw_rectangle_lines(
+            arena.x,
+            arena.y,
+            arena.w,
+            arena.h,
+            3.0,
+            Color::from_rgba(255, 210, 120, 255),
+        );
 
-        draw_text("Финал: соберите артефакты до конца времени", 20.0, 55.0, 26.0, WHITE);
-        let timer_color = if self.time_left < 10.0 { RED } else { Color::from_rgba(255, 220, 130, 255) };
-        draw_text(&format!("Таймер: {:.0}", self.time_left.ceil()), screen_width() - 160.0, 55.0, 28.0, timer_color);
+        draw_text(
+            "Финал: соберите артефакты до конца времени",
+            20.0,
+            55.0,
+            26.0,
+            WHITE,
+        );
+        let timer_color = if self.time_left < 10.0 {
+            RED
+        } else {
+            Color::from_rgba(255, 220, 130, 255)
+        };
+        draw_text(
+            &format!("Таймер: {:.0}", self.time_left.ceil()),
+            screen_width() - 160.0,
+            55.0,
+            28.0,
+            timer_color,
+        );
 
-        let collected = self.artifacts.iter().filter(|artifact| artifact.collected).count();
-        draw_text(&format!("Артефакты: {}/{}", collected, self.artifacts.len()), 20.0, 82.0, 20.0, LIGHTGRAY);
+        let collected = self
+            .artifacts
+            .iter()
+            .filter(|artifact| artifact.collected)
+            .count();
+        draw_text(
+            &format!("Артефакты: {}/{}", collected, self.artifacts.len()),
+            20.0,
+            82.0,
+            20.0,
+            LIGHTGRAY,
+        );
 
         for hazard in &self.hazards {
-            draw_rectangle(hazard.rect.x, hazard.rect.y, hazard.rect.w, hazard.rect.h, Color::from_rgba(190, 70, 70, 255));
-            draw_rectangle_lines(hazard.rect.x, hazard.rect.y, hazard.rect.w, hazard.rect.h, 2.0, WHITE);
+            draw_rectangle(
+                hazard.rect.x,
+                hazard.rect.y,
+                hazard.rect.w,
+                hazard.rect.h,
+                Color::from_rgba(190, 70, 70, 255),
+            );
+            draw_rectangle_lines(
+                hazard.rect.x,
+                hazard.rect.y,
+                hazard.rect.w,
+                hazard.rect.h,
+                2.0,
+                WHITE,
+            );
         }
 
         for artifact in &self.artifacts {
             if artifact.collected {
                 continue;
             }
-            draw_poly(artifact.pos.x, artifact.pos.y, 6, 12.0, 0.0, Color::from_rgba(255, 215, 0, 255));
+            draw_poly(
+                artifact.pos.x,
+                artifact.pos.y,
+                6,
+                12.0,
+                0.0,
+                Color::from_rgba(255, 215, 0, 255),
+            );
             draw_poly_lines(artifact.pos.x, artifact.pos.y, 6, 12.0, 0.0, 2.0, WHITE);
         }
 
@@ -158,7 +244,13 @@ impl FinalChallengePuzzle {
         } else {
             Color::from_rgba(120, 190, 255, 255)
         };
-        draw_rectangle(self.player.x, self.player.y, self.player.w, self.player.h, player_color);
+        draw_rectangle(
+            self.player.x,
+            self.player.y,
+            self.player.w,
+            self.player.h,
+            player_color,
+        );
         draw_rectangle(self.player.x + 6.0, self.player.y + 6.0, 6.0, 6.0, WHITE);
         draw_rectangle(self.player.x + 16.0, self.player.y + 6.0, 6.0, 6.0, WHITE);
 
@@ -167,14 +259,38 @@ impl FinalChallengePuzzle {
             draw_rectangle(0.0, 0.0, screen_width(), screen_height(), overlay);
             let text = "Время вышло";
             let width = measure_text(text, None, 46, 1.0).width;
-            draw_text(text, screen_width() / 2.0 - width / 2.0, screen_height() / 2.0, 46.0, RED);
+            draw_text(
+                text,
+                screen_width() / 2.0 - width / 2.0,
+                screen_height() / 2.0,
+                46.0,
+                RED,
+            );
             let hint = "Нажмите R для рестарта";
             let hint_width = measure_text(hint, None, 24, 1.0).width;
-            draw_text(hint, screen_width() / 2.0 - hint_width / 2.0, screen_height() / 2.0 + 40.0, 24.0, WHITE);
+            draw_text(
+                hint,
+                screen_width() / 2.0 - hint_width / 2.0,
+                screen_height() / 2.0 + 40.0,
+                24.0,
+                WHITE,
+            );
         } else {
-            draw_text("WASD/стрелки - движение, избегайте ловушек", 20.0, screen_height() - 20.0, 18.0, GRAY);
+            draw_text(
+                "WASD/стрелки - движение, избегайте ловушек",
+                20.0,
+                screen_height() - 20.0,
+                18.0,
+                GRAY,
+            );
             if self.hit_cooldown > 0.0 {
-                draw_text("Столкновение: короткая передышка", screen_width() - 290.0, 82.0, 20.0, Color::from_rgba(255, 180, 140, 255));
+                draw_text(
+                    "Столкновение: короткая передышка",
+                    screen_width() - 290.0,
+                    82.0,
+                    20.0,
+                    Color::from_rgba(255, 180, 140, 255),
+                );
             }
         }
     }

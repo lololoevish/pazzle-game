@@ -1,7 +1,9 @@
-use macroquad::prelude::*;
-use crate::game_state::GameState;
-use super::Scene;
 use ::rand::random;
+use macroquad::prelude::*;
+
+use crate::game_state::GameState;
+
+use super::Scene;
 
 pub struct MenuScene {
     selected_option: usize,
@@ -9,6 +11,7 @@ pub struct MenuScene {
     next_state: Option<GameState>,
     animation_time: f32,
     particles: Vec<Particle>,
+    story_overlay_open: bool,
 }
 
 struct Particle {
@@ -24,38 +27,38 @@ impl MenuScene {
     pub fn new() -> Self {
         Self {
             selected_option: 0,
-            options: vec!["Играть", "Настройки", "Выход"],
+            options: vec!["Играть", "Сюжет", "Выход"],
             next_state: None,
             animation_time: 0.0,
             particles: Vec::new(),
+            story_overlay_open: false,
         }
     }
-    
+
     fn draw_gradient_background(&self) {
-        // Градиентный фон
         let colors = [
-            Color::from_rgba(20, 30, 50, 255),
-            Color::from_rgba(40, 20, 60, 255),
-            Color::from_rgba(60, 30, 80, 255),
+            Color::from_rgba(12, 20, 36, 255),
+            Color::from_rgba(28, 18, 48, 255),
+            Color::from_rgba(48, 34, 68, 255),
         ];
-        
+
         for i in 0..screen_height() as i32 {
             let t = i as f32 / screen_height();
             let idx = (t * (colors.len() - 1) as f32) as usize;
             let next_idx = (idx + 1).min(colors.len() - 1);
             let local_t = (t * (colors.len() - 1) as f32) - idx as f32;
-            
+
             let color = Color::new(
                 colors[idx].r + (colors[next_idx].r - colors[idx].r) * local_t,
                 colors[idx].g + (colors[next_idx].g - colors[idx].g) * local_t,
                 colors[idx].b + (colors[next_idx].b - colors[idx].b) * local_t,
                 1.0,
             );
-            
+
             draw_line(0.0, i as f32, screen_width(), i as f32, 1.0, color);
         }
     }
-    
+
     fn draw_particles(&self) {
         for p in &self.particles {
             let alpha = p.life / 100.0;
@@ -63,10 +66,62 @@ impl MenuScene {
             draw_circle(p.x, p.y, p.size, color);
         }
     }
+
+    fn draw_backdrop(&self) {
+        draw_circle(640.0, 110.0, 58.0, Color::from_rgba(255, 228, 160, 55));
+        draw_circle(640.0, 110.0, 42.0, Color::from_rgba(255, 228, 160, 185));
+
+        for i in 0..6 {
+            let width = 110.0 + i as f32 * 18.0;
+            let height = 90.0 + (i % 3) as f32 * 30.0;
+            let x = 30.0 + i as f32 * 120.0;
+            let y = 420.0 - height;
+            draw_rectangle(x, y, width, height, Color::from_rgba(22, 28, 42, 210));
+            draw_rectangle(
+                x + width * 0.3,
+                y - 25.0,
+                24.0,
+                25.0,
+                Color::from_rgba(28, 34, 50, 220),
+            );
+        }
+
+        draw_triangle(
+            vec2(0.0, 520.0),
+            vec2(260.0, 290.0),
+            vec2(460.0, 520.0),
+            Color::from_rgba(28, 42, 54, 220),
+        );
+        draw_triangle(
+            vec2(300.0, 520.0),
+            vec2(560.0, 250.0),
+            vec2(800.0, 520.0),
+            Color::from_rgba(24, 34, 46, 220),
+        );
+    }
+
+    fn option_hint(&self, index: usize) -> &'static str {
+        match index {
+            0 => "Отправиться в город и начать цепочку испытаний.",
+            1 => "Показать краткую предысторию о шести печатях Элдорадо.",
+            2 => "Закрыть игру.",
+            _ => "",
+        }
+    }
 }
 
 impl Scene for MenuScene {
     fn handle_input(&mut self) {
+        if self.story_overlay_open {
+            if is_key_pressed(KeyCode::Escape)
+                || is_key_pressed(KeyCode::Enter)
+                || is_key_pressed(KeyCode::Space)
+            {
+                self.story_overlay_open = false;
+            }
+            return;
+        }
+
         if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
             self.selected_option = if self.selected_option == 0 {
                 self.options.len() - 1
@@ -74,25 +129,24 @@ impl Scene for MenuScene {
                 self.selected_option - 1
             };
         }
-        
+
         if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
             self.selected_option = (self.selected_option + 1) % self.options.len();
         }
-        
+
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
             match self.selected_option {
                 0 => self.next_state = Some(GameState::Town),
-                1 => {}, // Настройки - пока не реализовано
+                1 => self.story_overlay_open = true,
                 2 => self.next_state = Some(GameState::Quit),
                 _ => {}
             }
         }
     }
-    
+
     fn update(&mut self) {
         self.animation_time += get_frame_time();
-        
-        // Генерация частиц
+
         if random::<f32>() < 0.1 {
             self.particles.push(Particle {
                 x: random::<f32>() * screen_width(),
@@ -103,8 +157,7 @@ impl Scene for MenuScene {
                 size: random::<f32>() * 3.0 + 2.0,
             });
         }
-        
-        // Обновление частиц
+
         self.particles.retain_mut(|p| {
             p.x += p.vx;
             p.y += p.vy;
@@ -112,93 +165,97 @@ impl Scene for MenuScene {
             p.life > 0.0
         });
     }
-    
+
     fn draw(&self) {
         self.draw_gradient_background();
         self.draw_particles();
-        
-        // Заголовок
-        let title = "ПРИКЛЮЧЕНЧЕСКАЯ ИГРА";
+        self.draw_backdrop();
+
+        let title = "ELDORADO PUZZLE";
         let title_size = 50.0;
         let title_width = measure_text(title, None, title_size as u16, 1.0).width;
-        
-        // Тень заголовка
+
         draw_text(
             title,
             screen_width() / 2.0 - title_width / 2.0 + 3.0,
-            150.0 + 3.0,
+            138.0,
             title_size,
             Color::from_rgba(20, 10, 30, 255),
         );
-        
-        // Основной заголовок
         draw_text(
             title,
             screen_width() / 2.0 - title_width / 2.0,
-            150.0,
+            135.0,
             title_size,
             Color::from_rgba(255, 215, 0, 255),
         );
-        
-        // Подзаголовок
-        let subtitle = "С головоломками";
-        let subtitle_size = 25.0;
+
+        let subtitle = "Город шести печатей и древних механизмов";
+        let subtitle_size = 24.0;
         let subtitle_width = measure_text(subtitle, None, subtitle_size as u16, 1.0).width;
         draw_text(
             subtitle,
             screen_width() / 2.0 - subtitle_width / 2.0,
-            180.0,
+            170.0,
             subtitle_size,
             Color::from_rgba(200, 180, 150, 255),
         );
-        
-        // Опции меню
-        let menu_start_y = 280.0;
-        let option_height = 60.0;
-        
+
+        draw_text(
+            "Каждый пройденный уровень открывает путь к следующему. Повторно пройденные печати можно отключать рычагом.",
+            65.0,
+            210.0,
+            20.0,
+            Color::from_rgba(184, 203, 228, 255),
+        );
+
+        let menu_start_y = 300.0;
+        let option_height = 70.0;
+
         for (i, option) in self.options.iter().enumerate() {
             let y = menu_start_y + i as f32 * option_height;
             let is_selected = i == self.selected_option;
-            
-            // Фон опции
             let bg_color = if is_selected {
                 Color::from_rgba(80, 100, 140, 200)
             } else {
                 Color::from_rgba(40, 50, 70, 150)
             };
-            
-            let rect_width = 300.0;
+
+            let rect_width = 420.0;
             let rect_x = screen_width() / 2.0 - rect_width / 2.0;
-            
-            draw_rectangle(rect_x, y - 35.0, rect_width, 50.0, bg_color);
-            
-            // Рамка
+
+            draw_rectangle(rect_x, y - 35.0, rect_width, 56.0, bg_color);
+
             let border_color = if is_selected {
                 Color::from_rgba(150, 200, 255, 255)
             } else {
                 Color::from_rgba(100, 120, 150, 255)
             };
-            
-            draw_rectangle_lines(rect_x, y - 35.0, rect_width, 50.0, 2.0, border_color);
-            
-            // Текст опции
+            draw_rectangle_lines(rect_x, y - 35.0, rect_width, 56.0, 2.0, border_color);
+
             let text_size = if is_selected { 35.0 } else { 30.0 };
             let text_color = if is_selected {
                 Color::from_rgba(255, 255, 255, 255)
             } else {
                 Color::from_rgba(180, 180, 180, 255)
             };
-            
+
             let text_width = measure_text(option, None, text_size as u16, 1.0).width;
             draw_text(
                 option,
                 screen_width() / 2.0 - text_width / 2.0,
-                y,
+                y - 3.0,
                 text_size,
                 text_color,
             );
-            
-            // Индикатор выбора
+            draw_text(
+                self.option_hint(i),
+                rect_x + 18.0,
+                y + 18.0,
+                16.0,
+                Color::from_rgba(185, 198, 215, 255),
+            );
+
             if is_selected {
                 let pulse = (self.animation_time * 3.0).sin() * 0.3 + 0.7;
                 let indicator_color = Color::new(1.0, 1.0, 0.4, pulse);
@@ -206,8 +263,7 @@ impl Scene for MenuScene {
                 draw_text("◄", rect_x + rect_width + 10.0, y, 30.0, indicator_color);
             }
         }
-        
-        // Подсказка
+
         let hint = "↑↓ - выбор, ENTER - подтвердить";
         let hint_size = 18.0;
         let hint_width = measure_text(hint, None, hint_size as u16, 1.0).width;
@@ -218,18 +274,86 @@ impl Scene for MenuScene {
             hint_size,
             Color::from_rgba(150, 150, 150, 255),
         );
-        
-        // Версия
-        let version = "v1.2.0 (Rust Edition)";
+
         draw_text(
-            version,
+            "v1.3.0-dev (Rust Edition)",
             10.0,
             screen_height() - 10.0,
             16.0,
             Color::from_rgba(100, 100, 100, 255),
         );
+
+        if self.story_overlay_open {
+            draw_rectangle(
+                0.0,
+                0.0,
+                screen_width(),
+                screen_height(),
+                Color::from_rgba(6, 10, 18, 220),
+            );
+
+            let panel = Rect::new(90.0, 90.0, screen_width() - 180.0, screen_height() - 180.0);
+            draw_rectangle(
+                panel.x,
+                panel.y,
+                panel.w,
+                panel.h,
+                Color::from_rgba(18, 24, 40, 245),
+            );
+            draw_rectangle_lines(
+                panel.x,
+                panel.y,
+                panel.w,
+                panel.h,
+                3.0,
+                Color::from_rgba(255, 214, 126, 255),
+            );
+
+            draw_text(
+                "Предыстория",
+                panel.x + 26.0,
+                panel.y + 44.0,
+                34.0,
+                Color::from_rgba(255, 230, 180, 255),
+            );
+            draw_text(
+                "Под Элдорадо скрыт механизм из шести печатей. Каждая печать удерживает один участок города от падения.",
+                panel.x + 26.0,
+                panel.y + 88.0,
+                24.0,
+                WHITE,
+            );
+            draw_text(
+                "Чтобы добраться до ядра хранилища, придётся пройти все испытания по порядку: лабиринт, архив слов, зал памяти,",
+                panel.x + 26.0,
+                panel.y + 128.0,
+                22.0,
+                LIGHTGRAY,
+            );
+            draw_text(
+                "галерею пар, мост над бездной и финальную комнату артефактов. После первой победы на уровне появляется рычаг,",
+                panel.x + 26.0,
+                panel.y + 162.0,
+                22.0,
+                LIGHTGRAY,
+            );
+            draw_text(
+                "который отключает механизм для повторных посещений.",
+                panel.x + 26.0,
+                panel.y + 196.0,
+                22.0,
+                LIGHTGRAY,
+            );
+            draw_text(
+                "ENTER или ESC - закрыть",
+                panel.x + 26.0,
+                panel.y + panel.h - 28.0,
+                20.0,
+                Color::from_rgba(120, 210, 255, 255),
+            );
+        }
     }
-    
+
     fn get_next_state(&self) -> Option<GameState> {
         self.next_state
     }

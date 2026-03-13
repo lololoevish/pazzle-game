@@ -30,17 +30,43 @@ impl PlatformerPuzzle {
             spawn,
             on_ground: false,
             platforms: vec![
-                Platform { rect: Rect::new(40.0, 520.0, 220.0, 24.0) },
-                Platform { rect: Rect::new(260.0, 430.0, 150.0, 20.0) },
-                Platform { rect: Rect::new(460.0, 340.0, 150.0, 20.0) },
-                Platform { rect: Rect::new(610.0, 250.0, 120.0, 20.0) },
-                Platform { rect: Rect::new(330.0, 210.0, 150.0, 20.0) },
+                Platform {
+                    rect: Rect::new(40.0, 520.0, 220.0, 24.0),
+                },
+                Platform {
+                    rect: Rect::new(260.0, 430.0, 150.0, 20.0),
+                },
+                Platform {
+                    rect: Rect::new(460.0, 340.0, 150.0, 20.0),
+                },
+                Platform {
+                    rect: Rect::new(610.0, 250.0, 120.0, 20.0),
+                },
+                Platform {
+                    rect: Rect::new(330.0, 210.0, 150.0, 20.0),
+                },
             ],
             crystals: vec![
-                Crystal { x: 320.0, y: 390.0, collected: false },
-                Crystal { x: 520.0, y: 300.0, collected: false },
-                Crystal { x: 665.0, y: 210.0, collected: false },
-                Crystal { x: 395.0, y: 170.0, collected: false },
+                Crystal {
+                    x: 320.0,
+                    y: 390.0,
+                    collected: false,
+                },
+                Crystal {
+                    x: 520.0,
+                    y: 300.0,
+                    collected: false,
+                },
+                Crystal {
+                    x: 665.0,
+                    y: 210.0,
+                    collected: false,
+                },
+                Crystal {
+                    x: 395.0,
+                    y: 170.0,
+                    collected: false,
+                },
             ],
             respawn_message_timer: 0.0,
         }
@@ -64,7 +90,11 @@ impl PlatformerPuzzle {
 
         self.velocity.x = horizontal * 250.0;
 
-        if self.on_ground && (is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W)) {
+        if self.on_ground
+            && (is_key_pressed(KeyCode::Space)
+                || is_key_pressed(KeyCode::Up)
+                || is_key_pressed(KeyCode::W))
+        {
             self.velocity.y = -395.0;
             self.on_ground = false;
         }
@@ -86,11 +116,10 @@ impl PlatformerPuzzle {
         self.on_ground = false;
 
         for platform in &self.platforms {
-            let landed_on_platform =
-                previous_y + self.player.h <= platform.rect.y
-                    && self.player.y + self.player.h >= platform.rect.y
-                    && self.player.x + self.player.w > platform.rect.x
-                    && self.player.x < platform.rect.x + platform.rect.w;
+            let landed_on_platform = previous_y + self.player.h <= platform.rect.y
+                && self.player.y + self.player.h >= platform.rect.y
+                && self.player.x + self.player.w > platform.rect.x
+                && self.player.x < platform.rect.x + platform.rect.w;
 
             if landed_on_platform {
                 self.player.y = platform.rect.y - self.player.h;
@@ -120,7 +149,11 @@ impl PlatformerPuzzle {
 
     pub fn draw(&self) {
         draw_text("Соберите все кристаллы", 20.0, 60.0, 28.0, WHITE);
-        let collected = self.crystals.iter().filter(|crystal| crystal.collected).count();
+        let collected = self
+            .crystals
+            .iter()
+            .filter(|crystal| crystal.collected)
+            .count();
         let progress = format!("Кристаллы: {}/{}", collected, self.crystals.len());
         draw_text(&progress, 20.0, 90.0, 20.0, LIGHTGRAY);
 
@@ -146,7 +179,14 @@ impl PlatformerPuzzle {
                 continue;
             }
 
-            draw_poly(crystal.x, crystal.y, 4, 14.0, 45.0, Color::from_rgba(110, 220, 255, 255));
+            draw_poly(
+                crystal.x,
+                crystal.y,
+                4,
+                14.0,
+                45.0,
+                Color::from_rgba(110, 220, 255, 255),
+            );
             draw_poly_lines(crystal.x, crystal.y, 4, 14.0, 45.0, 2.0, WHITE);
         }
 
@@ -174,7 +214,13 @@ impl PlatformerPuzzle {
         );
 
         if self.respawn_message_timer > 0.0 {
-            draw_text("Вы упали. Возврат на старт", screen_width() - 240.0, 90.0, 20.0, Color::from_rgba(255, 210, 120, 255));
+            draw_text(
+                "Вы упали. Возврат на старт",
+                screen_width() - 240.0,
+                90.0,
+                20.0,
+                Color::from_rgba(255, 210, 120, 255),
+            );
         }
     }
 
