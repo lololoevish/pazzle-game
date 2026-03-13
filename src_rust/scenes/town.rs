@@ -2,6 +2,9 @@ use macroquad::prelude::*;
 
 use crate::game_state::{GameProgress, GameState};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
+use crate::visual_assets::{
+    draw_sprite, item_texture, npc_texture, platform_texture, player_texture, Facing,
+};
 
 use super::Scene;
 
@@ -9,8 +12,14 @@ struct TownNpc {
     rect: Rect,
     name: &'static str,
     role: &'static str,
-    dialog: &'static str,
     color: Color,
+}
+
+struct ActiveDialogue {
+    npc_index: usize,
+    line_index: usize,
+    visible_chars: usize,
+    lines: Vec<String>,
 }
 
 struct SealMarker {
@@ -34,6 +43,8 @@ pub struct TownScene {
     entrance_rect: Rect,
     npcs: Vec<TownNpc>,
     seals: Vec<SealMarker>,
+    active_dialogue: Option<ActiveDialogue>,
+    player_facing: Facing,
 }
 
 impl TownScene {
@@ -50,21 +61,18 @@ impl TownScene {
                     rect: Rect::new(164.0, 416.0, 26.0, 38.0),
                     name: "Староста Иара",
                     role: "Хранитель тропы",
-                    dialog: "Дальше не набор отдельных комнат, а один длинный спуск. Каждая печать держит каменную дверь, и только рычаг после победы размыкает проход глубже.",
                     color: Color::from_rgba(226, 188, 126, 255),
                 },
                 TownNpc {
                     rect: Rect::new(604.0, 414.0, 26.0, 38.0),
                     name: "Механик Роан",
                     role: "Смотритель механизмов",
-                    dialog: "Когда уже один раз сломал печать, алтарь тебя помнит. Зайдёшь снова в ту же головоломку, нажмёшь L и сможешь не повторять решение перед рычагом.",
                     color: Color::from_rgba(146, 208, 255, 255),
                 },
                 TownNpc {
                     rect: Rect::new(384.0, 376.0, 26.0, 38.0),
                     name: "Архивариус Тель",
                     role: "Толкователь печатей",
-                    dialog: "Не торопись смотреть только на центр экрана. Стены, свет и механизмы подсказывают, что уже открыто, что ещё спит и где именно ждать следующий поворот хода.",
                     color: Color::from_rgba(198, 168, 232, 255),
                 },
             ],
@@ -106,23 +114,148 @@ impl TownScene {
                     accent: Color::from_rgba(255, 132, 132, 255),
                 },
             ],
+            active_dialogue: None,
+            player_facing: Facing::Down,
         }
     }
 
-    fn target_level(&self) -> u8 {
+    fn town_entry_level(&self) -> u8 {
+        1
+    }
+
+    fn current_objective_level(&self) -> u8 {
         for level in 1..=6 {
             if self.progress.is_level_unlocked(level) && !self.progress.is_lever_pulled(level) {
                 return level;
             }
         }
 
-        for level in (1..=6).rev() {
-            if self.progress.is_level_unlocked(level) {
-                return level;
-            }
-        }
+        6
+    }
 
-        1
+    fn opened_seal_count(&self) -> usize {
+        (1..=6)
+            .filter(|level| self.progress.is_lever_pulled(*level))
+            .count()
+    }
+
+    fn level_label(level: u8) -> &'static str {
+        match level {
+            1 => "лабиринт молчаливых стен",
+            2 => "архивную пещеру печатей",
+            3 => "грот часовщика",
+            4 => "галерею зеркального эха",
+            5 => "разлом кристаллов",
+            6 => "ядро глубинного хранилища",
+            _ => "следующую пещеру",
+        }
+    }
+
+    fn npc_preview(&self, npc_index: usize) -> String {
+        let target_level = self.current_objective_level();
+        let opened = self.opened_seal_count();
+
+        match npc_index {
+            0 => {
+                if opened >= 6 {
+                    "Все печати уже открыты. Староста говорит о том, что путь под городом завершён."
+                        .to_string()
+                } else {
+                    format!(
+                        "Староста следит за порядком спуска. Сейчас он говорит о пути в {}.",
+                        Self::level_label(target_level)
+                    )
+                }
+            }
+            1 => {
+                if opened == 0 {
+                    "Механик объяснит, зачем вообще нужен рычаг после победы.".to_string()
+                } else {
+                    format!(
+                        "Механик видит {} уже открытых печатей и комментирует работу рычагов.",
+                        opened
+                    )
+                }
+            }
+            2 => {
+                if target_level == 2 {
+                    "Архивариус особенно разговорчив перед архивной пещерой и памятью о символах."
+                        .to_string()
+                } else {
+                    "Архивариус читает окружение и подсказывает, на что смотреть в текущей пещере."
+                        .to_string()
+                }
+            }
+            _ => String::new(),
+        }
+    }
+
+    fn build_dialogue_lines(&self, npc_index: usize) -> Vec<String> {
+        let target_level = self.current_objective_level();
+        let opened = self.opened_seal_count();
+        let final_open = self.progress.is_lever_pulled(6);
+
+        match npc_index {
+            0 => {
+                if final_open {
+                    vec![
+                        "Ты вскрыл все шесть печатей. Для деревни это значит, что Элдорадо больше не висит над пропастью на древних замках.".to_string(),
+                        "Теперь мой совет уже не о выживании, а о памяти: не потеряй ощущение пути, который прошёл под нами.".to_string(),
+                        "Если снова пойдёшь вниз, смотри на обелиски. Они теперь напоминают не о долге, а о проделанной работе.".to_string(),
+                    ]
+                } else {
+                    vec![
+                        "Слушай внимательно: дальше не набор комнат из меню, а один длинный спуск под деревней.".to_string(),
+                        format!(
+                            "Сейчас тебе нужно пройти через {}. Пока не сорвёшь печать и не опустишь рычаг, дорога глубже не откроется.",
+                            Self::level_label(target_level)
+                        ),
+                        format!(
+                            "Уже вскрыто печатей: {} из 6. Обелиски у шахты показывают это честнее любых слов.",
+                            opened
+                        ),
+                    ]
+                }
+            }
+            1 => {
+                let mut lines = vec![
+                    "Я обслуживаю рычаги внизу. Они не для красоты: именно они двигают каменную дверь после победы.".to_string(),
+                ];
+                if opened == 0 {
+                    lines.push("Сначала почувствуй это на первом спуске: решишь печать, а потом сам услышишь, как рычаг сдвигает породу.".to_string());
+                } else {
+                    lines.push(format!(
+                        "У тебя уже открыто {} печатей. Значит, ты видел, как рычаг фиксирует победу и переводит пещеру в пройденное состояние.",
+                        opened
+                    ));
+                }
+                lines.push(
+                    "Если печать уже ломал раньше, алтарь тебя узнаёт. На повторном заходе в головоломку нажми L, и механизм позволит не тратить время на старое решение."
+                        .to_string(),
+                );
+                lines
+            }
+            2 => {
+                let second_level_done = self.progress.is_level_completed(2);
+                let mut lines = vec![
+                    "Печати любят прятать подсказки в окружении. Смотри не только в центр, но и на свет, стены, руны и движение деталей.".to_string(),
+                ];
+                if target_level == 2 || !second_level_done {
+                    lines.push("Архивная пещера особенно коварна: она проверяет не одну мысль, а две подряд. Сначала слово, потом память о форме.".to_string());
+                } else {
+                    lines.push(format!(
+                        "Раз сейчас на очереди {}, ищи в окружении не просто красоту, а ритм, повтор или напряжение механизма.",
+                        Self::level_label(target_level)
+                    ));
+                }
+                lines.push(
+                    "Если видишь, что окно говорит с тобой как тёплая рамка, это житель. Если как тяжёлая каменная плита, это сама печать."
+                        .to_string(),
+                );
+                lines
+            }
+            _ => vec!["...".to_string()],
+        }
     }
 
     fn player_center(&self) -> Vec2 {
@@ -162,15 +295,58 @@ impl TownScene {
         best.map(|(_, target)| target)
     }
 
+    fn start_dialogue(&mut self, npc_index: usize) {
+        let lines = self.build_dialogue_lines(npc_index);
+        self.active_dialogue = Some(ActiveDialogue {
+            npc_index,
+            line_index: 0,
+            visible_chars: 0,
+            lines,
+        });
+        self.status_message =
+            "Диалог открыт. E или ENTER - дальше, SPACE - допечатать строку, ESC - закрыть."
+                .to_string();
+    }
+
+    fn dialogue_line<'a>(&self, dialogue: &'a ActiveDialogue) -> &'a str {
+        &dialogue.lines[dialogue.line_index]
+    }
+
+    fn finish_or_advance_dialogue(&mut self) {
+        let Some(dialogue) = &mut self.active_dialogue else {
+            return;
+        };
+
+        let total_chars = dialogue.lines[dialogue.line_index].chars().count();
+
+        if dialogue.visible_chars < total_chars {
+            dialogue.visible_chars = total_chars;
+            return;
+        }
+
+        if dialogue.line_index + 1 < dialogue.lines.len() {
+            dialogue.line_index += 1;
+            dialogue.visible_chars = 0;
+        } else {
+            self.active_dialogue = None;
+            self.status_message =
+                "Диалог завершён. Подойдите к шахте, чтобы продолжить спуск.".to_string();
+        }
+    }
+
+    fn visible_dialogue_text(&self) -> Option<String> {
+        let dialogue = self.active_dialogue.as_ref()?;
+        let line = self.dialogue_line(dialogue);
+        Some(line.chars().take(dialogue.visible_chars).collect())
+    }
+
     fn interact(&mut self) {
         match self.focus_target() {
             Some(FocusTarget::Entrance) => {
-                let target_level = self.target_level();
-                self.next_state = Some(GameState::Playing(target_level));
+                self.next_state = Some(GameState::Playing(self.town_entry_level()));
             }
             Some(FocusTarget::Npc(index)) => {
-                let npc = &self.npcs[index];
-                self.status_message = format!("{}: {}", npc.name, npc.dialog);
+                self.start_dialogue(index);
             }
             None => {
                 self.status_message = "Подойдите к спуску или к NPC и нажмите E.".to_string();
@@ -179,6 +355,8 @@ impl TownScene {
     }
 
     fn draw_background(&self) {
+        let platform = platform_texture();
+        let relic = item_texture();
         for i in 0..screen_height() as i32 {
             let t = i as f32 / screen_height();
             let color = Color::new(0.03 + t * 0.08, 0.08 + t * 0.14, 0.17 + t * 0.14, 1.0);
@@ -228,6 +406,14 @@ impl TownScene {
                 vec2(x + width + 10.0, y),
                 vec2(x + width / 2.0, y - 38.0),
                 Color::from_rgba(70, 42, 36, 245),
+            );
+            draw_sprite(
+                &platform,
+                x + 8.0,
+                y + height - 24.0,
+                width - 16.0,
+                26.0,
+                WHITE,
             );
         }
 
@@ -312,6 +498,20 @@ impl TownScene {
                 6.0,
                 if completed { seal.accent } else { base },
             );
+            draw_sprite(
+                &relic,
+                seal.rect.x + seal.rect.w / 2.0 - 12.0,
+                seal.rect.y + 44.0,
+                24.0,
+                24.0,
+                if opened {
+                    Color::from_rgba(186, 228, 164, 255)
+                } else if completed {
+                    Color::from_rgba(255, 236, 166, 255)
+                } else {
+                    Color::from_rgba(144, 154, 176, 220)
+                },
+            );
             let title_width = measure_game_text(seal.title, None, 14, 1.0).width;
             draw_game_text(
                 seal.title,
@@ -326,6 +526,7 @@ impl TownScene {
     fn draw_npc(&self, npc: &TownNpc, is_focused: bool) {
         let bob = (self.animation_time * 2.3 + npc.rect.x * 0.018).sin() * 3.0;
         let y = npc.rect.y + bob;
+        let texture = npc_texture();
 
         draw_ellipse(
             npc.rect.x + npc.rect.w / 2.0,
@@ -335,21 +536,7 @@ impl TownScene {
             0.0,
             Color::from_rgba(0, 0, 0, 70),
         );
-        draw_circle(npc.rect.x + npc.rect.w / 2.0, y + 9.0, 10.0, npc.color);
-        draw_rectangle(
-            npc.rect.x,
-            y + 14.0,
-            npc.rect.w,
-            npc.rect.h - 14.0,
-            Color::from_rgba(76, 60, 56, 255),
-        );
-        draw_rectangle(
-            npc.rect.x + 5.0,
-            y + 18.0,
-            npc.rect.w - 10.0,
-            npc.rect.h - 24.0,
-            Color::from_rgba(216, 230, 244, 70),
-        );
+        draw_sprite(&texture, npc.rect.x - 10.0, y - 6.0, 48.0, 48.0, npc.color);
 
         if is_focused {
             draw_circle_lines(npc.rect.x + npc.rect.w / 2.0, y + 9.0, 15.0, 2.0, WHITE);
@@ -366,6 +553,7 @@ impl TownScene {
 
     fn draw_player(&self) {
         let step_bob = (self.animation_time * 8.0).sin().abs() * 2.2;
+        let texture = player_texture(self.player_facing);
         draw_ellipse(
             self.player.x + self.player.w / 2.0,
             self.player.y + self.player.h + 3.0,
@@ -374,32 +562,129 @@ impl TownScene {
             0.0,
             Color::from_rgba(0, 0, 0, 70),
         );
+        draw_sprite(
+            &texture,
+            self.player.x - 12.0,
+            self.player.y - 12.0 - step_bob,
+            52.0,
+            52.0,
+            WHITE,
+        );
+    }
+
+    fn draw_dialogue_overlay(&self) {
+        let Some(dialogue) = &self.active_dialogue else {
+            return;
+        };
+
+        let npc = &self.npcs[dialogue.npc_index];
+        let typed_text = self.visible_dialogue_text().unwrap_or_default();
+        let panel = Rect::new(58.0, 356.0, screen_width() - 116.0, 172.0);
+
         draw_rectangle(
-            self.player.x,
-            self.player.y - step_bob,
-            self.player.w,
-            self.player.h,
-            Color::from_rgba(122, 182, 255, 255),
+            0.0,
+            0.0,
+            screen_width(),
+            screen_height(),
+            Color::from_rgba(0, 0, 0, 112),
         );
         draw_rectangle(
-            self.player.x + 5.0,
-            self.player.y + 7.0 - step_bob,
-            self.player.w - 10.0,
-            9.0,
-            Color::from_rgba(236, 244, 255, 255),
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            Color::from_rgba(20, 18, 32, 242),
         );
-        draw_circle(self.player.x + 8.0, self.player.y - step_bob, 3.0, BLACK);
-        draw_circle(
-            self.player.x + self.player.w - 8.0,
-            self.player.y - step_bob,
+        draw_rectangle(
+            panel.x + 8.0,
+            panel.y + 8.0,
+            panel.w - 16.0,
+            panel.h - 16.0,
+            Color::from_rgba(42, 28, 18, 88),
+        );
+        draw_rectangle_lines(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
             3.0,
-            BLACK,
+            Color::from_rgba(255, 204, 128, 220),
+        );
+
+        draw_circle(panel.x + 42.0, panel.y + 42.0, 18.0, npc.color);
+        draw_circle_lines(
+            panel.x + 42.0,
+            panel.y + 42.0,
+            20.0,
+            2.0,
+            Color::from_rgba(255, 236, 200, 255),
+        );
+        draw_game_text(
+            npc.name,
+            panel.x + 76.0,
+            panel.y + 34.0,
+            26.0,
+            Color::from_rgba(255, 232, 182, 255),
+        );
+        draw_game_text(
+            npc.role,
+            panel.x + 76.0,
+            panel.y + 58.0,
+            16.0,
+            Color::from_rgba(210, 220, 235, 255),
+        );
+
+        draw_wrapped_game_text(
+            &typed_text,
+            panel.x + 24.0,
+            panel.y + 92.0,
+            panel.w - 48.0,
+            22.0,
+            5.0,
+            Color::from_rgba(242, 240, 236, 255),
+        );
+
+        let progress = format!(
+            "Реплика {}/{}",
+            dialogue.line_index + 1,
+            dialogue.lines.len()
+        );
+        draw_game_text(
+            &progress,
+            panel.x + panel.w - 116.0,
+            panel.y + 34.0,
+            16.0,
+            Color::from_rgba(132, 206, 255, 255),
+        );
+        draw_game_text(
+            "E / ENTER - дальше, SPACE - допечатать, ESC - закрыть",
+            panel.x + 24.0,
+            panel.y + panel.h - 18.0,
+            16.0,
+            Color::from_rgba(255, 212, 124, 255),
         );
     }
 }
 
 impl Scene for TownScene {
     fn handle_input(&mut self) {
+        if self.active_dialogue.is_some() {
+            if is_key_pressed(KeyCode::Escape) {
+                self.active_dialogue = None;
+                self.status_message =
+                    "Диалог закрыт. Подойдите к шахте, чтобы продолжить спуск.".to_string();
+                return;
+            }
+
+            if is_key_pressed(KeyCode::Space)
+                || is_key_pressed(KeyCode::Enter)
+                || is_key_pressed(KeyCode::E)
+            {
+                self.finish_or_advance_dialogue();
+            }
+            return;
+        }
+
         if is_key_pressed(KeyCode::E) {
             self.interact();
         }
@@ -411,6 +696,15 @@ impl Scene for TownScene {
 
     fn update(&mut self) {
         self.animation_time += get_frame_time();
+
+        if let Some(dialogue) = &mut self.active_dialogue {
+            let total_chars = dialogue.lines[dialogue.line_index].chars().count();
+            if dialogue.visible_chars < total_chars {
+                let reveal = (get_frame_time() * 42.0).ceil() as usize;
+                dialogue.visible_chars = (dialogue.visible_chars + reveal).min(total_chars);
+            }
+            return;
+        }
 
         let mut movement = Vec2::ZERO;
         if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
@@ -427,6 +721,19 @@ impl Scene for TownScene {
         }
 
         if movement.length_squared() > 0.0 {
+            if movement.x.abs() > movement.y.abs() {
+                self.player_facing = if movement.x > 0.0 {
+                    Facing::Right
+                } else {
+                    Facing::Left
+                };
+            } else {
+                self.player_facing = if movement.y > 0.0 {
+                    Facing::Down
+                } else {
+                    Facing::Up
+                };
+            }
             let step = movement.normalize() * 170.0 * get_frame_time();
             self.player.x =
                 (self.player.x + step.x).clamp(24.0, screen_width() - self.player.w - 24.0);
@@ -455,6 +762,37 @@ impl Scene for TownScene {
             18.0,
             4.0,
             Color::from_rgba(192, 208, 226, 255),
+        );
+        let objective_panel = Rect::new(44.0, 102.0, screen_width() - 88.0, 44.0);
+        draw_rectangle(
+            objective_panel.x,
+            objective_panel.y,
+            objective_panel.w,
+            objective_panel.h,
+            Color::from_rgba(10, 16, 26, 170),
+        );
+        draw_rectangle_lines(
+            objective_panel.x,
+            objective_panel.y,
+            objective_panel.w,
+            objective_panel.h,
+            2.0,
+            Color::from_rgba(108, 162, 208, 120),
+        );
+        let objective_text = format!(
+            "Цель экспедиции: уровень {} | Открыто печатей: {}/6 | Решено: {}/6",
+            self.current_objective_level(),
+            self.opened_seal_count(),
+            self.progress.completed_count()
+        );
+        draw_wrapped_game_text(
+            &objective_text,
+            objective_panel.x + 16.0,
+            objective_panel.y + 18.0,
+            objective_panel.w - 32.0,
+            16.0,
+            3.0,
+            Color::from_rgba(224, 232, 240, 255),
         );
 
         for npc in &self.npcs {
@@ -491,7 +829,8 @@ impl Scene for TownScene {
 
         match focus {
             Some(FocusTarget::Entrance) => {
-                let target_level = self.target_level();
+                let target_level = self.current_objective_level();
+                let relic = item_texture();
                 draw_game_text(
                     "Шахтный спуск",
                     panel.x + 18.0,
@@ -499,8 +838,16 @@ impl Scene for TownScene {
                     24.0,
                     Color::from_rgba(132, 220, 255, 255),
                 );
+                draw_sprite(
+                    &relic,
+                    panel.x + panel.w - 64.0,
+                    panel.y + 18.0,
+                    34.0,
+                    34.0,
+                    WHITE,
+                );
                 draw_wrapped_game_text(
-                    &format!("Следующая активная пещера: уровень {}.", target_level),
+                    "Шахта всегда начинается с первой пещеры, а дальше путь идёт цепочкой через внутренние двери.",
                     panel.x + 18.0,
                     panel.y + 60.0,
                     panel.w - 36.0,
@@ -509,7 +856,10 @@ impl Scene for TownScene {
                     WHITE,
                 );
                 draw_wrapped_game_text(
-                    "После решения печати потяните рычаг уже внутри пещеры. Только он открывает следующий проход.",
+                    &format!(
+                        "Текущая цель по прогрессу: уровень {}. Если ранние пещеры уже решены, внутри можно быстро открыть их рычаги заново и пройти дальше.",
+                        target_level
+                    ),
                     panel.x + 18.0,
                     panel.y + 90.0,
                     panel.w - 36.0,
@@ -536,13 +886,20 @@ impl Scene for TownScene {
                     Color::from_rgba(210, 220, 235, 255),
                 );
                 draw_wrapped_game_text(
-                    npc.dialog,
+                    &self.npc_preview(index),
                     panel.x + 18.0,
                     panel.y + 82.0,
                     panel.w - 36.0,
                     16.0,
                     4.0,
                     LIGHTGRAY,
+                );
+                draw_game_text(
+                    "E - говорить",
+                    panel.x + 18.0,
+                    panel.y + 134.0,
+                    16.0,
+                    Color::from_rgba(255, 214, 126, 255),
                 );
             }
             None => {
@@ -598,6 +955,8 @@ impl Scene for TownScene {
             3.0,
             Color::from_rgba(220, 228, 238, 255),
         );
+
+        self.draw_dialogue_overlay();
     }
 
     fn get_next_state(&self) -> Option<GameState> {

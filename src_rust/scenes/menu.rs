@@ -2,17 +2,19 @@ use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use ::rand::random;
 use macroquad::prelude::*;
 
-use crate::game_state::GameState;
+use crate::game_state::{GameProgress, GameState};
 
 use super::Scene;
 
 pub struct MenuScene {
+    progress: GameProgress,
     selected_option: usize,
     options: Vec<&'static str>,
     next_state: Option<GameState>,
     animation_time: f32,
     particles: Vec<Particle>,
     story_overlay_open: bool,
+    reset_confirm_open: bool,
 }
 
 struct Particle {
@@ -25,14 +27,16 @@ struct Particle {
 }
 
 impl MenuScene {
-    pub fn new() -> Self {
+    pub fn new(progress: GameProgress) -> Self {
         Self {
+            progress,
             selected_option: 0,
-            options: vec!["Играть", "Сюжет", "Выход"],
+            options: vec!["Играть", "Новая игра", "Сюжет", "Выход"],
             next_state: None,
             animation_time: 0.0,
             particles: Vec::new(),
             story_overlay_open: false,
+            reset_confirm_open: false,
         }
     }
 
@@ -104,15 +108,38 @@ impl MenuScene {
     fn option_hint(&self, index: usize) -> &'static str {
         match index {
             0 => "Отправиться в город и начать цепочку испытаний.",
-            1 => "Показать краткую предысторию о шести печатях Элдорадо.",
-            2 => "Закрыть игру.",
+            1 => "Стереть сохранение и начать прохождение заново.",
+            2 => "Показать краткую предысторию о шести печатях Элдорадо.",
+            3 => "Закрыть игру.",
             _ => "",
+        }
+    }
+
+    fn objective_label(&self) -> &'static str {
+        match self.progress.current_objective_level() {
+            1 => "Лабиринт молчаливых стен",
+            2 => "Архивная пещера печатей",
+            3 => "Грот часовщика",
+            4 => "Галерея зеркального эха",
+            5 => "Разлом кристаллов",
+            6 => "Ядро глубинного хранилища",
+            _ => "Неизвестная цель",
         }
     }
 }
 
 impl Scene for MenuScene {
     fn handle_input(&mut self) {
+        if self.reset_confirm_open {
+            if is_key_pressed(KeyCode::Escape) {
+                self.reset_confirm_open = false;
+            }
+            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                self.next_state = Some(GameState::ResetGame);
+            }
+            return;
+        }
+
         if self.story_overlay_open {
             if is_key_pressed(KeyCode::Escape)
                 || is_key_pressed(KeyCode::Enter)
@@ -138,8 +165,9 @@ impl Scene for MenuScene {
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
             match self.selected_option {
                 0 => self.next_state = Some(GameState::Town),
-                1 => self.story_overlay_open = true,
-                2 => self.next_state = Some(GameState::Quit),
+                1 => self.reset_confirm_open = true,
+                2 => self.story_overlay_open = true,
+                3 => self.next_state = Some(GameState::Quit),
                 _ => {}
             }
         }
@@ -212,7 +240,39 @@ impl Scene for MenuScene {
             Color::from_rgba(184, 203, 228, 255),
         );
 
-        let menu_start_y = 300.0;
+        let progress_panel = Rect::new(88.0, 236.0, screen_width() - 176.0, 50.0);
+        draw_rectangle(
+            progress_panel.x,
+            progress_panel.y,
+            progress_panel.w,
+            progress_panel.h,
+            Color::from_rgba(12, 18, 30, 170),
+        );
+        draw_rectangle_lines(
+            progress_panel.x,
+            progress_panel.y,
+            progress_panel.w,
+            progress_panel.h,
+            2.0,
+            Color::from_rgba(112, 170, 214, 126),
+        );
+        let progress_text = format!(
+            "Открыто печатей: {}/6 | Решено головоломок: {}/6 | Текущая цель: {}",
+            self.progress.opened_count(),
+            self.progress.completed_count(),
+            self.objective_label()
+        );
+        draw_wrapped_game_text(
+            &progress_text,
+            progress_panel.x + 16.0,
+            progress_panel.y + 20.0,
+            progress_panel.w - 32.0,
+            17.0,
+            3.0,
+            Color::from_rgba(226, 232, 240, 255),
+        );
+
+        let menu_start_y = 316.0;
         let option_height = 70.0;
 
         for (i, option) in self.options.iter().enumerate() {
@@ -352,6 +412,55 @@ impl Scene for MenuScene {
                 panel.y + panel.h - 28.0,
                 20.0,
                 Color::from_rgba(120, 210, 255, 255),
+            );
+        }
+
+        if self.reset_confirm_open {
+            draw_rectangle(
+                0.0,
+                0.0,
+                screen_width(),
+                screen_height(),
+                Color::from_rgba(0, 0, 0, 190),
+            );
+            let panel = Rect::new(150.0, 180.0, screen_width() - 300.0, 190.0);
+            draw_rectangle(
+                panel.x,
+                panel.y,
+                panel.w,
+                panel.h,
+                Color::from_rgba(22, 16, 18, 250),
+            );
+            draw_rectangle_lines(
+                panel.x,
+                panel.y,
+                panel.w,
+                panel.h,
+                3.0,
+                Color::from_rgba(220, 110, 90, 255),
+            );
+            draw_game_text(
+                "Новая игра",
+                panel.x + 24.0,
+                panel.y + 40.0,
+                32.0,
+                Color::from_rgba(255, 220, 190, 255),
+            );
+            draw_wrapped_game_text(
+                "Текущее сохранение будет стёрто. Прогресс по уровням, рычагам и маршруту пещер начнётся заново.",
+                panel.x + 24.0,
+                panel.y + 82.0,
+                panel.w - 48.0,
+                20.0,
+                5.0,
+                WHITE,
+            );
+            draw_game_text(
+                "ENTER - подтвердить, ESC - отмена",
+                panel.x + 24.0,
+                panel.y + panel.h - 22.0,
+                18.0,
+                Color::from_rgba(255, 204, 120, 255),
             );
         }
     }

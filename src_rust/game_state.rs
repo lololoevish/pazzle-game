@@ -7,6 +7,7 @@ pub enum GameState {
     Menu,
     Town,
     Playing(u8),
+    ResetGame,
     Quit,
 }
 
@@ -93,6 +94,26 @@ impl GameProgress {
             .get(&level)
             .map(|progress| progress.lever_pulled)
             .unwrap_or(false)
+    }
+
+    pub fn opened_count(&self) -> usize {
+        (1..=6).filter(|level| self.is_lever_pulled(*level)).count()
+    }
+
+    pub fn completed_count(&self) -> usize {
+        (1..=6)
+            .filter(|level| self.is_level_completed(*level))
+            .count()
+    }
+
+    pub fn current_objective_level(&self) -> u8 {
+        for level in 1..=6 {
+            if self.is_level_unlocked(level) && !self.is_lever_pulled(level) {
+                return level;
+            }
+        }
+
+        6
     }
 
     pub fn complete_level(&mut self, level: u8) {

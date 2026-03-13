@@ -2,6 +2,10 @@ use macroquad::prelude::*;
 
 use crate::game_state::{GameState, LevelProgress, ProgressUpdate};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
+use crate::visual_assets::{
+    draw_sprite, enemy_texture, item_texture, lever_texture, platform_texture, player_texture,
+    Facing,
+};
 
 use super::puzzles::{
     FinalChallengePuzzle, MazePuzzle, MemoryMatchPuzzle, PatternPuzzle, PlatformerPuzzle,
@@ -33,12 +37,13 @@ pub struct GameplayScene {
     memory_match_puzzle: Option<MemoryMatchPuzzle>,
     platformer_puzzle: Option<PlatformerPuzzle>,
     final_challenge_puzzle: Option<FinalChallengePuzzle>,
+    player_facing: Facing,
 }
 
 impl GameplayScene {
     pub fn new(level: u8, level_progress: LevelProgress) -> Self {
         let puzzle_solved = level_progress.completed;
-        let passage_open = level_progress.lever_pulled;
+        let passage_open = false;
         let mut scene = Self {
             level,
             level_progress,
@@ -51,7 +56,7 @@ impl GameplayScene {
             puzzle_solved,
             passage_open,
             cave_animation: 0.0,
-            passage_anim: if passage_open { 1.0 } else { 0.0 },
+            passage_anim: 0.0,
             player: Rect::new(94.0, 470.0, 28.0, 40.0),
             altar_rect: Rect::new(282.0, 340.0, 168.0, 118.0),
             lever_rect: Rect::new(538.0, 366.0, 62.0, 112.0),
@@ -63,6 +68,7 @@ impl GameplayScene {
             memory_match_puzzle: None,
             platformer_puzzle: None,
             final_challenge_puzzle: None,
+            player_facing: Facing::Down,
         };
 
         scene.setup_level();
@@ -147,6 +153,8 @@ impl GameplayScene {
     fn sync_status_message(&mut self) {
         self.status_message = if self.passage_open {
             "Каменная дверь уже раскрыта. Подойдите к проходу справа и нажмите E, чтобы спуститься дальше.".to_string()
+        } else if self.level_progress.completed {
+            "Печать уже знакома вам. Можно перепройти её у алтаря или просто опустить рычаг и открыть дверь заново.".to_string()
         } else if self.puzzle_solved {
             "Печать разрушена. Теперь потяните рычаг у двери, чтобы открыть проход в следующую пещеру.".to_string()
         } else {
@@ -210,13 +218,14 @@ impl GameplayScene {
     }
 
     fn pull_lever(&mut self) {
-        if !self.puzzle_solved {
+        if !self.puzzle_solved && !self.level_progress.completed {
             self.status_message =
                 "Рычаг заблокирован. Сначала сорвите печать у алтаря.".to_string();
             return;
         }
 
         self.passage_open = true;
+        self.puzzle_solved = true;
         self.level_progress.lever_pulled = true;
         self.pending_progress_update = Some(ProgressUpdate::LeverPulled {
             level: self.level,
@@ -391,6 +400,7 @@ impl GameplayScene {
     }
 
     fn draw_altar(&self) {
+        let relic = item_texture();
         draw_rectangle(
             self.altar_rect.x,
             self.altar_rect.y,
@@ -454,6 +464,18 @@ impl GameplayScene {
             2.0,
             Color::from_rgba(134, 144, 164, 180),
         );
+        draw_sprite(
+            &relic,
+            self.altar_rect.x + self.altar_rect.w / 2.0 - 22.0,
+            self.altar_rect.y + 38.0,
+            44.0,
+            44.0,
+            if self.puzzle_solved {
+                Color::from_rgba(160, 170, 182, 220)
+            } else {
+                WHITE
+            },
+        );
 
         let label = if self.puzzle_solved {
             "Печать погашена"
@@ -474,6 +496,7 @@ impl GameplayScene {
         if !(self.puzzle_solved || self.passage_open) {
             return;
         }
+        let lever = lever_texture();
 
         draw_rectangle(
             self.lever_rect.x + 6.0,
@@ -504,6 +527,14 @@ impl GameplayScene {
             } else {
                 Color::from_rgba(232, 178, 92, 255)
             },
+        );
+        draw_sprite(
+            &lever,
+            self.lever_rect.x - 8.0,
+            self.lever_rect.y + 2.0,
+            76.0,
+            76.0,
+            WHITE,
         );
         let label = if self.passage_open {
             "Рычаг опущен"
@@ -588,6 +619,7 @@ impl GameplayScene {
         } else {
             (self.cave_animation * 8.2).sin().abs() * 2.2
         };
+        let texture = player_texture(self.player_facing);
         draw_ellipse(
             self.player.x + self.player.w / 2.0,
             self.player.y + self.player.h + 4.0,
@@ -596,26 +628,13 @@ impl GameplayScene {
             0.0,
             Color::from_rgba(0, 0, 0, 74),
         );
-        draw_rectangle(
-            self.player.x,
-            self.player.y - bob,
-            self.player.w,
-            self.player.h,
-            Color::from_rgba(124, 184, 255, 255),
-        );
-        draw_rectangle(
-            self.player.x + 5.0,
-            self.player.y + 8.0 - bob,
-            self.player.w - 10.0,
-            10.0,
-            Color::from_rgba(236, 244, 255, 255),
-        );
-        draw_circle(self.player.x + 8.0, self.player.y - bob, 3.0, BLACK);
-        draw_circle(
-            self.player.x + self.player.w - 8.0,
-            self.player.y - bob,
-            3.0,
-            BLACK,
+        draw_sprite(
+            &texture,
+            self.player.x - 12.0,
+            self.player.y - 12.0 - bob,
+            54.0,
+            54.0,
+            WHITE,
         );
     }
 
@@ -677,6 +696,223 @@ impl GameplayScene {
             540.0,
             screen_width() - 68.0,
             18.0,
+            3.0,
+            Color::from_rgba(220, 228, 238, 255),
+        );
+    }
+
+    fn draw_vignette(&self) {
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            74.0,
+            Color::from_rgba(0, 0, 0, 118),
+        );
+        draw_rectangle(
+            0.0,
+            screen_height() - 88.0,
+            screen_width(),
+            88.0,
+            Color::from_rgba(0, 0, 0, 132),
+        );
+        draw_rectangle(
+            0.0,
+            0.0,
+            48.0,
+            screen_height(),
+            Color::from_rgba(0, 0, 0, 72),
+        );
+        draw_rectangle(
+            screen_width() - 48.0,
+            0.0,
+            48.0,
+            screen_height(),
+            Color::from_rgba(0, 0, 0, 72),
+        );
+    }
+
+    fn draw_world_detail(&self) {
+        let mist = (self.cave_animation * 0.8).sin() * 0.5 + 0.5;
+        let platform = platform_texture();
+        let relic = item_texture();
+        let gargoyle = enemy_texture();
+        draw_ellipse(
+            228.0,
+            332.0,
+            210.0,
+            74.0,
+            0.0,
+            Color::from_rgba(36, 68, 92, (22.0 + mist * 26.0) as u8),
+        );
+        draw_ellipse(
+            604.0,
+            342.0,
+            188.0,
+            66.0,
+            0.0,
+            Color::from_rgba(28, 54, 78, (18.0 + mist * 20.0) as u8),
+        );
+
+        for x in [152.0, 492.0, 642.0] {
+            draw_rectangle(x, 304.0, 14.0, 196.0, Color::from_rgba(40, 40, 46, 180));
+            draw_rectangle(
+                x - 8.0,
+                294.0,
+                30.0,
+                18.0,
+                Color::from_rgba(70, 66, 60, 190),
+            );
+        }
+
+        for x in [154.0, 266.0, 510.0, 622.0] {
+            draw_sprite(&platform, x, 452.0, 78.0, 36.0, WHITE);
+        }
+
+        draw_sprite(
+            &gargoyle,
+            120.0,
+            236.0,
+            56.0,
+            56.0,
+            Color::from_rgba(186, 180, 198, 220),
+        );
+        draw_sprite(
+            &gargoyle,
+            618.0,
+            232.0,
+            56.0,
+            56.0,
+            Color::from_rgba(186, 180, 198, 220),
+        );
+        draw_sprite(
+            &relic,
+            206.0,
+            430.0,
+            28.0,
+            28.0,
+            Color::from_rgba(170, 232, 255, 220),
+        );
+        draw_sprite(
+            &relic,
+            596.0,
+            430.0,
+            28.0,
+            28.0,
+            Color::from_rgba(170, 232, 255, 220),
+        );
+
+        draw_circle(
+            self.altar_rect.x + self.altar_rect.w / 2.0,
+            self.altar_rect.y + self.altar_rect.h / 2.0,
+            96.0,
+            Color::from_rgba(96, 180, 255, if self.puzzle_solved { 18 } else { 36 }),
+        );
+    }
+
+    fn draw_puzzle_shell(&self) {
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            screen_height(),
+            Color::from_rgba(3, 6, 12, 206),
+        );
+
+        let top_panel = Rect::new(14.0, 14.0, screen_width() - 28.0, 90.0);
+        draw_rectangle(
+            top_panel.x,
+            top_panel.y,
+            top_panel.w,
+            top_panel.h,
+            Color::from_rgba(10, 18, 28, 245),
+        );
+        draw_rectangle(
+            top_panel.x + 8.0,
+            top_panel.y + 8.0,
+            top_panel.w - 16.0,
+            top_panel.h - 16.0,
+            Color::from_rgba(24, 32, 44, 228),
+        );
+        draw_rectangle_lines(
+            top_panel.x,
+            top_panel.y,
+            top_panel.w,
+            top_panel.h,
+            3.0,
+            Color::from_rgba(198, 170, 114, 220),
+        );
+
+        let title = format!("{} | {}", self.level_title(), self.current_stage_name());
+        draw_game_text(
+            &title,
+            top_panel.x + 18.0,
+            top_panel.y + 30.0,
+            24.0,
+            Color::from_rgba(255, 230, 182, 255),
+        );
+        draw_wrapped_game_text(
+            self.level_goal(),
+            top_panel.x + 18.0,
+            top_panel.y + 56.0,
+            top_panel.w - 36.0,
+            16.0,
+            3.0,
+            Color::from_rgba(204, 214, 228, 255),
+        );
+
+        let frame = Rect::new(14.0, 110.0, screen_width() - 28.0, screen_height() - 194.0);
+        draw_rectangle(
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            Color::from_rgba(4, 10, 18, 180),
+        );
+        draw_rectangle_lines(
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            2.0,
+            Color::from_rgba(86, 136, 176, 120),
+        );
+
+        let footer = Rect::new(14.0, screen_height() - 76.0, screen_width() - 28.0, 62.0);
+        draw_rectangle(
+            footer.x,
+            footer.y,
+            footer.w,
+            footer.h,
+            Color::from_rgba(8, 12, 20, 232),
+        );
+        draw_rectangle_lines(
+            footer.x,
+            footer.y,
+            footer.w,
+            footer.h,
+            2.0,
+            Color::from_rgba(90, 146, 196, 126),
+        );
+
+        let footer_text = if self.level_progress.completed {
+            "ESC - выйти из головоломки, L - пропустить повторное решение"
+        } else {
+            "ESC - выйти из головоломки"
+        };
+        draw_game_text(
+            footer_text,
+            footer.x + 18.0,
+            footer.y + 22.0,
+            16.0,
+            Color::from_rgba(255, 214, 126, 255),
+        );
+        draw_wrapped_game_text(
+            &self.status_message,
+            footer.x + 18.0,
+            footer.y + 46.0,
+            footer.w - 36.0,
+            16.0,
             3.0,
             Color::from_rgba(220, 228, 238, 255),
         );
@@ -860,6 +1096,19 @@ impl Scene for GameplayScene {
         }
 
         if movement.length_squared() > 0.0 {
+            if movement.x.abs() > movement.y.abs() {
+                self.player_facing = if movement.x > 0.0 {
+                    Facing::Right
+                } else {
+                    Facing::Left
+                };
+            } else {
+                self.player_facing = if movement.y > 0.0 {
+                    Facing::Down
+                } else {
+                    Facing::Up
+                };
+            }
             let step = movement.normalize() * 170.0 * get_frame_time();
             self.player.x =
                 (self.player.x + step.x).clamp(24.0, screen_width() - self.player.w - 24.0);
@@ -878,20 +1127,15 @@ impl Scene for GameplayScene {
 
     fn draw(&self) {
         self.draw_cave_background();
+        self.draw_world_detail();
+        self.draw_vignette();
         self.draw_altar();
         self.draw_lever();
         self.draw_exit();
         self.draw_player();
-        self.draw_world_ui();
 
         if self.in_puzzle {
-            draw_rectangle(
-                0.0,
-                118.0,
-                screen_width(),
-                screen_height() - 176.0,
-                Color::from_rgba(6, 10, 18, 214),
-            );
+            self.draw_puzzle_shell();
 
             if let Some(maze) = &self.maze_puzzle {
                 maze.draw();
@@ -912,17 +1156,9 @@ impl Scene for GameplayScene {
                 final_challenge.draw();
             }
 
-            if self.level_progress.completed && !self.show_instruction_overlay {
-                draw_game_text(
-                    "L - пропустить повторное решение и вернуться к рычагу",
-                    18.0,
-                    144.0,
-                    18.0,
-                    Color::from_rgba(255, 214, 126, 255),
-                );
-            }
-
             self.draw_instruction_overlay();
+        } else {
+            self.draw_world_ui();
         }
     }
 
