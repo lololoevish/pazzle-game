@@ -71,7 +71,7 @@ impl GameProgress {
         }
 
         if let Some(prev_level) = self.levels.get(&(level - 1)) {
-            prev_level.completed || prev_level.lever_pulled
+            prev_level.lever_pulled
         } else {
             false
         }
@@ -93,10 +93,6 @@ impl GameProgress {
             .get(&level)
             .map(|progress| progress.lever_pulled)
             .unwrap_or(false)
-    }
-
-    pub fn can_use_lever(&self, level: u8) -> bool {
-        self.is_level_completed(level)
     }
 
     pub fn complete_level(&mut self, level: u8) {
@@ -136,10 +132,22 @@ mod tests {
     }
 
     #[test]
-    fn completing_a_level_unlocks_the_next_one() {
+    fn completing_a_level_without_lever_does_not_unlock_the_next_one() {
         let mut progress = GameProgress::default();
         progress.complete_level(1);
         progress.complete_level(2);
+
+        assert!(!progress.is_level_unlocked(2));
+        assert!(!progress.is_level_unlocked(3));
+    }
+
+    #[test]
+    fn pulling_the_lever_unlocks_the_next_level() {
+        let mut progress = GameProgress::default();
+        progress.complete_level(1);
+        progress.set_lever_pulled(1, true);
+        progress.complete_level(2);
+        progress.set_lever_pulled(2, true);
 
         assert!(progress.is_level_unlocked(2));
         assert!(progress.is_level_unlocked(3));

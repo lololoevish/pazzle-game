@@ -1,3 +1,4 @@
+use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use ::rand::random;
 use macroquad::prelude::*;
 
@@ -173,16 +174,16 @@ impl Scene for MenuScene {
 
         let title = "ELDORADO PUZZLE";
         let title_size = 50.0;
-        let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+        let title_width = measure_game_text(title, None, title_size as u16, 1.0).width;
 
-        draw_text(
+        draw_game_text(
             title,
             screen_width() / 2.0 - title_width / 2.0 + 3.0,
             138.0,
             title_size,
             Color::from_rgba(20, 10, 30, 255),
         );
-        draw_text(
+        draw_game_text(
             title,
             screen_width() / 2.0 - title_width / 2.0,
             135.0,
@@ -192,8 +193,8 @@ impl Scene for MenuScene {
 
         let subtitle = "Город шести печатей и древних механизмов";
         let subtitle_size = 24.0;
-        let subtitle_width = measure_text(subtitle, None, subtitle_size as u16, 1.0).width;
-        draw_text(
+        let subtitle_width = measure_game_text(subtitle, None, subtitle_size as u16, 1.0).width;
+        draw_game_text(
             subtitle,
             screen_width() / 2.0 - subtitle_width / 2.0,
             170.0,
@@ -201,11 +202,13 @@ impl Scene for MenuScene {
             Color::from_rgba(200, 180, 150, 255),
         );
 
-        draw_text(
+        draw_wrapped_game_text(
             "Каждый пройденный уровень открывает путь к следующему. Повторно пройденные печати можно отключать рычагом.",
             65.0,
             210.0,
+            screen_width() - 130.0,
             20.0,
+            4.0,
             Color::from_rgba(184, 203, 228, 255),
         );
 
@@ -240,15 +243,15 @@ impl Scene for MenuScene {
                 Color::from_rgba(180, 180, 180, 255)
             };
 
-            let text_width = measure_text(option, None, text_size as u16, 1.0).width;
-            draw_text(
+            let text_width = measure_game_text(option, None, text_size as u16, 1.0).width;
+            draw_game_text(
                 option,
                 screen_width() / 2.0 - text_width / 2.0,
                 y - 3.0,
                 text_size,
                 text_color,
             );
-            draw_text(
+            draw_game_text(
                 self.option_hint(i),
                 rect_x + 18.0,
                 y + 18.0,
@@ -259,15 +262,15 @@ impl Scene for MenuScene {
             if is_selected {
                 let pulse = (self.animation_time * 3.0).sin() * 0.3 + 0.7;
                 let indicator_color = Color::new(1.0, 1.0, 0.4, pulse);
-                draw_text("►", rect_x - 30.0, y, 30.0, indicator_color);
-                draw_text("◄", rect_x + rect_width + 10.0, y, 30.0, indicator_color);
+                draw_game_text("►", rect_x - 30.0, y, 30.0, indicator_color);
+                draw_game_text("◄", rect_x + rect_width + 10.0, y, 30.0, indicator_color);
             }
         }
 
         let hint = "↑↓ - выбор, ENTER - подтвердить";
         let hint_size = 18.0;
-        let hint_width = measure_text(hint, None, hint_size as u16, 1.0).width;
-        draw_text(
+        let hint_width = measure_game_text(hint, None, hint_size as u16, 1.0).width;
+        draw_game_text(
             hint,
             screen_width() / 2.0 - hint_width / 2.0,
             screen_height() - 30.0,
@@ -275,7 +278,7 @@ impl Scene for MenuScene {
             Color::from_rgba(150, 150, 150, 255),
         );
 
-        draw_text(
+        draw_game_text(
             "v1.3.0-dev (Rust Edition)",
             10.0,
             screen_height() - 10.0,
@@ -289,7 +292,7 @@ impl Scene for MenuScene {
                 0.0,
                 screen_width(),
                 screen_height(),
-                Color::from_rgba(6, 10, 18, 220),
+                Color::from_rgba(2, 4, 10, 242),
             );
 
             let panel = Rect::new(90.0, 90.0, screen_width() - 180.0, screen_height() - 180.0);
@@ -298,7 +301,7 @@ impl Scene for MenuScene {
                 panel.y,
                 panel.w,
                 panel.h,
-                Color::from_rgba(18, 24, 40, 245),
+                Color::from_rgba(10, 16, 30, 255),
             );
             draw_rectangle_lines(
                 panel.x,
@@ -309,42 +312,41 @@ impl Scene for MenuScene {
                 Color::from_rgba(255, 214, 126, 255),
             );
 
-            draw_text(
+            draw_game_text(
                 "Предыстория",
                 panel.x + 26.0,
                 panel.y + 44.0,
                 34.0,
                 Color::from_rgba(255, 230, 180, 255),
             );
-            draw_text(
+            draw_wrapped_game_text(
                 "Под Элдорадо скрыт механизм из шести печатей. Каждая печать удерживает один участок города от падения.",
                 panel.x + 26.0,
                 panel.y + 88.0,
+                panel.w - 52.0,
                 24.0,
+                6.0,
                 WHITE,
             );
-            draw_text(
-                "Чтобы добраться до ядра хранилища, придётся пройти все испытания по порядку: лабиринт, архив слов, зал памяти,",
+            draw_wrapped_game_text(
+                "Чтобы добраться до ядра хранилища, придётся пройти все испытания по порядку: лабиринт, архив слов, зал памяти, галерею пар, мост над бездной и финальную комнату артефактов.",
                 panel.x + 26.0,
-                panel.y + 128.0,
+                panel.y + 152.0,
+                panel.w - 52.0,
                 22.0,
+                6.0,
                 LIGHTGRAY,
             );
-            draw_text(
-                "галерею пар, мост над бездной и финальную комнату артефактов. После первой победы на уровне появляется рычаг,",
+            draw_wrapped_game_text(
+                "После первой победы на уровне появляется рычаг, который отключает механизм для повторных посещений.",
                 panel.x + 26.0,
-                panel.y + 162.0,
+                panel.y + 248.0,
+                panel.w - 52.0,
                 22.0,
+                6.0,
                 LIGHTGRAY,
             );
-            draw_text(
-                "который отключает механизм для повторных посещений.",
-                panel.x + 26.0,
-                panel.y + 196.0,
-                22.0,
-                LIGHTGRAY,
-            );
-            draw_text(
+            draw_game_text(
                 "ENTER или ESC - закрыть",
                 panel.x + 26.0,
                 panel.y + panel.h - 28.0,

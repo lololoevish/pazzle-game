@@ -1,3 +1,4 @@
+use crate::ui_text::draw_game_text;
 use ::rand::{thread_rng, Rng};
 use macroquad::prelude::*;
 
@@ -196,11 +197,11 @@ impl PatternPuzzle {
             )
         };
 
-        draw_text(&info, 20.0, 60.0, 24.0, WHITE);
+        draw_game_text(&info, 20.0, 60.0, 24.0, WHITE);
 
         // Подсказка
         if !self.showing_sequence {
-            draw_text(
+            draw_game_text(
                 "Кликайте на кнопки в правильном порядке",
                 20.0,
                 90.0,

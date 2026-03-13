@@ -1,3 +1,4 @@
+use crate::ui_text::{draw_game_text, measure_game_text};
 use macroquad::prelude::*;
 
 struct Hazard {
@@ -173,7 +174,7 @@ impl FinalChallengePuzzle {
             Color::from_rgba(255, 210, 120, 255),
         );
 
-        draw_text(
+        draw_game_text(
             "Финал: соберите артефакты до конца времени",
             20.0,
             55.0,
@@ -185,7 +186,7 @@ impl FinalChallengePuzzle {
         } else {
             Color::from_rgba(255, 220, 130, 255)
         };
-        draw_text(
+        draw_game_text(
             &format!("Таймер: {:.0}", self.time_left.ceil()),
             screen_width() - 160.0,
             55.0,
@@ -198,7 +199,7 @@ impl FinalChallengePuzzle {
             .iter()
             .filter(|artifact| artifact.collected)
             .count();
-        draw_text(
+        draw_game_text(
             &format!("Артефакты: {}/{}", collected, self.artifacts.len()),
             20.0,
             82.0,
@@ -258,8 +259,8 @@ impl FinalChallengePuzzle {
             let overlay = Color::from_rgba(0, 0, 0, 170);
             draw_rectangle(0.0, 0.0, screen_width(), screen_height(), overlay);
             let text = "Время вышло";
-            let width = measure_text(text, None, 46, 1.0).width;
-            draw_text(
+            let width = measure_game_text(text, None, 46, 1.0).width;
+            draw_game_text(
                 text,
                 screen_width() / 2.0 - width / 2.0,
                 screen_height() / 2.0,
@@ -267,8 +268,8 @@ impl FinalChallengePuzzle {
                 RED,
             );
             let hint = "Нажмите R для рестарта";
-            let hint_width = measure_text(hint, None, 24, 1.0).width;
-            draw_text(
+            let hint_width = measure_game_text(hint, None, 24, 1.0).width;
+            draw_game_text(
                 hint,
                 screen_width() / 2.0 - hint_width / 2.0,
                 screen_height() / 2.0 + 40.0,
@@ -276,7 +277,7 @@ impl FinalChallengePuzzle {
                 WHITE,
             );
         } else {
-            draw_text(
+            draw_game_text(
                 "WASD/стрелки - движение, избегайте ловушек",
                 20.0,
                 screen_height() - 20.0,
@@ -284,7 +285,7 @@ impl FinalChallengePuzzle {
                 GRAY,
             );
             if self.hit_cooldown > 0.0 {
-                draw_text(
+                draw_game_text(
                     "Столкновение: короткая передышка",
                     screen_width() - 290.0,
                     82.0,

@@ -1,3 +1,4 @@
+use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use ::rand::{thread_rng, Rng};
 use macroquad::prelude::*;
 use std::collections::HashSet;
@@ -14,6 +15,7 @@ pub struct WordSearchPuzzle {
     found_words: Vec<String>,
     placements: Vec<WordPlacement>,
     drag_start: Option<(usize, usize)>,
+    click_start: Option<(usize, usize)>,
     current_selection: Vec<(usize, usize)>,
     grid_size: usize,
     status_message: String,
@@ -34,9 +36,11 @@ impl WordSearchPuzzle {
             found_words: Vec::new(),
             placements: Vec::new(),
             drag_start: None,
+            click_start: None,
             current_selection: Vec::new(),
             grid_size: 10,
-            status_message: "Зажмите мышь и проведите по слову".to_string(),
+            status_message: "Кликните первую и последнюю букву слова или протяните мышью"
+                .to_string(),
         };
 
         puzzle.generate_grid();
@@ -192,6 +196,19 @@ impl WordSearchPuzzle {
             self.drag_start = self.cell_from_mouse(mx, my);
             if let Some(start) = self.drag_start {
                 self.current_selection = vec![start];
+                if let Some(click_start) = self.click_start {
+                    let path = self.build_selection_path(click_start, start);
+                    if !path.is_empty() && path.len() > 1 {
+                        self.current_selection = path;
+                        self.check_selection();
+                        self.click_start = None;
+                        self.drag_start = None;
+                        return;
+                    }
+                } else {
+                    self.click_start = Some(start);
+                    self.status_message = "Выберите последнюю букву слова".to_string();
+                }
             }
         }
 
@@ -200,13 +217,23 @@ impl WordSearchPuzzle {
                 let path = self.build_selection_path(start, end);
                 if !path.is_empty() {
                     self.current_selection = path;
+                    self.click_start = Some(start);
                 }
             }
         }
 
         if is_mouse_button_released(MouseButton::Left) {
-            self.check_selection();
+            if self.current_selection.len() > 1 {
+                self.check_selection();
+                self.click_start = None;
+            }
             self.drag_start = None;
+        }
+
+        if is_mouse_button_pressed(MouseButton::Right) {
+            self.click_start = None;
+            self.current_selection.clear();
+            self.status_message = "Выбор сброшен. Кликните первую букву заново".to_string();
         }
     }
 
@@ -242,8 +269,8 @@ impl WordSearchPuzzle {
 
                 let ch = self.grid[y][x].to_string();
                 let text_size = 24.0;
-                let text_width = measure_text(&ch, None, text_size as u16, 1.0).width;
-                draw_text(
+                let text_width = measure_game_text(&ch, None, text_size as u16, 1.0).width;
+                draw_game_text(
                     &ch,
                     px + (cell_size - text_width) / 2.0,
                     py + cell_size / 2.0 + 8.0,
@@ -256,7 +283,7 @@ impl WordSearchPuzzle {
         let words_x = 50.0;
         let words_y = offset_y;
 
-        draw_text("Найдите слова:", words_x, words_y, 20.0, WHITE);
+        draw_game_text("Найдите слова:", words_x, words_y, 20.0, WHITE);
 
         for (i, word) in self.words.iter().enumerate() {
             let color = if self.found_words.contains(word) {
@@ -265,16 +292,18 @@ impl WordSearchPuzzle {
                 WHITE
             };
 
-            draw_text(word, words_x, words_y + 30.0 + i as f32 * 25.0, 18.0, color);
+            draw_game_text(word, words_x, words_y + 30.0 + i as f32 * 25.0, 18.0, color);
         }
 
         let progress = format!("Найдено: {}/{}", self.found_words.len(), self.words.len());
-        draw_text(&progress, 20.0, 60.0, 20.0, WHITE);
-        draw_text(
+        draw_game_text(&progress, 20.0, 60.0, 20.0, WHITE);
+        draw_wrapped_game_text(
             &self.status_message,
             20.0,
-            screen_height() - 45.0,
+            screen_height() - 62.0,
+            screen_width() - 40.0,
             18.0,
+            4.0,
             LIGHTGRAY,
         );
     }

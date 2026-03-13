@@ -1,3 +1,4 @@
+use crate::ui_text::draw_game_text;
 use ::rand::{thread_rng, Rng};
 use macroquad::prelude::*;
 
@@ -174,7 +175,7 @@ impl MazePuzzle {
         draw_circle(player_x, player_y, cell_size / 3.0, BLUE);
         draw_circle_lines(player_x, player_y, cell_size / 3.0, 3.0, WHITE);
 
-        draw_text(
+        draw_game_text(
             "WASD - скольжение до ближайшей стены",
             20.0,
             120.0,

@@ -1,3 +1,4 @@
+use crate::ui_text::draw_game_text;
 use macroquad::prelude::*;
 
 struct Platform {
@@ -148,14 +149,14 @@ impl PlatformerPuzzle {
     }
 
     pub fn draw(&self) {
-        draw_text("Соберите все кристаллы", 20.0, 60.0, 28.0, WHITE);
+        draw_game_text("Соберите все кристаллы", 20.0, 60.0, 28.0, WHITE);
         let collected = self
             .crystals
             .iter()
             .filter(|crystal| crystal.collected)
             .count();
         let progress = format!("Кристаллы: {}/{}", collected, self.crystals.len());
-        draw_text(&progress, 20.0, 90.0, 20.0, LIGHTGRAY);
+        draw_game_text(&progress, 20.0, 90.0, 20.0, LIGHTGRAY);
 
         for platform in &self.platforms {
             draw_rectangle(
@@ -205,7 +206,7 @@ impl PlatformerPuzzle {
             Color::from_rgba(230, 240, 255, 255),
         );
 
-        draw_text(
+        draw_game_text(
             "A/D или стрелки - движение, SPACE - прыжок",
             20.0,
             screen_height() - 20.0,
@@ -214,7 +215,7 @@ impl PlatformerPuzzle {
         );
 
         if self.respawn_message_timer > 0.0 {
-            draw_text(
+            draw_game_text(
                 "Вы упали. Возврат на старт",
                 screen_width() - 240.0,
                 90.0,

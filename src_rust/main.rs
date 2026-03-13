@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 mod game_state;
 mod scenes;
+mod ui_text;
 
 use game_state::{GameProgress, GameState};
 use scenes::{GameplayScene, MenuScene, Scene, TownScene};
@@ -13,6 +14,7 @@ const SCREEN_HEIGHT: f32 = 600.0;
 async fn main() {
     // Настройка окна
     request_new_screen_size(SCREEN_WIDTH, SCREEN_HEIGHT);
+    ui_text::init().await;
 
     // Загрузка прогресса
     let mut game_progress = GameProgress::load().unwrap_or_default();
