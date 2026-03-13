@@ -9,7 +9,7 @@ use super::Scene;
 pub struct MenuScene {
     progress: GameProgress,
     selected_option: usize,
-    options: Vec<&'static str>,
+    options: Vec<String>,
     next_state: Option<GameState>,
     animation_time: f32,
     particles: Vec<Particle>,
@@ -31,7 +31,12 @@ impl MenuScene {
         Self {
             progress,
             selected_option: 0,
-            options: vec!["Играть", "Новая игра", "Сюжет", "Выход"],
+            options: vec![
+                "Играть".to_string(),
+                "Новая игра".to_string(),
+                "Сюжет".to_string(),
+                "Выход".to_string(),
+            ],
             next_state: None,
             animation_time: 0.0,
             particles: Vec::new(),
@@ -107,12 +112,30 @@ impl MenuScene {
 
     fn option_hint(&self, index: usize) -> &'static str {
         match index {
-            0 => "Отправиться в город и начать цепочку испытаний.",
+            0 => {
+                if self.has_progress() {
+                    "Продолжить текущую экспедицию с уже найденным прогрессом."
+                } else {
+                    "Отправиться в город и начать цепочку испытаний."
+                }
+            }
             1 => "Стереть сохранение и начать прохождение заново.",
             2 => "Показать краткую предысторию о шести печатях Элдорадо.",
             3 => "Закрыть игру.",
             _ => "",
         }
+    }
+
+    fn has_progress(&self) -> bool {
+        self.progress.completed_count() > 0 || self.progress.opened_count() > 0
+    }
+
+    fn refresh_options(&mut self) {
+        self.options[0] = if self.has_progress() {
+            "Продолжить".to_string()
+        } else {
+            "Играть".to_string()
+        };
     }
 
     fn objective_label(&self) -> &'static str {
@@ -130,6 +153,8 @@ impl MenuScene {
 
 impl Scene for MenuScene {
     fn handle_input(&mut self) {
+        self.refresh_options();
+
         if self.reset_confirm_open {
             if is_key_pressed(KeyCode::Escape) {
                 self.reset_confirm_open = false;
@@ -175,6 +200,7 @@ impl Scene for MenuScene {
 
     fn update(&mut self) {
         self.animation_time += get_frame_time();
+        self.refresh_options();
 
         if random::<f32>() < 0.1 {
             self.particles.push(Particle {
@@ -270,6 +296,23 @@ impl Scene for MenuScene {
             17.0,
             3.0,
             Color::from_rgba(226, 232, 240, 255),
+        );
+        let save_badge = if self.has_progress() {
+            "Сохранение найдено"
+        } else {
+            "Новый старт"
+        };
+        let badge_width = measure_game_text(save_badge, None, 16, 1.0).width;
+        draw_game_text(
+            save_badge,
+            progress_panel.x + progress_panel.w - badge_width - 18.0,
+            progress_panel.y - 6.0,
+            16.0,
+            if self.has_progress() {
+                Color::from_rgba(132, 220, 255, 255)
+            } else {
+                Color::from_rgba(255, 214, 126, 255)
+            },
         );
 
         let menu_start_y = 316.0;
