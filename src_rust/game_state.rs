@@ -15,6 +15,7 @@ pub enum GameState {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ProgressUpdate {
     LeverPulled { level: u8, pulled: bool },
+    MechanicTrainingCompleted,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,6 +38,8 @@ pub struct GameProgress {
     pub levels: HashMap<u8, LevelProgress>,
     pub gold: i32,
     pub items: Vec<String>,
+    #[serde(default)]
+    pub mechanic_training_completed: bool,
 }
 
 impl Default for GameProgress {
@@ -50,6 +53,7 @@ impl Default for GameProgress {
             levels,
             gold: 100,
             items: Vec::new(),
+            mechanic_training_completed: false,
         }
     }
 }
@@ -121,6 +125,14 @@ impl GameProgress {
         self.is_lever_pulled(6)
     }
 
+    pub fn is_mechanic_training_completed(&self) -> bool {
+        self.mechanic_training_completed
+    }
+
+    pub fn item_count(&self) -> usize {
+        self.items.len()
+    }
+
     pub fn complete_level(&mut self, level: u8) {
         if let Some(progress) = self.levels.get_mut(&level) {
             progress.completed = true;
@@ -140,6 +152,16 @@ impl GameProgress {
     pub fn apply_update(&mut self, update: ProgressUpdate) {
         match update {
             ProgressUpdate::LeverPulled { level, pulled } => self.set_lever_pulled(level, pulled),
+            ProgressUpdate::MechanicTrainingCompleted => {
+                if !self.mechanic_training_completed {
+                    self.mechanic_training_completed = true;
+                    self.gold += 35;
+                    let reward = "Ключ механика".to_string();
+                    if !self.items.iter().any(|item| item == &reward) {
+                        self.items.push(reward);
+                    }
+                }
+            }
         }
     }
 }
@@ -212,5 +234,18 @@ mod tests {
         progress.set_lever_pulled(6, true);
 
         assert!(progress.is_expedition_complete());
+    }
+
+    #[test]
+    fn mechanic_training_reward_is_applied_only_once() {
+        let mut progress = GameProgress::default();
+
+        progress.apply_update(super::ProgressUpdate::MechanicTrainingCompleted);
+        progress.apply_update(super::ProgressUpdate::MechanicTrainingCompleted);
+
+        assert!(progress.is_mechanic_training_completed());
+        assert_eq!(progress.gold, 135);
+        assert_eq!(progress.items.len(), 1);
+        assert_eq!(progress.items[0], "Ключ механика");
     }
 }

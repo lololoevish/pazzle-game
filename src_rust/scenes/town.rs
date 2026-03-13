@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::game_state::{GameProgress, GameState};
+use crate::game_state::{GameProgress, GameState, ProgressUpdate};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use crate::visual_assets::{
     draw_sprite, item_texture, npc_texture, platform_texture, player_texture, Facing,
@@ -29,6 +29,17 @@ struct SealMarker {
     accent: Color,
 }
 
+struct MechanicTrainingGame {
+    sequence: Vec<KeyCode>,
+    reveal_index: usize,
+    reveal_timer: f32,
+    waiting_for_input: bool,
+    input_index: usize,
+    round: usize,
+    won: bool,
+    failed: bool,
+}
+
 enum FocusTarget {
     Entrance,
     Npc(usize),
@@ -41,9 +52,11 @@ pub struct TownScene {
     status_message: String,
     player: Rect,
     entrance_rect: Rect,
+    pending_progress_update: Option<ProgressUpdate>,
     npcs: Vec<TownNpc>,
     seals: Vec<SealMarker>,
     active_dialogue: Option<ActiveDialogue>,
+    mechanic_training: Option<MechanicTrainingGame>,
     player_facing: Facing,
 }
 
@@ -56,6 +69,7 @@ impl TownScene {
             status_message: "Подойдите к шахтному спуску и нажмите E. Внутри пещеры уровни идут цепочкой один за другим.".to_string(),
             player: Rect::new(388.0, 474.0, 26.0, 40.0),
             entrance_rect: Rect::new(322.0, 176.0, 156.0, 136.0),
+            pending_progress_update: None,
             npcs: vec![
                 TownNpc {
                     rect: Rect::new(164.0, 416.0, 26.0, 38.0),
@@ -115,6 +129,7 @@ impl TownScene {
                 },
             ],
             active_dialogue: None,
+            mechanic_training: None,
             player_facing: Facing::Down,
         }
     }
@@ -162,11 +177,14 @@ impl TownScene {
                 }
             }
             1 => {
-                if opened == 0 {
-                    "Механик объяснит, зачем вообще нужен рычаг после победы.".to_string()
+                if self.progress.is_mechanic_training_completed() {
+                    "Механик уже доверил вам калибровку. Награда получена, но тренировку можно проходить повторно ради практики."
+                        .to_string()
+                } else if opened == 0 {
+                    "Механик объяснит, зачем вообще нужен рычаг после победы, и предложит калибровку на реакцию.".to_string()
                 } else {
                     format!(
-                        "Механик видит {} уже открытых печатей и комментирует работу рычагов.",
+                        "Механик видит {} уже открытых печатей, комментирует работу рычагов и готов дать тренировку на точность.",
                         opened
                     )
                 }
@@ -227,6 +245,17 @@ impl TownScene {
                     "Если печать уже ломал раньше, алтарь тебя узнаёт. На повторном заходе в головоломку нажми L, и механизм позволит не тратить время на старое решение."
                         .to_string(),
                 );
+                if self.progress.is_mechanic_training_completed() {
+                    lines.push(
+                        "Калибровку ты уже прошёл. Но если хочешь освежить реакцию, подойди ко мне и жми Q: станок снова соберёт схему."
+                            .to_string(),
+                    );
+                } else {
+                    lines.push(
+                        "Хочешь быстрый тест перед спуском, а не только разговор? Подойди ближе и нажми Q. Я запущу калибровку механизма и посмотрю, держишь ли темп."
+                            .to_string(),
+                    );
+                }
                 lines
             }
             2 => {
@@ -332,6 +361,119 @@ impl TownScene {
         let dialogue = self.active_dialogue.as_ref()?;
         let line = self.dialogue_line(dialogue);
         Some(line.chars().take(dialogue.visible_chars).collect())
+    }
+
+    fn is_mechanic_focused(&self) -> bool {
+        matches!(self.focus_target(), Some(FocusTarget::Npc(1)))
+    }
+
+    fn start_mechanic_training(&mut self) {
+        self.mechanic_training = Some(MechanicTrainingGame {
+            sequence: vec![KeyCode::Up, KeyCode::Right, KeyCode::Left, KeyCode::Down],
+            reveal_index: 0,
+            reveal_timer: 0.0,
+            waiting_for_input: false,
+            input_index: 0,
+            round: 1,
+            won: false,
+            failed: false,
+        });
+        self.status_message =
+            "Калибровка механика запущена. Смотрите на последовательность и повторяйте её стрелками."
+                .to_string();
+    }
+
+    fn complete_mechanic_training(&mut self) {
+        let first_win = !self.progress.is_mechanic_training_completed();
+        self.progress
+            .apply_update(ProgressUpdate::MechanicTrainingCompleted);
+        if first_win {
+            self.pending_progress_update = Some(ProgressUpdate::MechanicTrainingCompleted);
+            self.status_message =
+                "Калибровка завершена. Роан выдал 35 золота и предмет «Ключ механика».".to_string();
+        } else {
+            self.status_message =
+                "Калибровка снова пройдена. Награда уже была получена раньше, но реакция в порядке."
+                    .to_string();
+        }
+    }
+
+    fn mechanic_training_label(key: KeyCode) -> &'static str {
+        match key {
+            KeyCode::Up => "Вверх",
+            KeyCode::Right => "Вправо",
+            KeyCode::Down => "Вниз",
+            KeyCode::Left => "Влево",
+            _ => "?",
+        }
+    }
+
+    fn mechanic_training_arrow(key: KeyCode) -> &'static str {
+        match key {
+            KeyCode::Up => "↑",
+            KeyCode::Right => "→",
+            KeyCode::Down => "↓",
+            KeyCode::Left => "←",
+            _ => "?",
+        }
+    }
+
+    fn mechanic_training_color(key: KeyCode) -> Color {
+        match key {
+            KeyCode::Up => Color::from_rgba(132, 220, 255, 255),
+            KeyCode::Right => Color::from_rgba(255, 212, 122, 255),
+            KeyCode::Down => Color::from_rgba(132, 242, 182, 255),
+            KeyCode::Left => Color::from_rgba(234, 146, 188, 255),
+            _ => LIGHTGRAY,
+        }
+    }
+
+    fn handle_mechanic_training_input(&mut self) {
+        let Some(game) = &mut self.mechanic_training else {
+            return;
+        };
+
+        if is_key_pressed(KeyCode::Escape) {
+            self.mechanic_training = None;
+            self.status_message =
+                "Калибровка остановлена. Если захотите вернуться, подойдите к Роану и нажмите Q."
+                    .to_string();
+            return;
+        }
+
+        if !game.waiting_for_input || game.won || game.failed {
+            return;
+        }
+
+        for key in [KeyCode::Up, KeyCode::Right, KeyCode::Down, KeyCode::Left] {
+            if is_key_pressed(key) {
+                if key == game.sequence[game.input_index] {
+                    game.input_index += 1;
+                    if game.input_index >= game.round {
+                        if game.round >= game.sequence.len() {
+                            game.won = true;
+                            self.complete_mechanic_training();
+                        } else {
+                            game.round += 1;
+                            game.reveal_index = 0;
+                            game.reveal_timer = 0.0;
+                            game.waiting_for_input = false;
+                            game.input_index = 0;
+                            self.status_message = format!(
+                                "Раунд {} принят. Смотрите следующую последовательность.",
+                                game.round - 1
+                            );
+                        }
+                    }
+                } else {
+                    game.failed = true;
+                    self.status_message =
+                        "Калибровка сорвалась: ритм рычага ушёл. Нажмите Q у Роана, чтобы начать заново."
+                            .to_string();
+                }
+                break;
+            }
+        }
     }
 
     fn interact(&mut self) {
@@ -566,6 +708,142 @@ impl TownScene {
         );
     }
 
+    fn draw_mechanic_training_overlay(&self) {
+        let Some(game) = &self.mechanic_training else {
+            return;
+        };
+
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            screen_height(),
+            Color::from_rgba(0, 0, 0, 164),
+        );
+
+        let panel = Rect::new(86.0, 112.0, screen_width() - 172.0, 336.0);
+        draw_rectangle(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            Color::from_rgba(10, 18, 30, 245),
+        );
+        draw_rectangle(
+            panel.x + 10.0,
+            panel.y + 10.0,
+            panel.w - 20.0,
+            panel.h - 20.0,
+            Color::from_rgba(20, 32, 48, 220),
+        );
+        draw_rectangle_lines(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            3.0,
+            Color::from_rgba(122, 206, 255, 220),
+        );
+
+        draw_game_text(
+            "Калибровка механика",
+            panel.x + 24.0,
+            panel.y + 36.0,
+            30.0,
+            Color::from_rgba(255, 232, 182, 255),
+        );
+        let info = if game.won {
+            "Станок стабилизирован. Роан подтверждает, что вы держите ритм подземных механизмов."
+        } else if game.failed {
+            "Последовательность сорвана. В калибровке важен точный порядок нажатий."
+        } else if game.waiting_for_input {
+            "Теперь повторите последовательность стрелками. Чем дальше раунд, тем длиннее цепочка."
+        } else {
+            "Сначала наблюдайте за схемой: плитки загорятся по очереди. Запомните порядок."
+        };
+        draw_wrapped_game_text(
+            info,
+            panel.x + 24.0,
+            panel.y + 66.0,
+            panel.w - 48.0,
+            18.0,
+            4.0,
+            Color::from_rgba(214, 224, 238, 255),
+        );
+
+        let arrows = [
+            (KeyCode::Up, vec2(panel.x + panel.w / 2.0, panel.y + 156.0)),
+            (
+                KeyCode::Left,
+                vec2(panel.x + panel.w / 2.0 - 84.0, panel.y + 230.0),
+            ),
+            (
+                KeyCode::Right,
+                vec2(panel.x + panel.w / 2.0 + 84.0, panel.y + 230.0),
+            ),
+            (
+                KeyCode::Down,
+                vec2(panel.x + panel.w / 2.0, panel.y + 230.0),
+            ),
+        ];
+        let active_key =
+            if !game.waiting_for_input && !game.won && !game.failed && game.reveal_index > 0 {
+                Some(game.sequence[game.reveal_index - 1])
+            } else {
+                None
+            };
+        for (key, center) in arrows {
+            let mut color = Color::from_rgba(40, 56, 76, 255);
+            let outline = Self::mechanic_training_color(key);
+            if active_key == Some(key) {
+                color = Color::new(outline.r, outline.g, outline.b, 0.92);
+            }
+            draw_circle(center.x, center.y, 34.0, color);
+            draw_circle_lines(center.x, center.y, 34.0, 3.0, outline);
+            let arrow = Self::mechanic_training_arrow(key);
+            let width = measure_game_text(arrow, None, 38, 1.0).width;
+            draw_game_text(arrow, center.x - width / 2.0, center.y + 14.0, 38.0, WHITE);
+            let label = Self::mechanic_training_label(key);
+            let label_width = measure_game_text(label, None, 14, 1.0).width;
+            draw_game_text(
+                label,
+                center.x - label_width / 2.0,
+                center.y + 54.0,
+                14.0,
+                Color::from_rgba(196, 210, 228, 255),
+            );
+        }
+
+        let status = format!(
+            "Раунд: {}/{} | Ввод: {}/{} | Награда: {}",
+            game.round,
+            game.sequence.len(),
+            game.input_index,
+            game.round,
+            if self.progress.is_mechanic_training_completed() {
+                "уже получена"
+            } else {
+                "35 золота + Ключ механика"
+            }
+        );
+        draw_wrapped_game_text(
+            &status,
+            panel.x + 24.0,
+            panel.y + 286.0,
+            panel.w - 48.0,
+            16.0,
+            4.0,
+            Color::from_rgba(132, 214, 255, 255),
+        );
+        draw_game_text(
+            "Стрелки - повторить, ESC - выйти",
+            panel.x + 24.0,
+            panel.y + panel.h - 18.0,
+            17.0,
+            Color::from_rgba(255, 210, 122, 255),
+        );
+    }
+
     fn draw_dialogue_overlay(&self) {
         let Some(dialogue) = &self.active_dialogue else {
             return;
@@ -662,6 +940,11 @@ impl TownScene {
 
 impl Scene for TownScene {
     fn handle_input(&mut self) {
+        if self.mechanic_training.is_some() {
+            self.handle_mechanic_training_input();
+            return;
+        }
+
         if self.active_dialogue.is_some() {
             if is_key_pressed(KeyCode::Escape) {
                 self.active_dialogue = None;
@@ -683,6 +966,10 @@ impl Scene for TownScene {
             self.interact();
         }
 
+        if is_key_pressed(KeyCode::Q) && self.is_mechanic_focused() {
+            self.start_mechanic_training();
+        }
+
         if is_key_pressed(KeyCode::Escape) {
             self.next_state = Some(GameState::Menu);
         }
@@ -690,6 +977,27 @@ impl Scene for TownScene {
 
     fn update(&mut self) {
         self.animation_time += get_frame_time();
+
+        if let Some(game) = &mut self.mechanic_training {
+            if game.won || game.failed {
+                return;
+            }
+
+            if !game.waiting_for_input {
+                game.reveal_timer += get_frame_time();
+                if game.reveal_timer >= 0.62 {
+                    game.reveal_timer = 0.0;
+                    game.reveal_index += 1;
+                    if game.reveal_index > game.round {
+                        game.waiting_for_input = true;
+                        game.reveal_index = 0;
+                        self.status_message =
+                            format!("Повторите калибровочную схему: {} шаг(а).", game.round);
+                    }
+                }
+            }
+            return;
+        }
 
         if let Some(dialogue) = &mut self.active_dialogue {
             let total_chars = dialogue.lines[dialogue.line_index].chars().count();
@@ -761,7 +1069,7 @@ impl Scene for TownScene {
             4.0,
             Color::from_rgba(192, 208, 226, 255),
         );
-        let objective_panel = Rect::new(44.0, 102.0, screen_width() - 88.0, 44.0);
+        let objective_panel = Rect::new(44.0, 102.0, screen_width() - 88.0, 66.0);
         draw_rectangle(
             objective_panel.x,
             objective_panel.y,
@@ -799,6 +1107,25 @@ impl Scene for TownScene {
             16.0,
             3.0,
             Color::from_rgba(224, 232, 240, 255),
+        );
+        let inventory_text = format!(
+            "Золото: {} | Предметы: {} | Калибровка Роана: {}",
+            self.progress.gold,
+            self.progress.item_count(),
+            if self.progress.is_mechanic_training_completed() {
+                "пройдена"
+            } else {
+                "не пройдена"
+            }
+        );
+        draw_wrapped_game_text(
+            &inventory_text,
+            objective_panel.x + 16.0,
+            objective_panel.y + 42.0,
+            objective_panel.w - 32.0,
+            15.0,
+            3.0,
+            Color::from_rgba(168, 206, 236, 255),
         );
 
         for npc in &self.npcs {
@@ -901,7 +1228,11 @@ impl Scene for TownScene {
                     LIGHTGRAY,
                 );
                 draw_game_text(
-                    "E - говорить",
+                    if index == 1 {
+                        "E - говорить, Q - калибровка"
+                    } else {
+                        "E - говорить"
+                    },
                     panel.x + 18.0,
                     panel.y + 134.0,
                     16.0,
@@ -963,9 +1294,14 @@ impl Scene for TownScene {
         );
 
         self.draw_dialogue_overlay();
+        self.draw_mechanic_training_overlay();
     }
 
     fn get_next_state(&self) -> Option<GameState> {
         self.next_state
+    }
+
+    fn take_progress_update(&mut self) -> Option<ProgressUpdate> {
+        self.pending_progress_update.take()
     }
 }
