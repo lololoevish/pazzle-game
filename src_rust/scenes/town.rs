@@ -40,6 +40,21 @@ struct MechanicTrainingGame {
     failed: bool,
 }
 
+struct ArchivistQuizGame {
+    question_index: usize,
+    selected_option: usize,
+    score: usize,
+    answered: bool,
+    passed: bool,
+    failed: bool,
+}
+
+struct QuizQuestion {
+    prompt: &'static str,
+    options: [&'static str; 3],
+    correct: usize,
+}
+
 enum FocusTarget {
     Entrance,
     Npc(usize),
@@ -57,6 +72,7 @@ pub struct TownScene {
     seals: Vec<SealMarker>,
     active_dialogue: Option<ActiveDialogue>,
     mechanic_training: Option<MechanicTrainingGame>,
+    archivist_quiz: Option<ArchivistQuizGame>,
     player_facing: Facing,
 }
 
@@ -130,9 +146,28 @@ impl TownScene {
             ],
             active_dialogue: None,
             mechanic_training: None,
+            archivist_quiz: None,
             player_facing: Facing::Down,
         }
     }
+
+    const ARCHIVIST_QUESTIONS: [QuizQuestion; 3] = [
+        QuizQuestion {
+            prompt: "Какая пещера проверяет героя скольжением до стены?",
+            options: ["Лабиринт", "Разлом", "Галерея пар"],
+            correct: 0,
+        },
+        QuizQuestion {
+            prompt: "Что действительно открывает следующую пещеру после победы?",
+            options: ["Сам факт решения", "Рычаг", "Разговор с NPC"],
+            correct: 1,
+        },
+        QuizQuestion {
+            prompt: "Что происходит на второй стадии архивной пещеры?",
+            options: ["Платформер", "Финальный таймер", "Игра на память"],
+            correct: 2,
+        },
+    ];
 
     fn town_entry_level(&self) -> u8 {
         1
@@ -190,7 +225,10 @@ impl TownScene {
                 }
             }
             2 => {
-                if target_level == 2 {
+                if self.progress.is_archivist_quiz_completed() {
+                    "Архивариус уже проверил вашу память о правилах глубин. Награда получена, но викторину можно пройти повторно."
+                        .to_string()
+                } else if target_level == 2 {
                     "Архивариус особенно разговорчив перед архивной пещерой и памятью о символах."
                         .to_string()
                 } else {
@@ -275,6 +313,17 @@ impl TownScene {
                     "Если видишь, что окно говорит с тобой как тёплая рамка, это житель. Если как тяжёлая каменная плита, это сама печать."
                         .to_string(),
                 );
+                if self.progress.is_archivist_quiz_completed() {
+                    lines.push(
+                        "Я уже выдал тебе печать архивариуса. Но если хочешь проверить память ещё раз, подойди и нажми Q."
+                            .to_string(),
+                    );
+                } else {
+                    lines.push(
+                        "Если хочешь доказать, что помнишь правила глубин, подойди и нажми Q. Я открою короткую викторину хранителя."
+                            .to_string(),
+                    );
+                }
                 lines
             }
             _ => vec!["...".to_string()],
@@ -367,6 +416,10 @@ impl TownScene {
         matches!(self.focus_target(), Some(FocusTarget::Npc(1)))
     }
 
+    fn is_archivist_focused(&self) -> bool {
+        matches!(self.focus_target(), Some(FocusTarget::Npc(2)))
+    }
+
     fn start_mechanic_training(&mut self) {
         self.mechanic_training = Some(MechanicTrainingGame {
             sequence: vec![KeyCode::Up, KeyCode::Right, KeyCode::Left, KeyCode::Down],
@@ -428,6 +481,36 @@ impl TownScene {
         }
     }
 
+    fn start_archivist_quiz(&mut self) {
+        self.archivist_quiz = Some(ArchivistQuizGame {
+            question_index: 0,
+            selected_option: 0,
+            score: 0,
+            answered: false,
+            passed: false,
+            failed: false,
+        });
+        self.status_message =
+            "Архивариус открыл викторину. Выберите ответ стрелками и подтвердите Enter."
+                .to_string();
+    }
+
+    fn complete_archivist_quiz(&mut self) {
+        let first_win = !self.progress.is_archivist_quiz_completed();
+        self.progress
+            .apply_update(ProgressUpdate::ArchivistQuizCompleted);
+        if first_win {
+            self.pending_progress_update = Some(ProgressUpdate::ArchivistQuizCompleted);
+            self.status_message =
+                "Викторина пройдена. Тель выдал 25 золота и предмет «Печать архивариуса»."
+                    .to_string();
+        } else {
+            self.status_message =
+                "Викторина снова пройдена. Награда уже была получена, но память у вас крепкая."
+                    .to_string();
+        }
+    }
+
     fn handle_mechanic_training_input(&mut self) {
         let Some(game) = &mut self.mechanic_training else {
             return;
@@ -473,6 +556,79 @@ impl TownScene {
                 }
                 break;
             }
+        }
+    }
+
+    fn handle_archivist_quiz_input(&mut self) {
+        let Some(quiz) = &mut self.archivist_quiz else {
+            return;
+        };
+
+        if is_key_pressed(KeyCode::Escape) {
+            self.archivist_quiz = None;
+            self.status_message =
+                "Викторина закрыта. Если захотите вернуться, подойдите к Телю и нажмите Q."
+                    .to_string();
+            return;
+        }
+
+        if quiz.passed || quiz.failed {
+            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                self.archivist_quiz = None;
+            }
+            return;
+        }
+
+        if quiz.answered {
+            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                if quiz.question_index + 1 >= Self::ARCHIVIST_QUESTIONS.len() {
+                    if quiz.score >= 2 {
+                        quiz.passed = true;
+                        self.complete_archivist_quiz();
+                    } else {
+                        quiz.failed = true;
+                        self.status_message =
+                            "Тель закрывает фолиант: знаний пока недостаточно. Нажмите Q у архивариуса, чтобы начать заново."
+                                .to_string();
+                    }
+                } else {
+                    quiz.question_index += 1;
+                    quiz.selected_option = 0;
+                    quiz.answered = false;
+                    self.status_message = format!(
+                        "Вопрос {} из {}. Смотрите формулировку внимательно.",
+                        quiz.question_index + 1,
+                        Self::ARCHIVIST_QUESTIONS.len()
+                    );
+                }
+            }
+            return;
+        }
+
+        if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+            quiz.selected_option = if quiz.selected_option == 0 {
+                2
+            } else {
+                quiz.selected_option - 1
+            };
+        }
+
+        if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+            quiz.selected_option = (quiz.selected_option + 1) % 3;
+        }
+
+        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            let question = &Self::ARCHIVIST_QUESTIONS[quiz.question_index];
+            if quiz.selected_option == question.correct {
+                quiz.score += 1;
+                self.status_message =
+                    "Ответ принят. Архивариус кивает и открывает следующую карточку.".to_string();
+            } else {
+                self.status_message =
+                    "Ответ неверен. Архивариус отмечает ошибку и всё равно покажет следующий вопрос."
+                        .to_string();
+            }
+            quiz.answered = true;
         }
     }
 
@@ -844,6 +1000,169 @@ impl TownScene {
         );
     }
 
+    fn draw_archivist_quiz_overlay(&self) {
+        let Some(quiz) = &self.archivist_quiz else {
+            return;
+        };
+
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            screen_height(),
+            Color::from_rgba(0, 0, 0, 176),
+        );
+
+        let panel = Rect::new(92.0, 88.0, screen_width() - 184.0, 374.0);
+        draw_rectangle(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            Color::from_rgba(20, 14, 34, 246),
+        );
+        draw_rectangle(
+            panel.x + 10.0,
+            panel.y + 10.0,
+            panel.w - 20.0,
+            panel.h - 20.0,
+            Color::from_rgba(34, 22, 52, 228),
+        );
+        draw_rectangle_lines(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            3.0,
+            Color::from_rgba(210, 170, 255, 220),
+        );
+
+        draw_game_text(
+            "Викторина архивариуса",
+            panel.x + 24.0,
+            panel.y + 34.0,
+            30.0,
+            Color::from_rgba(246, 226, 255, 255),
+        );
+
+        if quiz.passed || quiz.failed {
+            let summary = if quiz.passed {
+                "Тель доволен: память о правилах глубин подтверждена."
+            } else {
+                "Тель закрывает фолиант: знаний пока недостаточно для награды."
+            };
+            draw_wrapped_game_text(
+                summary,
+                panel.x + 24.0,
+                panel.y + 78.0,
+                panel.w - 48.0,
+                22.0,
+                5.0,
+                WHITE,
+            );
+            let result = format!(
+                "Верных ответов: {}/{} | Награда: {}",
+                quiz.score,
+                Self::ARCHIVIST_QUESTIONS.len(),
+                if self.progress.is_archivist_quiz_completed() || quiz.passed {
+                    "уже получена или выдана"
+                } else {
+                    "25 золота + Печать архивариуса"
+                }
+            );
+            draw_wrapped_game_text(
+                &result,
+                panel.x + 24.0,
+                panel.y + 158.0,
+                panel.w - 48.0,
+                18.0,
+                4.0,
+                Color::from_rgba(192, 212, 236, 255),
+            );
+            draw_game_text(
+                "ENTER / SPACE - закрыть, ESC - выйти",
+                panel.x + 24.0,
+                panel.y + panel.h - 24.0,
+                18.0,
+                Color::from_rgba(255, 214, 126, 255),
+            );
+            return;
+        }
+
+        let question = &Self::ARCHIVIST_QUESTIONS[quiz.question_index];
+        let header = format!(
+            "Вопрос {}/{} | Очки: {}",
+            quiz.question_index + 1,
+            Self::ARCHIVIST_QUESTIONS.len(),
+            quiz.score
+        );
+        draw_game_text(
+            &header,
+            panel.x + 24.0,
+            panel.y + 62.0,
+            18.0,
+            Color::from_rgba(132, 214, 255, 255),
+        );
+        draw_wrapped_game_text(
+            question.prompt,
+            panel.x + 24.0,
+            panel.y + 108.0,
+            panel.w - 48.0,
+            24.0,
+            6.0,
+            WHITE,
+        );
+
+        for (index, option) in question.options.iter().enumerate() {
+            let y = panel.y + 188.0 + index as f32 * 58.0;
+            let is_selected = quiz.selected_option == index;
+            let is_correct = quiz.answered && question.correct == index;
+            let is_wrong_choice = quiz.answered && quiz.selected_option == index && !is_correct;
+            let bg = if is_correct {
+                Color::from_rgba(56, 108, 78, 220)
+            } else if is_wrong_choice {
+                Color::from_rgba(120, 52, 66, 220)
+            } else if is_selected {
+                Color::from_rgba(80, 72, 126, 220)
+            } else {
+                Color::from_rgba(42, 40, 66, 190)
+            };
+            draw_rectangle(panel.x + 24.0, y, panel.w - 48.0, 42.0, bg);
+            draw_rectangle_lines(
+                panel.x + 24.0,
+                y,
+                panel.w - 48.0,
+                42.0,
+                2.0,
+                if is_selected {
+                    Color::from_rgba(220, 198, 255, 255)
+                } else {
+                    Color::from_rgba(126, 118, 164, 220)
+                },
+            );
+            let label = format!("{}. {}", index + 1, option);
+            draw_game_text(
+                &label,
+                panel.x + 40.0,
+                y + 26.0,
+                18.0,
+                Color::from_rgba(242, 240, 236, 255),
+            );
+        }
+
+        draw_game_text(
+            if quiz.answered {
+                "ENTER / SPACE - дальше, ESC - выйти"
+            } else {
+                "W/S или ↑/↓ - выбор, ENTER - подтвердить, ESC - выйти"
+            },
+            panel.x + 24.0,
+            panel.y + panel.h - 22.0,
+            17.0,
+            Color::from_rgba(255, 214, 126, 255),
+        );
+    }
+
     fn draw_dialogue_overlay(&self) {
         let Some(dialogue) = &self.active_dialogue else {
             return;
@@ -940,6 +1259,11 @@ impl TownScene {
 
 impl Scene for TownScene {
     fn handle_input(&mut self) {
+        if self.archivist_quiz.is_some() {
+            self.handle_archivist_quiz_input();
+            return;
+        }
+
         if self.mechanic_training.is_some() {
             self.handle_mechanic_training_input();
             return;
@@ -969,6 +1293,9 @@ impl Scene for TownScene {
         if is_key_pressed(KeyCode::Q) && self.is_mechanic_focused() {
             self.start_mechanic_training();
         }
+        if is_key_pressed(KeyCode::Q) && self.is_archivist_focused() {
+            self.start_archivist_quiz();
+        }
 
         if is_key_pressed(KeyCode::Escape) {
             self.next_state = Some(GameState::Menu);
@@ -977,6 +1304,10 @@ impl Scene for TownScene {
 
     fn update(&mut self) {
         self.animation_time += get_frame_time();
+
+        if self.archivist_quiz.is_some() {
+            return;
+        }
 
         if let Some(game) = &mut self.mechanic_training {
             if game.won || game.failed {
@@ -1109,13 +1440,18 @@ impl Scene for TownScene {
             Color::from_rgba(224, 232, 240, 255),
         );
         let inventory_text = format!(
-            "Золото: {} | Предметы: {} | Калибровка Роана: {}",
+            "Золото: {} | Предметы: {} | Роан: {} | Тель: {}",
             self.progress.gold,
             self.progress.item_count(),
             if self.progress.is_mechanic_training_completed() {
                 "пройдена"
             } else {
                 "не пройдена"
+            },
+            if self.progress.is_archivist_quiz_completed() {
+                "викторина пройдена"
+            } else {
+                "викторина не пройдена"
             }
         );
         draw_wrapped_game_text(
@@ -1230,6 +1566,8 @@ impl Scene for TownScene {
                 draw_game_text(
                     if index == 1 {
                         "E - говорить, Q - калибровка"
+                    } else if index == 2 {
+                        "E - говорить, Q - викторина"
                     } else {
                         "E - говорить"
                     },
@@ -1295,6 +1633,7 @@ impl Scene for TownScene {
 
         self.draw_dialogue_overlay();
         self.draw_mechanic_training_overlay();
+        self.draw_archivist_quiz_overlay();
     }
 
     fn get_next_state(&self) -> Option<GameState> {
