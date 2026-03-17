@@ -207,48 +207,111 @@ impl TownScene {
         }
     }
 
+    fn reward_name(npc_index: usize) -> &'static str {
+        match npc_index {
+            0 => "Талисман старосты",
+            1 => "Ключ механика",
+            2 => "Печать архивариуса",
+            _ => "награда",
+        }
+    }
+
+    fn reward_summary(&self, npc_index: usize) -> &'static str {
+        match npc_index {
+            0 => "30 золота и Талисман старосты",
+            1 => "35 золота и Ключ механика",
+            2 => "25 золота и Печать архивариуса",
+            _ => "награда неизвестна",
+        }
+    }
+
+    fn npc_activity_completed(&self, npc_index: usize) -> bool {
+        match npc_index {
+            0 => self.progress.is_elder_trial_completed(),
+            1 => self.progress.is_mechanic_training_completed(),
+            2 => self.progress.is_archivist_quiz_completed(),
+            _ => false,
+        }
+    }
+
+    fn expedition_stage_label(&self) -> &'static str {
+        match self.opened_seal_count() {
+            0 => "спуск только начинается",
+            1 | 2 => "деревня ещё слушает глубину",
+            3 | 4 => "середина маршрута уже вскрыта",
+            5 => "до последней печати остался один проход",
+            _ => "цепочка печатей закрыта окончательно",
+        }
+    }
+
     fn npc_preview(&self, npc_index: usize) -> String {
         let target_level = self.current_objective_level();
         let opened = self.opened_seal_count();
 
         match npc_index {
             0 => {
-                if self.progress.is_elder_trial_completed() {
-                    "Староста уже испытал вашу выдержку. Награда получена, но испытание числа можно повторять."
+                if self.progress.is_expedition_complete()
+                    && self.progress.is_elder_trial_completed()
+                {
+                    "Староста видит завершённую экспедицию и напоминает, что Талисман старосты уже у вас. Испытание можно повторять ради выдержки."
                         .to_string()
+                } else if self.progress.is_elder_trial_completed() {
+                    format!(
+                        "Староста уже признал вашу выдержку и выдал {}. Теперь он следит, как вы дожмёте путь к {}.",
+                        Self::reward_name(0),
+                        Self::level_label(target_level)
+                    )
                 } else if opened >= 6 {
-                    "Все печати уже открыты. Староста говорит о том, что путь под городом завершён."
+                    "Все печати уже открыты. Староста больше говорит не о выживании, а о том, что деревня наконец выдохнула."
                         .to_string()
                 } else {
                     format!(
-                        "Староста следит за порядком спуска. Сейчас он говорит о пути в {}.",
+                        "Староста следит за порядком спуска: {}. Сейчас его взгляд направлен в {}.",
+                        self.expedition_stage_label(),
                         Self::level_label(target_level)
                     )
                 }
             }
             1 => {
-                if self.progress.is_mechanic_training_completed() {
-                    "Механик уже доверил вам калибровку. Награда получена, но тренировку можно проходить повторно ради практики."
+                if self.progress.is_expedition_complete()
+                    && self.progress.is_mechanic_training_completed()
+                {
+                    "Роан уже выдал Ключ механика и теперь говорит как мастер после большой смены: можно только шлифовать темп и повторять калибровку."
                         .to_string()
+                } else if self.progress.is_mechanic_training_completed() {
+                    format!(
+                        "Механик уже доверил вам калибровку и выдал {}. Теперь он следит, насколько уверенно вы работаете с рычагами глубже.",
+                        Self::reward_name(1)
+                    )
                 } else if opened == 0 {
                     "Механик объяснит, зачем вообще нужен рычаг после победы, и предложит калибровку на реакцию.".to_string()
                 } else {
                     format!(
-                        "Механик видит {} уже открытых печатей, комментирует работу рычагов и готов дать тренировку на точность.",
-                        opened
+                        "Механик видит {} уже открытых печатей, сверяет ваш темп со своей калибровкой и всё ещё ждёт, когда вы заберёте {}.",
+                        opened,
+                        Self::reward_name(1)
                     )
                 }
             }
             2 => {
-                if self.progress.is_archivist_quiz_completed() {
-                    "Архивариус уже проверил вашу память о правилах глубин. Награда получена, но викторину можно пройти повторно."
+                if self.progress.is_expedition_complete()
+                    && self.progress.is_archivist_quiz_completed()
+                {
+                    "Архивариус уже выдал Печать архивариуса и теперь говорит как летописец завершённого маршрута: можно только перепроверять память и детали."
                         .to_string()
+                } else if self.progress.is_archivist_quiz_completed() {
+                    format!(
+                        "Архивариус уже проверил вашу память и выдал {}. Теперь он комментирует не правила, а нюансы следующей пещеры.",
+                        Self::reward_name(2)
+                    )
                 } else if target_level == 2 {
                     "Архивариус особенно разговорчив перед архивной пещерой и памятью о символах."
                         .to_string()
                 } else {
-                    "Архивариус читает окружение и подсказывает, на что смотреть в текущей пещере."
-                        .to_string()
+                    format!(
+                        "Архивариус читает окружение как документ: сейчас он ждёт, заметите ли вы ритм, ведущий в {}.",
+                        Self::level_label(target_level)
+                    )
                 }
             }
             _ => String::new(),
@@ -270,9 +333,9 @@ impl TownScene {
                     ];
                     lines.push(
                         if self.progress.is_elder_trial_completed() {
-                            "Если хочешь ещё раз проверить терпение, подойди и нажми Q: число старосты снова будет скрыто."
+                            "Талисман старосты уже у тебя. Если хочешь ещё раз проверить терпение, подойди и нажми Q: число снова будет скрыто."
                         } else {
-                            "Если хочешь испытание не на ловкость, а на выдержку, подойди и нажми Q. Я дам тебе число на поиск."
+                            "Ты закрыл путь под городом, но ещё не прошёл моё личное испытание. Подойди и нажми Q: я всё ещё дам тебе число на поиск."
                         }
                         .to_string(),
                     );
@@ -288,12 +351,24 @@ impl TownScene {
                             "Уже вскрыто печатей: {} из 6. Обелиски у шахты показывают это честнее любых слов.",
                             opened
                         ),
+                        format!(
+                            "Сейчас в деревне состояние простое: {}.",
+                            self.expedition_stage_label()
+                        ),
                     ];
                     lines.push(
                         if self.progress.is_elder_trial_completed() {
-                            "Ты уже прошёл моё испытание на выдержку. Но если хочешь повторить, подойди и нажми Q."
+                            "Ты уже прошёл моё испытание на выдержку и получил Талисман старосты. Но если хочешь повторить, подойди и нажми Q."
                         } else {
                             "Перед спуском могу проверить не руки, а голову. Подойди и нажми Q: попробуешь угадать скрытое число за несколько попыток."
+                        }
+                        .to_string(),
+                    );
+                    lines.push(
+                        if self.progress.is_elder_trial_completed() {
+                            "Награда за мою проверку уже твоя, значит теперь я смотрю только на то, выдержишь ли ты оставшийся маршрут."
+                        } else {
+                            "Моя награда простая: 30 золота и Талисман старосты. Но мне важнее, чтобы ты шёл вниз без суеты."
                         }
                         .to_string(),
                     );
@@ -315,6 +390,14 @@ impl TownScene {
                 lines.push(
                     "Если печать уже ломал раньше, алтарь тебя узнаёт. На повторном заходе в головоломку нажми L, и механизм позволит не тратить время на старое решение."
                         .to_string(),
+                );
+                lines.push(
+                    if self.progress.is_mechanic_training_completed() {
+                        "Ты уже забрал Ключ механика и 35 золота. Значит, я буду говорить с тобой уже не как с новичком, а как с человеком, который понимает ритм машины."
+                    } else {
+                        "Моя тренировка не про сюжет, а про дисциплину. Если пройдёшь её, получишь 35 золота и Ключ механика."
+                    }
+                    .to_string(),
                 );
                 if self.progress.is_mechanic_training_completed() {
                     lines.push(
@@ -342,6 +425,14 @@ impl TownScene {
                         Self::level_label(target_level)
                     ));
                 }
+                lines.push(
+                    if self.progress.is_archivist_quiz_completed() {
+                        "Печать архивариуса уже у тебя. Значит, дальше я оцениваю не память о правилах, а то, замечаешь ли ты язык самих комнат."
+                    } else {
+                        "Если хочешь мою печать и 25 золота, придётся доказать, что ты запомнил правила глубин, а не просто наугад двигаешься вперёд."
+                    }
+                    .to_string(),
+                );
                 lines.push(
                     "Если видишь, что окно говорит с тобой как тёплая рамка, это житель. Если как тяжёлая каменная плита, это сама печать."
                         .to_string(),
@@ -1832,7 +1923,7 @@ impl Scene for TownScene {
         self.draw_player();
 
         let focus = self.focus_target();
-        let panel = Rect::new(486.0, 286.0, 290.0, 174.0);
+        let panel = Rect::new(486.0, 286.0, 290.0, 188.0);
         draw_rectangle(
             panel.x,
             panel.y,
@@ -1931,6 +2022,30 @@ impl Scene for TownScene {
                     LIGHTGRAY,
                 );
                 draw_game_text(
+                    if self.npc_activity_completed(index) {
+                        "Награда уже получена"
+                    } else {
+                        "Награда ещё не получена"
+                    },
+                    panel.x + 18.0,
+                    panel.y + 134.0,
+                    15.0,
+                    if self.npc_activity_completed(index) {
+                        Color::from_rgba(158, 238, 176, 255)
+                    } else {
+                        Color::from_rgba(255, 204, 126, 255)
+                    },
+                );
+                draw_wrapped_game_text(
+                    self.reward_summary(index),
+                    panel.x + 18.0,
+                    panel.y + 150.0,
+                    panel.w - 36.0,
+                    14.0,
+                    3.0,
+                    Color::from_rgba(180, 198, 218, 255),
+                );
+                draw_game_text(
                     if index == 0 {
                         "E - говорить, Q - испытание"
                     } else if index == 1 {
@@ -1941,8 +2056,8 @@ impl Scene for TownScene {
                         "E - говорить"
                     },
                     panel.x + 18.0,
-                    panel.y + 154.0,
-                    16.0,
+                    panel.y + 172.0,
+                    14.0,
                     Color::from_rgba(255, 214, 126, 255),
                 );
             }
