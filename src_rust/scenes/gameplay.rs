@@ -129,6 +129,30 @@ impl GameplayScene {
         }
     }
 
+    fn chapter_label(&self) -> &'static str {
+        match self.level {
+            1 => "CHAPTER // SILENT WALLS",
+            2 => "CHAPTER // ARCHIVE VEIN",
+            3 => "CHAPTER // CLOCKWORK GROTTO",
+            4 => "CHAPTER // MIRROR ECHO",
+            5 => "CHAPTER // CRYSTAL FAULT",
+            6 => "CHAPTER // CORE BELOW",
+            _ => "CHAPTER // CAVERN",
+        }
+    }
+
+    fn level_accent(&self) -> Color {
+        match self.level {
+            1 => Color::from_rgba(120, 204, 255, 255),
+            2 => Color::from_rgba(255, 214, 124, 255),
+            3 => Color::from_rgba(194, 156, 255, 255),
+            4 => Color::from_rgba(255, 146, 192, 255),
+            5 => Color::from_rgba(126, 240, 198, 255),
+            6 => Color::from_rgba(255, 118, 118, 255),
+            _ => Color::from_rgba(196, 206, 224, 255),
+        }
+    }
+
     fn current_stage_name(&self) -> &'static str {
         match (self.level, self.current_stage) {
             (2, 0) => "Первая печать",
@@ -299,11 +323,24 @@ impl GameplayScene {
     }
 
     fn draw_cave_background(&self) {
+        let accent = self.level_accent();
         for i in 0..screen_height() as i32 {
             let t = i as f32 / screen_height();
-            let color = Color::new(0.02 + t * 0.07, 0.04 + t * 0.08, 0.07 + t * 0.09, 1.0);
+            let color = Color::new(
+                0.02 + t * (0.04 + accent.r * 0.03),
+                0.03 + t * (0.06 + accent.g * 0.03),
+                0.05 + t * (0.08 + accent.b * 0.04),
+                1.0,
+            );
             draw_line(0.0, i as f32, screen_width(), i as f32, 1.0, color);
         }
+
+        draw_circle(
+            640.0,
+            108.0,
+            120.0,
+            Color::new(accent.r, accent.g, accent.b, 0.09),
+        );
 
         for i in 0..8 {
             let x = i as f32 * 110.0 - 40.0;
@@ -333,6 +370,14 @@ impl GameplayScene {
             vec2(820.0, 520.0),
             Color::from_rgba(18, 28, 40, 182),
         );
+        if self.level >= 4 {
+            draw_triangle(
+                vec2(500.0, 520.0),
+                vec2(720.0, 176.0),
+                vec2(880.0, 520.0),
+                Color::from_rgba(12, 22, 34, 210),
+            );
+        }
 
         draw_rectangle(
             0.0,
@@ -394,7 +439,7 @@ impl GameplayScene {
                 crystal_x + 18.0,
                 460.0,
                 14.0 + pulse * 6.0,
-                Color::from_rgba(110, 220, 255, (20.0 + pulse * 40.0) as u8),
+                Color::new(accent.r, accent.g, accent.b, 0.08 + pulse * 0.16),
             );
         }
     }
@@ -639,18 +684,26 @@ impl GameplayScene {
     }
 
     fn draw_world_ui(&self) {
+        let accent = self.level_accent();
         let title = format!("{}  |  {}", self.level_title(), self.current_stage_name());
+        draw_game_text(
+            self.chapter_label(),
+            18.0,
+            18.0,
+            16.0,
+            Color::from_rgba(255, 210, 132, 255),
+        );
         draw_game_text(
             &title,
             18.0,
-            34.0,
+            42.0,
             28.0,
             Color::from_rgba(255, 232, 180, 255),
         );
         draw_wrapped_game_text(
             self.level_goal(),
             18.0,
-            62.0,
+            70.0,
             screen_width() - 220.0,
             17.0,
             3.0,
@@ -670,7 +723,7 @@ impl GameplayScene {
         draw_game_text(
             context_hint,
             screen_width() - hint_width - 18.0,
-            34.0,
+            26.0,
             16.0,
             Color::from_rgba(152, 172, 194, 255),
         );
@@ -680,15 +733,22 @@ impl GameplayScene {
             518.0,
             screen_width() - 36.0,
             60.0,
-            Color::from_rgba(4, 10, 18, 196),
+            Color::from_rgba(4, 10, 18, 218),
+        );
+        draw_rectangle(
+            26.0,
+            526.0,
+            screen_width() - 52.0,
+            44.0,
+            Color::new(accent.r * 0.18, accent.g * 0.12, accent.b * 0.12, 0.26),
         );
         draw_rectangle_lines(
             18.0,
             518.0,
             screen_width() - 36.0,
             60.0,
-            2.0,
-            Color::from_rgba(82, 144, 194, 126),
+            3.0,
+            Color::new(accent.r, accent.g, accent.b, 0.44),
         );
         draw_wrapped_game_text(
             &self.status_message,
@@ -811,6 +871,7 @@ impl GameplayScene {
     }
 
     fn draw_puzzle_shell(&self) {
+        let accent = self.level_accent();
         draw_rectangle(
             0.0,
             0.0,
@@ -840,21 +901,28 @@ impl GameplayScene {
             top_panel.w,
             top_panel.h,
             3.0,
-            Color::from_rgba(198, 170, 114, 220),
+            Color::new(accent.r, accent.g, accent.b, 0.86),
         );
 
         let title = format!("{} | {}", self.level_title(), self.current_stage_name());
         draw_game_text(
+            self.chapter_label(),
+            top_panel.x + 18.0,
+            top_panel.y + 18.0,
+            15.0,
+            Color::from_rgba(255, 210, 132, 255),
+        );
+        draw_game_text(
             &title,
             top_panel.x + 18.0,
-            top_panel.y + 30.0,
+            top_panel.y + 42.0,
             24.0,
             Color::from_rgba(255, 230, 182, 255),
         );
         draw_wrapped_game_text(
             self.level_goal(),
             top_panel.x + 18.0,
-            top_panel.y + 56.0,
+            top_panel.y + 64.0,
             top_panel.w - 36.0,
             16.0,
             3.0,
@@ -875,7 +943,7 @@ impl GameplayScene {
             frame.w,
             frame.h,
             2.0,
-            Color::from_rgba(86, 136, 176, 120),
+            Color::new(accent.r, accent.g, accent.b, 0.36),
         );
 
         let footer = Rect::new(14.0, screen_height() - 76.0, screen_width() - 28.0, 62.0);
@@ -892,7 +960,7 @@ impl GameplayScene {
             footer.w,
             footer.h,
             2.0,
-            Color::from_rgba(90, 146, 196, 126),
+            Color::new(accent.r, accent.g, accent.b, 0.46),
         );
 
         let footer_text = if self.level_progress.completed {
@@ -922,6 +990,8 @@ impl GameplayScene {
         if !self.show_instruction_overlay {
             return;
         }
+
+        let accent = self.level_accent();
 
         draw_rectangle(
             0.0,
@@ -958,7 +1028,12 @@ impl GameplayScene {
             panel.w,
             panel.h,
             3.0,
-            Color::from_rgba(206, 184, 132, 255),
+            Color::new(
+                accent.r * 0.9 + 0.1,
+                accent.g * 0.8 + 0.1,
+                accent.b * 0.7 + 0.2,
+                1.0,
+            ),
         );
 
         for (x, y) in [
@@ -978,10 +1053,17 @@ impl GameplayScene {
             28.0,
             Color::from_rgba(255, 232, 182, 255),
         );
+        draw_game_text(
+            self.chapter_label(),
+            panel.x + 22.0,
+            panel.y + 54.0,
+            14.0,
+            Color::from_rgba(126, 92, 66, 255),
+        );
         draw_wrapped_game_text(
             self.instruction_text(),
             panel.x + 22.0,
-            panel.y + 72.0,
+            panel.y + 84.0,
             panel.w - 44.0,
             20.0,
             5.0,
