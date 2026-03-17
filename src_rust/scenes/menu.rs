@@ -47,9 +47,10 @@ impl MenuScene {
 
     fn draw_gradient_background(&self) {
         let colors = [
-            Color::from_rgba(12, 20, 36, 255),
-            Color::from_rgba(28, 18, 48, 255),
-            Color::from_rgba(48, 34, 68, 255),
+            Color::from_rgba(2, 4, 10, 255),
+            Color::from_rgba(14, 8, 22, 255),
+            Color::from_rgba(34, 10, 20, 255),
+            Color::from_rgba(10, 4, 10, 255),
         ];
 
         for i in 0..screen_height() as i32 {
@@ -67,46 +68,168 @@ impl MenuScene {
 
             draw_line(0.0, i as f32, screen_width(), i as f32, 1.0, color);
         }
+
+        for stripe in 0..26 {
+            let y = 12.0 + stripe as f32 * 22.0;
+            draw_rectangle(
+                0.0,
+                y,
+                screen_width(),
+                1.0,
+                Color::from_rgba(255, 255, 255, 8),
+            );
+        }
+
+        draw_circle(
+            screen_width() * 0.77 + 14.0,
+            108.0,
+            132.0,
+            Color::from_rgba(214, 36, 72, 30),
+        );
+        draw_circle(
+            screen_width() * 0.77,
+            118.0,
+            78.0,
+            Color::from_rgba(252, 194, 108, 24),
+        );
+        draw_circle(
+            screen_width() * 0.77,
+            118.0,
+            40.0,
+            Color::from_rgba(255, 238, 196, 42),
+        );
     }
 
     fn draw_particles(&self) {
-        for p in &self.particles {
+        for (index, p) in self.particles.iter().enumerate() {
             let alpha = p.life / 100.0;
-            let color = Color::new(1.0, 1.0, 0.4, alpha);
+            let tint = if index % 3 == 0 {
+                Color::new(1.0, 0.34, 0.46, alpha * 0.75)
+            } else if index % 3 == 1 {
+                Color::new(1.0, 0.86, 0.48, alpha * 0.65)
+            } else {
+                Color::new(0.52, 0.82, 1.0, alpha * 0.55)
+            };
+            let color = tint;
             draw_circle(p.x, p.y, p.size, color);
         }
     }
 
     fn draw_backdrop(&self) {
-        draw_circle(640.0, 110.0, 58.0, Color::from_rgba(255, 228, 160, 55));
-        draw_circle(640.0, 110.0, 42.0, Color::from_rgba(255, 228, 160, 185));
+        let pulse = (self.animation_time * 1.2).sin() * 0.5 + 0.5;
+        draw_circle(
+            640.0,
+            108.0,
+            96.0 + pulse * 14.0,
+            Color::from_rgba(220, 48, 82, (26.0 + pulse * 16.0) as u8),
+        );
+        draw_circle(640.0, 108.0, 54.0, Color::from_rgba(255, 222, 146, 172));
+        draw_circle(640.0, 108.0, 26.0, Color::from_rgba(255, 244, 210, 255));
 
-        for i in 0..6 {
-            let width = 110.0 + i as f32 * 18.0;
-            let height = 90.0 + (i % 3) as f32 * 30.0;
-            let x = 30.0 + i as f32 * 120.0;
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            154.0,
+            Color::from_rgba(0, 0, 0, 74),
+        );
+        draw_rectangle(
+            0.0,
+            screen_height() - 128.0,
+            screen_width(),
+            128.0,
+            Color::from_rgba(8, 0, 8, 92),
+        );
+
+        for i in 0..7 {
+            let width = 92.0 + i as f32 * 26.0;
+            let height = 110.0 + (i % 3) as f32 * 38.0;
+            let x = -10.0 + i as f32 * 122.0;
             let y = 420.0 - height;
-            draw_rectangle(x, y, width, height, Color::from_rgba(22, 28, 42, 210));
+            draw_rectangle(x, y, width, height, Color::from_rgba(10, 12, 20, 228));
             draw_rectangle(
                 x + width * 0.3,
-                y - 25.0,
-                24.0,
-                25.0,
-                Color::from_rgba(28, 34, 50, 220),
+                y - 38.0,
+                26.0,
+                38.0,
+                Color::from_rgba(14, 18, 28, 236),
+            );
+            draw_rectangle(
+                x + width * 0.62,
+                y - 28.0,
+                18.0,
+                28.0,
+                Color::from_rgba(12, 14, 24, 236),
             );
         }
 
         draw_triangle(
             vec2(0.0, 520.0),
-            vec2(260.0, 290.0),
+            vec2(236.0, 248.0),
             vec2(460.0, 520.0),
-            Color::from_rgba(28, 42, 54, 220),
+            Color::from_rgba(16, 24, 34, 228),
         );
         draw_triangle(
             vec2(300.0, 520.0),
-            vec2(560.0, 250.0),
+            vec2(554.0, 206.0),
             vec2(800.0, 520.0),
-            Color::from_rgba(24, 34, 46, 220),
+            Color::from_rgba(12, 18, 28, 232),
+        );
+        draw_triangle(
+            vec2(520.0, 520.0),
+            vec2(734.0, 250.0),
+            vec2(840.0, 520.0),
+            Color::from_rgba(16, 18, 30, 234),
+        );
+
+        let frame = Rect::new(58.0, 54.0, screen_width() - 116.0, screen_height() - 106.0);
+        draw_rectangle_lines(
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            2.0,
+            Color::from_rgba(122, 82, 90, 144),
+        );
+    }
+
+    fn draw_chapter_card(&self) {
+        let chapter = if self.progress.is_expedition_complete() {
+            "CHAPTER // FINALE"
+        } else if self.has_progress() {
+            "CHAPTER // RESUME"
+        } else {
+            "CHAPTER // DESCENT"
+        };
+        let card = Rect::new(78.0, 66.0, 214.0, 54.0);
+        draw_rectangle(
+            card.x,
+            card.y,
+            card.w,
+            card.h,
+            Color::from_rgba(14, 10, 16, 228),
+        );
+        draw_rectangle_lines(
+            card.x,
+            card.y,
+            card.w,
+            card.h,
+            2.0,
+            Color::from_rgba(220, 92, 118, 200),
+        );
+        draw_game_text(
+            chapter,
+            card.x + 18.0,
+            card.y + 21.0,
+            18.0,
+            Color::from_rgba(255, 216, 154, 255),
+        );
+        draw_game_text(
+            "ПЕЧАТИ ЭЛЬДОРАДО",
+            card.x + 18.0,
+            card.y + 40.0,
+            14.0,
+            Color::from_rgba(198, 204, 224, 255),
         );
     }
 
@@ -229,62 +352,79 @@ impl Scene for MenuScene {
         self.draw_gradient_background();
         self.draw_particles();
         self.draw_backdrop();
+        self.draw_chapter_card();
 
-        let title = "ELDORADO PUZZLE";
-        let title_size = 50.0;
+        let title = "ELDORADO";
+        let title_size = 68.0;
         let title_width = measure_game_text(title, None, title_size as u16, 1.0).width;
 
         draw_game_text(
             title,
             screen_width() / 2.0 - title_width / 2.0 + 3.0,
-            138.0,
+            152.0,
             title_size,
-            Color::from_rgba(20, 10, 30, 255),
+            Color::from_rgba(10, 0, 10, 255),
         );
         draw_game_text(
             title,
             screen_width() / 2.0 - title_width / 2.0,
-            135.0,
+            148.0,
             title_size,
-            Color::from_rgba(255, 215, 0, 255),
+            Color::from_rgba(255, 240, 206, 255),
+        );
+        let subtitle_title = "DESCENT OF SIX SEALS";
+        let sub_width = measure_game_text(subtitle_title, None, 24, 1.0).width;
+        draw_game_text(
+            subtitle_title,
+            screen_width() / 2.0 - sub_width / 2.0,
+            184.0,
+            24.0,
+            Color::from_rgba(230, 110, 126, 255),
         );
 
-        let subtitle = "Город шести печатей и древних механизмов";
-        let subtitle_size = 24.0;
+        let subtitle = "Шесть печатей держат город над бездной";
+        let subtitle_size = 22.0;
         let subtitle_width = measure_game_text(subtitle, None, subtitle_size as u16, 1.0).width;
         draw_game_text(
             subtitle,
             screen_width() / 2.0 - subtitle_width / 2.0,
-            170.0,
+            214.0,
             subtitle_size,
-            Color::from_rgba(200, 180, 150, 255),
+            Color::from_rgba(214, 214, 222, 255),
         );
 
         draw_wrapped_game_text(
-            "Каждый пройденный уровень открывает путь к следующему. Повторно пройденные печати можно отключать рычагом.",
-            65.0,
-            210.0,
-            screen_width() - 130.0,
-            20.0,
+            "Спуск начинается в тихой деревне и уходит всё глубже. Каждый решённый зал открывает следующий, а старые механизмы можно обойти рычагом.",
+            118.0,
+            246.0,
+            screen_width() - 236.0,
+            18.0,
             4.0,
-            Color::from_rgba(184, 203, 228, 255),
+            Color::from_rgba(204, 210, 226, 255),
         );
 
-        let progress_panel = Rect::new(88.0, 236.0, screen_width() - 176.0, 50.0);
+        let progress_panel = Rect::new(92.0, 284.0, screen_width() - 184.0, 72.0);
         draw_rectangle(
             progress_panel.x,
             progress_panel.y,
             progress_panel.w,
             progress_panel.h,
-            Color::from_rgba(12, 18, 30, 170),
+            Color::from_rgba(8, 10, 18, 228),
+        );
+        draw_rectangle(
+            progress_panel.x + 8.0,
+            progress_panel.y + 8.0,
+            progress_panel.w - 16.0,
+            progress_panel.h - 16.0,
+            Color::from_rgba(24, 10, 18, 190),
         );
         draw_rectangle_lines(
             progress_panel.x,
             progress_panel.y,
             progress_panel.w,
             progress_panel.h,
-            2.0,
-            Color::from_rgba(112, 170, 214, 126),
+            3.0,
+            Color::from_rgba(196, 88, 110, 186),
         );
         let progress_text = format!(
             "Открыто печатей: {}/6 | Решено головоломок: {}/6 | Текущая цель: {}",
@@ -295,11 +435,11 @@ impl Scene for MenuScene {
         draw_wrapped_game_text(
             &progress_text,
             progress_panel.x + 16.0,
-            progress_panel.y + 20.0,
+            progress_panel.y + 30.0,
             progress_panel.w - 32.0,
             17.0,
             3.0,
-            Color::from_rgba(226, 232, 240, 255),
+            Color::from_rgba(232, 232, 236, 255),
         );
         let save_badge = if self.has_progress() {
             "Сохранение найдено"
@@ -310,12 +450,12 @@ impl Scene for MenuScene {
         draw_game_text(
             save_badge,
             progress_panel.x + progress_panel.w - badge_width - 18.0,
-            progress_panel.y - 6.0,
+            progress_panel.y - 8.0,
             16.0,
             if self.has_progress() {
-                Color::from_rgba(132, 220, 255, 255)
-            } else {
                 Color::from_rgba(255, 214, 126, 255)
+            } else {
+                Color::from_rgba(220, 104, 128, 255)
             },
         );
         if self.progress.is_expedition_complete() {
@@ -324,66 +464,72 @@ impl Scene for MenuScene {
                 progress_panel.x + 16.0,
                 progress_panel.y - 6.0,
                 16.0,
-                Color::from_rgba(182, 236, 166, 255),
+                Color::from_rgba(164, 246, 182, 255),
             );
         }
 
-        let menu_start_y = 316.0;
-        let option_height = 70.0;
+        let menu_start_y = 410.0;
+        let option_height = 68.0;
 
         for (i, option) in self.options.iter().enumerate() {
             let y = menu_start_y + i as f32 * option_height;
             let is_selected = i == self.selected_option;
             let bg_color = if is_selected {
-                Color::from_rgba(80, 100, 140, 200)
+                Color::from_rgba(110, 26, 44, 242)
             } else {
-                Color::from_rgba(40, 50, 70, 150)
+                Color::from_rgba(16, 18, 28, 208)
             };
 
-            let rect_width = 420.0;
-            let rect_x = screen_width() / 2.0 - rect_width / 2.0;
+            let rect_width = 520.0;
+            let rect_x = 112.0;
 
-            draw_rectangle(rect_x, y - 35.0, rect_width, 56.0, bg_color);
+            draw_rectangle(rect_x, y - 38.0, rect_width, 60.0, bg_color);
+            draw_rectangle(
+                rect_x + 8.0,
+                y - 30.0,
+                rect_width - 16.0,
+                44.0,
+                if is_selected {
+                    Color::from_rgba(136, 44, 64, 196)
+                } else {
+                    Color::from_rgba(22, 24, 36, 154)
+                },
+            );
 
             let border_color = if is_selected {
-                Color::from_rgba(150, 200, 255, 255)
+                Color::from_rgba(255, 222, 176, 255)
             } else {
-                Color::from_rgba(100, 120, 150, 255)
+                Color::from_rgba(116, 90, 104, 220)
             };
-            draw_rectangle_lines(rect_x, y - 35.0, rect_width, 56.0, 2.0, border_color);
+            draw_rectangle_lines(rect_x, y - 38.0, rect_width, 60.0, 2.0, border_color);
 
-            let text_size = if is_selected { 35.0 } else { 30.0 };
+            let text_size = if is_selected { 34.0 } else { 29.0 };
             let text_color = if is_selected {
-                Color::from_rgba(255, 255, 255, 255)
+                Color::from_rgba(255, 244, 228, 255)
             } else {
-                Color::from_rgba(180, 180, 180, 255)
+                Color::from_rgba(194, 188, 194, 255)
             };
 
-            let text_width = measure_game_text(option, None, text_size as u16, 1.0).width;
-            draw_game_text(
-                option,
-                screen_width() / 2.0 - text_width / 2.0,
-                y - 3.0,
-                text_size,
-                text_color,
-            );
-            draw_game_text(
+            draw_game_text(option, rect_x + 26.0, y - 2.0, text_size, text_color);
+            draw_wrapped_game_text(
                 self.option_hint(i),
-                rect_x + 18.0,
-                y + 18.0,
-                16.0,
+                rect_x + 204.0,
+                y + 1.0,
+                rect_width - 236.0,
+                15.0,
+                3.0,
                 Color::from_rgba(185, 198, 215, 255),
             );
 
             if is_selected {
-                let pulse = (self.animation_time * 3.0).sin() * 0.3 + 0.7;
-                let indicator_color = Color::new(1.0, 1.0, 0.4, pulse);
-                draw_game_text("►", rect_x - 30.0, y, 30.0, indicator_color);
-                draw_game_text("◄", rect_x + rect_width + 10.0, y, 30.0, indicator_color);
+                let pulse = (self.animation_time * 4.4).sin() * 0.5 + 0.5;
+                let indicator_color = Color::new(1.0, 0.88, 0.62, 0.72 + pulse * 0.28);
+                draw_rectangle(rect_x - 16.0, y - 38.0, 6.0, 60.0, indicator_color);
+                draw_game_text(">", rect_x - 42.0, y + 1.0, 28.0, indicator_color);
             }
         }
 
-        let hint = "↑↓ - выбор, ENTER - подтвердить";
+        let hint = "↑↓ - выбор  |  ENTER - подтвердить  |  ESC - назад";
         let hint_size = 18.0;
         let hint_width = measure_game_text(hint, None, hint_size as u16, 1.0).width;
         draw_game_text(
@@ -391,7 +537,7 @@ impl Scene for MenuScene {
             screen_width() / 2.0 - hint_width / 2.0,
             screen_height() - 30.0,
             hint_size,
-            Color::from_rgba(150, 150, 150, 255),
+            Color::from_rgba(178, 160, 162, 255),
         );
 
         draw_game_text(
@@ -408,7 +554,7 @@ impl Scene for MenuScene {
                 0.0,
                 screen_width(),
                 screen_height(),
-                Color::from_rgba(2, 4, 10, 242),
+                Color::from_rgba(0, 0, 0, 236),
             );
 
             let panel = Rect::new(90.0, 90.0, screen_width() - 180.0, screen_height() - 180.0);
@@ -417,7 +563,14 @@ impl Scene for MenuScene {
                 panel.y,
                 panel.w,
                 panel.h,
-                Color::from_rgba(10, 16, 30, 255),
+                Color::from_rgba(12, 10, 20, 255),
+            );
+            draw_rectangle(
+                panel.x + 10.0,
+                panel.y + 10.0,
+                panel.w - 20.0,
+                panel.h - 20.0,
+                Color::from_rgba(30, 16, 22, 188),
             );
             draw_rectangle_lines(
                 panel.x,
@@ -425,7 +578,7 @@ impl Scene for MenuScene {
                 panel.w,
                 panel.h,
                 3.0,
-                Color::from_rgba(255, 214, 126, 255),
+                Color::from_rgba(220, 92, 118, 255),
             );
 
             draw_game_text(
@@ -433,7 +586,7 @@ impl Scene for MenuScene {
                 panel.x + 26.0,
                 panel.y + 44.0,
                 34.0,
-                Color::from_rgba(255, 230, 180, 255),
+                Color::from_rgba(255, 234, 190, 255),
             );
             draw_wrapped_game_text(
                 "Под Элдорадо скрыт механизм из шести печатей. Каждая печать удерживает один участок города от падения.",
@@ -442,7 +595,7 @@ impl Scene for MenuScene {
                 panel.w - 52.0,
                 24.0,
                 6.0,
-                WHITE,
+                Color::from_rgba(246, 242, 238, 255),
             );
             draw_wrapped_game_text(
                 "Чтобы добраться до ядра хранилища, придётся пройти все испытания по порядку: лабиринт, архив слов, зал памяти, галерею пар, мост над бездной и финальную комнату артефактов.",
@@ -451,7 +604,7 @@ impl Scene for MenuScene {
                 panel.w - 52.0,
                 22.0,
                 6.0,
-                LIGHTGRAY,
+                Color::from_rgba(204, 208, 218, 255),
             );
             draw_wrapped_game_text(
                 "После первой победы на уровне появляется рычаг, который отключает механизм для повторных посещений.",
@@ -460,14 +613,14 @@ impl Scene for MenuScene {
                 panel.w - 52.0,
                 22.0,
                 6.0,
-                LIGHTGRAY,
+                Color::from_rgba(204, 208, 218, 255),
             );
             draw_game_text(
                 "ENTER или ESC - закрыть",
                 panel.x + 26.0,
                 panel.y + panel.h - 28.0,
                 20.0,
-                Color::from_rgba(120, 210, 255, 255),
+                Color::from_rgba(255, 214, 126, 255),
             );
         }
 
@@ -477,7 +630,7 @@ impl Scene for MenuScene {
                 0.0,
                 screen_width(),
                 screen_height(),
-                Color::from_rgba(0, 0, 0, 190),
+                Color::from_rgba(0, 0, 0, 218),
             );
             let panel = Rect::new(150.0, 180.0, screen_width() - 300.0, 190.0);
             draw_rectangle(
@@ -485,7 +638,14 @@ impl Scene for MenuScene {
                 panel.y,
                 panel.w,
                 panel.h,
-                Color::from_rgba(22, 16, 18, 250),
+                Color::from_rgba(18, 8, 12, 250),
+            );
+            draw_rectangle(
+                panel.x + 10.0,
+                panel.y + 10.0,
+                panel.w - 20.0,
+                panel.h - 20.0,
+                Color::from_rgba(44, 16, 22, 188),
             );
             draw_rectangle_lines(
                 panel.x,
@@ -493,7 +653,7 @@ impl Scene for MenuScene {
                 panel.w,
                 panel.h,
                 3.0,
-                Color::from_rgba(220, 110, 90, 255),
+                Color::from_rgba(232, 114, 96, 255),
             );
             draw_game_text(
                 "Новая игра",

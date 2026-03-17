@@ -17,6 +17,7 @@ pub enum ProgressUpdate {
     LeverPulled { level: u8, pulled: bool },
     MechanicTrainingCompleted,
     ArchivistQuizCompleted,
+    ElderTrialCompleted,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +44,8 @@ pub struct GameProgress {
     pub mechanic_training_completed: bool,
     #[serde(default)]
     pub archivist_quiz_completed: bool,
+    #[serde(default)]
+    pub elder_trial_completed: bool,
 }
 
 impl Default for GameProgress {
@@ -58,6 +61,7 @@ impl Default for GameProgress {
             items: Vec::new(),
             mechanic_training_completed: false,
             archivist_quiz_completed: false,
+            elder_trial_completed: false,
         }
     }
 }
@@ -141,6 +145,10 @@ impl GameProgress {
         self.archivist_quiz_completed
     }
 
+    pub fn is_elder_trial_completed(&self) -> bool {
+        self.elder_trial_completed
+    }
+
     pub fn complete_level(&mut self, level: u8) {
         if let Some(progress) = self.levels.get_mut(&level) {
             progress.completed = true;
@@ -175,6 +183,16 @@ impl GameProgress {
                     self.archivist_quiz_completed = true;
                     self.gold += 25;
                     let reward = "Печать архивариуса".to_string();
+                    if !self.items.iter().any(|item| item == &reward) {
+                        self.items.push(reward);
+                    }
+                }
+            }
+            ProgressUpdate::ElderTrialCompleted => {
+                if !self.elder_trial_completed {
+                    self.elder_trial_completed = true;
+                    self.gold += 30;
+                    let reward = "Талисман старосты".to_string();
                     if !self.items.iter().any(|item| item == &reward) {
                         self.items.push(reward);
                     }
@@ -278,5 +296,18 @@ mod tests {
         assert_eq!(progress.gold, 125);
         assert_eq!(progress.items.len(), 1);
         assert_eq!(progress.items[0], "Печать архивариуса");
+    }
+
+    #[test]
+    fn elder_trial_reward_is_applied_only_once() {
+        let mut progress = GameProgress::default();
+
+        progress.apply_update(super::ProgressUpdate::ElderTrialCompleted);
+        progress.apply_update(super::ProgressUpdate::ElderTrialCompleted);
+
+        assert!(progress.is_elder_trial_completed());
+        assert_eq!(progress.gold, 130);
+        assert_eq!(progress.items.len(), 1);
+        assert_eq!(progress.items[0], "Талисман старосты");
     }
 }

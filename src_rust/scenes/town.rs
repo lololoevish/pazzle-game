@@ -1,3 +1,4 @@
+use ::rand::{thread_rng, Rng};
 use macroquad::prelude::*;
 
 use crate::game_state::{GameProgress, GameState, ProgressUpdate};
@@ -55,6 +56,15 @@ struct QuizQuestion {
     correct: usize,
 }
 
+struct ElderTrialGame {
+    secret: i32,
+    guess: i32,
+    attempts_left: i32,
+    resolved: bool,
+    won: bool,
+    hint: String,
+}
+
 enum FocusTarget {
     Entrance,
     Npc(usize),
@@ -73,6 +83,7 @@ pub struct TownScene {
     active_dialogue: Option<ActiveDialogue>,
     mechanic_training: Option<MechanicTrainingGame>,
     archivist_quiz: Option<ArchivistQuizGame>,
+    elder_trial: Option<ElderTrialGame>,
     player_facing: Facing,
 }
 
@@ -147,6 +158,7 @@ impl TownScene {
             active_dialogue: None,
             mechanic_training: None,
             archivist_quiz: None,
+            elder_trial: None,
             player_facing: Facing::Down,
         }
     }
@@ -201,7 +213,10 @@ impl TownScene {
 
         match npc_index {
             0 => {
-                if opened >= 6 {
+                if self.progress.is_elder_trial_completed() {
+                    "Староста уже испытал вашу выдержку. Награда получена, но испытание числа можно повторять."
+                        .to_string()
+                } else if opened >= 6 {
                     "Все печати уже открыты. Староста говорит о том, что путь под городом завершён."
                         .to_string()
                 } else {
@@ -248,13 +263,22 @@ impl TownScene {
         match npc_index {
             0 => {
                 if final_open {
-                    vec![
+                    let mut lines = vec![
                         "Ты вскрыл все шесть печатей. Для деревни это значит, что Элдорадо больше не висит над пропастью на древних замках.".to_string(),
                         "Теперь мой совет уже не о выживании, а о памяти: не потеряй ощущение пути, который прошёл под нами.".to_string(),
                         "Если снова пойдёшь вниз, смотри на обелиски. Они теперь напоминают не о долге, а о проделанной работе.".to_string(),
-                    ]
+                    ];
+                    lines.push(
+                        if self.progress.is_elder_trial_completed() {
+                            "Если хочешь ещё раз проверить терпение, подойди и нажми Q: число старосты снова будет скрыто."
+                        } else {
+                            "Если хочешь испытание не на ловкость, а на выдержку, подойди и нажми Q. Я дам тебе число на поиск."
+                        }
+                        .to_string(),
+                    );
+                    lines
                 } else {
-                    vec![
+                    let mut lines = vec![
                         "Слушай внимательно: дальше не набор комнат из меню, а один длинный спуск под деревней.".to_string(),
                         format!(
                             "Сейчас тебе нужно пройти через {}. Пока не сорвёшь печать и не опустишь рычаг, дорога глубже не откроется.",
@@ -264,7 +288,16 @@ impl TownScene {
                             "Уже вскрыто печатей: {} из 6. Обелиски у шахты показывают это честнее любых слов.",
                             opened
                         ),
-                    ]
+                    ];
+                    lines.push(
+                        if self.progress.is_elder_trial_completed() {
+                            "Ты уже прошёл моё испытание на выдержку. Но если хочешь повторить, подойди и нажми Q."
+                        } else {
+                            "Перед спуском могу проверить не руки, а голову. Подойди и нажми Q: попробуешь угадать скрытое число за несколько попыток."
+                        }
+                        .to_string(),
+                    );
+                    lines
                 }
             }
             1 => {
@@ -416,6 +449,10 @@ impl TownScene {
         matches!(self.focus_target(), Some(FocusTarget::Npc(1)))
     }
 
+    fn is_elder_focused(&self) -> bool {
+        matches!(self.focus_target(), Some(FocusTarget::Npc(0)))
+    }
+
     fn is_archivist_focused(&self) -> bool {
         matches!(self.focus_target(), Some(FocusTarget::Npc(2)))
     }
@@ -478,6 +515,37 @@ impl TownScene {
             KeyCode::Down => Color::from_rgba(132, 242, 182, 255),
             KeyCode::Left => Color::from_rgba(234, 146, 188, 255),
             _ => LIGHTGRAY,
+        }
+    }
+
+    fn start_elder_trial(&mut self) {
+        let mut rng = thread_rng();
+        self.elder_trial = Some(ElderTrialGame {
+            secret: rng.gen_range(1..=9),
+            guess: 5,
+            attempts_left: 4,
+            resolved: false,
+            won: false,
+            hint:
+                "Староста загадал число от 1 до 9. Меняйте ответ стрелками и подтверждайте Enter."
+                    .to_string(),
+        });
+        self.status_message =
+            "Испытание старосты началось. Найдите число за ограниченное число попыток.".to_string();
+    }
+
+    fn complete_elder_trial(&mut self) {
+        let first_win = !self.progress.is_elder_trial_completed();
+        self.progress
+            .apply_update(ProgressUpdate::ElderTrialCompleted);
+        if first_win {
+            self.pending_progress_update = Some(ProgressUpdate::ElderTrialCompleted);
+            self.status_message =
+                "Испытание старосты пройдено. Получено 30 золота и предмет «Талисман старосты»."
+                    .to_string();
+        } else {
+            self.status_message =
+                "Испытание старосты снова пройдено. Награда уже была получена раньше.".to_string();
         }
     }
 
@@ -632,6 +700,61 @@ impl TownScene {
         }
     }
 
+    fn handle_elder_trial_input(&mut self) {
+        let Some(trial) = &mut self.elder_trial else {
+            return;
+        };
+
+        if is_key_pressed(KeyCode::Escape) {
+            self.elder_trial = None;
+            self.status_message =
+                "Испытание старосты закрыто. Если захотите вернуться, подойдите к Иара и нажмите Q."
+                    .to_string();
+            return;
+        }
+
+        if trial.resolved {
+            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                self.elder_trial = None;
+            }
+            return;
+        }
+
+        if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+            trial.guess = if trial.guess >= 9 { 1 } else { trial.guess + 1 };
+        }
+        if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+            trial.guess = if trial.guess <= 1 { 9 } else { trial.guess - 1 };
+        }
+
+        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            trial.attempts_left -= 1;
+            if trial.guess == trial.secret {
+                trial.resolved = true;
+                trial.won = true;
+                trial.hint =
+                    "Староста кивает: число найдено. Испытание выдержки завершено.".to_string();
+                self.complete_elder_trial();
+            } else if trial.attempts_left <= 0 {
+                trial.resolved = true;
+                trial.won = false;
+                trial.hint = format!(
+                    "Попытки закончились. Загаданным числом было {}.",
+                    trial.secret
+                );
+                self.status_message =
+                    "Испытание старосты провалено. Нажмите Q у Иара, чтобы начать заново."
+                        .to_string();
+            } else if trial.guess < trial.secret {
+                trial.hint = format!("Слишком мало. Осталось попыток: {}.", trial.attempts_left);
+                self.status_message = "Староста советует мыслить смелее: число выше.".to_string();
+            } else {
+                trial.hint = format!("Слишком много. Осталось попыток: {}.", trial.attempts_left);
+                self.status_message = "Староста советует сбросить спешку: число ниже.".to_string();
+            }
+        }
+    }
+
     fn interact(&mut self) {
         match self.focus_target() {
             Some(FocusTarget::Entrance) => {
@@ -651,25 +774,42 @@ impl TownScene {
         let relic = item_texture();
         for i in 0..screen_height() as i32 {
             let t = i as f32 / screen_height();
-            let color = Color::new(0.03 + t * 0.08, 0.08 + t * 0.14, 0.17 + t * 0.14, 1.0);
+            let color = Color::new(0.01 + t * 0.08, 0.02 + t * 0.10, 0.08 + t * 0.16, 1.0);
             draw_line(0.0, i as f32, screen_width(), i as f32, 1.0, color);
         }
 
-        draw_circle(660.0, 94.0, 58.0, Color::from_rgba(255, 224, 144, 32));
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            168.0,
+            Color::from_rgba(0, 0, 0, 66),
+        );
+        draw_circle(650.0, 92.0, 110.0, Color::from_rgba(220, 56, 88, 24));
+        draw_circle(660.0, 94.0, 64.0, Color::from_rgba(255, 224, 144, 38));
         draw_circle(660.0, 94.0, 34.0, Color::from_rgba(255, 224, 144, 160));
+        draw_circle(660.0, 94.0, 14.0, Color::from_rgba(255, 240, 198, 255));
 
         draw_triangle(
             vec2(-30.0, 470.0),
-            vec2(220.0, 224.0),
+            vec2(190.0, 206.0),
             vec2(420.0, 470.0),
             Color::from_rgba(28, 46, 58, 210),
         );
         draw_triangle(
             vec2(280.0, 470.0),
-            vec2(514.0, 188.0),
+            vec2(500.0, 164.0),
             vec2(790.0, 470.0),
             Color::from_rgba(22, 36, 48, 220),
         );
+        draw_triangle(
+            vec2(520.0, 470.0),
+            vec2(734.0, 220.0),
+            vec2(860.0, 470.0),
+            Color::from_rgba(18, 28, 42, 224),
+        );
+        draw_circle(156.0, 156.0, 60.0, Color::from_rgba(96, 128, 208, 16));
+        draw_circle(526.0, 132.0, 52.0, Color::from_rgba(196, 78, 114, 14));
 
         let ground_y = 470.0;
         draw_rectangle(
@@ -677,27 +817,44 @@ impl TownScene {
             ground_y,
             screen_width(),
             screen_height() - ground_y,
-            Color::from_rgba(66, 46, 34, 255),
+            Color::from_rgba(54, 34, 26, 255),
         );
         draw_rectangle(
             0.0,
             ground_y + 24.0,
             screen_width(),
             54.0,
-            Color::from_rgba(102, 80, 58, 255),
+            Color::from_rgba(90, 66, 48, 255),
         );
+        for line in 0..8 {
+            let y = ground_y + 8.0 + line as f32 * 10.0;
+            draw_rectangle(
+                0.0,
+                y,
+                screen_width(),
+                2.0,
+                Color::from_rgba(255, 255, 255, 10),
+            );
+        }
 
         for idx in 0..5 {
             let x = 24.0 + idx as f32 * 154.0;
             let width = 90.0 + (idx % 2) as f32 * 12.0;
             let height = 88.0 + idx as f32 * 12.0;
             let y = 446.0 - height;
-            draw_rectangle(x, y, width, height, Color::from_rgba(34, 42, 62, 236));
+            draw_rectangle(x, y, width, height, Color::from_rgba(24, 28, 48, 236));
+            draw_rectangle(
+                x + 8.0,
+                y + 10.0,
+                width - 16.0,
+                height - 20.0,
+                Color::from_rgba(34, 44, 72, 90),
+            );
             draw_triangle(
                 vec2(x - 10.0, y),
                 vec2(x + width + 10.0, y),
                 vec2(x + width / 2.0, y - 38.0),
-                Color::from_rgba(70, 42, 36, 245),
+                Color::from_rgba(74, 32, 30, 245),
             );
             draw_sprite(
                 &platform,
@@ -714,7 +871,7 @@ impl TownScene {
             self.entrance_rect.y + 82.0,
             self.entrance_rect.w + 56.0,
             160.0,
-            Color::from_rgba(42, 44, 48, 255),
+            Color::from_rgba(28, 30, 38, 255),
         );
         draw_triangle(
             vec2(self.entrance_rect.x - 44.0, self.entrance_rect.y + 82.0),
@@ -726,16 +883,22 @@ impl TownScene {
                 self.entrance_rect.x + self.entrance_rect.w / 2.0,
                 self.entrance_rect.y - 24.0,
             ),
-            Color::from_rgba(82, 70, 60, 255),
+            Color::from_rgba(72, 54, 48, 255),
         );
 
         let pulse = (self.animation_time * 2.4).sin() * 0.5 + 0.5;
+        draw_circle(
+            self.entrance_rect.x + self.entrance_rect.w / 2.0,
+            self.entrance_rect.y + self.entrance_rect.h / 2.0,
+            48.0 + pulse * 24.0,
+            Color::from_rgba(92, 210, 255, (18.0 + pulse * 36.0) as u8),
+        );
         draw_rectangle(
             self.entrance_rect.x,
             self.entrance_rect.y,
             self.entrance_rect.w,
             self.entrance_rect.h,
-            Color::from_rgba(8, 12, 18, 255),
+            Color::from_rgba(4, 8, 12, 255),
         );
         draw_circle(
             self.entrance_rect.x + self.entrance_rect.w / 2.0,
@@ -750,6 +913,13 @@ impl TownScene {
             self.entrance_rect.h,
             3.0,
             Color::from_rgba(164, 214, 255, 220),
+        );
+        draw_game_text(
+            "DEPTH",
+            self.entrance_rect.x + 36.0,
+            self.entrance_rect.y - 10.0,
+            18.0,
+            Color::from_rgba(255, 212, 140, 255),
         );
 
         for (index, seal) in self.seals.iter().enumerate() {
@@ -813,6 +983,13 @@ impl TownScene {
                 Color::from_rgba(220, 226, 236, 255),
             );
         }
+        draw_rectangle(
+            0.0,
+            screen_height() - 154.0,
+            screen_width(),
+            154.0,
+            Color::from_rgba(0, 0, 0, 76),
+        );
     }
 
     fn draw_npc(&self, npc: &TownNpc, is_focused: bool) {
@@ -831,7 +1008,20 @@ impl TownScene {
         draw_sprite(&texture, npc.rect.x - 10.0, y - 6.0, 48.0, 48.0, npc.color);
 
         if is_focused {
+            draw_circle(
+                npc.rect.x + npc.rect.w / 2.0,
+                y + 9.0,
+                20.0,
+                Color::from_rgba(255, 214, 126, 30),
+            );
             draw_circle_lines(npc.rect.x + npc.rect.w / 2.0, y + 9.0, 15.0, 2.0, WHITE);
+            draw_game_text(
+                "!",
+                npc.rect.x + npc.rect.w / 2.0 - 4.0,
+                y - 18.0,
+                20.0,
+                Color::from_rgba(255, 228, 180, 255),
+            );
         }
 
         draw_game_text(
@@ -846,6 +1036,12 @@ impl TownScene {
     fn draw_player(&self) {
         let step_bob = (self.animation_time * 8.0).sin().abs() * 2.2;
         let texture = player_texture(self.player_facing);
+        draw_circle(
+            self.player.x + self.player.w / 2.0,
+            self.player.y + self.player.h / 2.0 + 2.0,
+            20.0,
+            Color::from_rgba(120, 180, 255, 18),
+        );
         draw_ellipse(
             self.player.x + self.player.w / 2.0,
             self.player.y + self.player.h + 3.0,
@@ -1163,6 +1359,126 @@ impl TownScene {
         );
     }
 
+    fn draw_elder_trial_overlay(&self) {
+        let Some(trial) = &self.elder_trial else {
+            return;
+        };
+
+        draw_rectangle(
+            0.0,
+            0.0,
+            screen_width(),
+            screen_height(),
+            Color::from_rgba(0, 0, 0, 172),
+        );
+
+        let panel = Rect::new(108.0, 102.0, screen_width() - 216.0, 312.0);
+        draw_rectangle(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            Color::from_rgba(32, 22, 18, 246),
+        );
+        draw_rectangle(
+            panel.x + 10.0,
+            panel.y + 10.0,
+            panel.w - 20.0,
+            panel.h - 20.0,
+            Color::from_rgba(56, 38, 26, 224),
+        );
+        draw_rectangle_lines(
+            panel.x,
+            panel.y,
+            panel.w,
+            panel.h,
+            3.0,
+            Color::from_rgba(240, 196, 126, 220),
+        );
+
+        draw_game_text(
+            "Испытание старосты",
+            panel.x + 24.0,
+            panel.y + 34.0,
+            30.0,
+            Color::from_rgba(255, 230, 184, 255),
+        );
+        draw_wrapped_game_text(
+            "Иара загадал число от 1 до 9. За несколько попыток нужно найти его без суеты и случайного перебора.",
+            panel.x + 24.0,
+            panel.y + 70.0,
+            panel.w - 48.0,
+            20.0,
+            5.0,
+            WHITE,
+        );
+
+        let guess_box = Rect::new(panel.x + panel.w / 2.0 - 72.0, panel.y + 132.0, 144.0, 86.0);
+        draw_rectangle(
+            guess_box.x,
+            guess_box.y,
+            guess_box.w,
+            guess_box.h,
+            Color::from_rgba(20, 16, 20, 220),
+        );
+        draw_rectangle_lines(
+            guess_box.x,
+            guess_box.y,
+            guess_box.w,
+            guess_box.h,
+            3.0,
+            Color::from_rgba(255, 214, 126, 255),
+        );
+        let guess = format!("{}", trial.guess);
+        let width = measure_game_text(&guess, None, 54, 1.0).width;
+        draw_game_text(
+            &guess,
+            guess_box.x + guess_box.w / 2.0 - width / 2.0,
+            guess_box.y + 58.0,
+            54.0,
+            Color::from_rgba(255, 236, 196, 255),
+        );
+
+        let stats = format!(
+            "Попытки осталось: {} | Награда: {}",
+            trial.attempts_left.max(0),
+            if self.progress.is_elder_trial_completed() {
+                "уже получена"
+            } else {
+                "30 золота + Талисман старосты"
+            }
+        );
+        draw_wrapped_game_text(
+            &stats,
+            panel.x + 24.0,
+            panel.y + 244.0,
+            panel.w - 48.0,
+            17.0,
+            4.0,
+            Color::from_rgba(208, 220, 232, 255),
+        );
+        draw_wrapped_game_text(
+            &trial.hint,
+            panel.x + 24.0,
+            panel.y + 274.0,
+            panel.w - 48.0,
+            18.0,
+            4.0,
+            Color::from_rgba(255, 214, 126, 255),
+        );
+        draw_game_text(
+            if trial.resolved {
+                "ENTER / SPACE - закрыть, ESC - выйти"
+            } else {
+                "W/S или ↑/↓ - изменить число, ENTER - подтвердить, ESC - выйти"
+            },
+            panel.x + 24.0,
+            panel.y + panel.h - 18.0,
+            16.0,
+            Color::from_rgba(255, 226, 170, 255),
+        );
+    }
+
     fn draw_dialogue_overlay(&self) {
         let Some(dialogue) = &self.active_dialogue else {
             return;
@@ -1184,14 +1500,14 @@ impl TownScene {
             panel.y,
             panel.w,
             panel.h,
-            Color::from_rgba(20, 18, 32, 242),
+            Color::from_rgba(12, 12, 18, 246),
         );
         draw_rectangle(
             panel.x + 8.0,
             panel.y + 8.0,
             panel.w - 16.0,
             panel.h - 16.0,
-            Color::from_rgba(42, 28, 18, 88),
+            Color::from_rgba(48, 18, 22, 118),
         );
         draw_rectangle_lines(
             panel.x,
@@ -1199,7 +1515,14 @@ impl TownScene {
             panel.w,
             panel.h,
             3.0,
-            Color::from_rgba(255, 204, 128, 220),
+            Color::from_rgba(255, 232, 182, 230),
+        );
+        draw_rectangle(
+            panel.x + 20.0,
+            panel.y + 72.0,
+            panel.w - 40.0,
+            3.0,
+            Color::from_rgba(255, 222, 144, 48),
         );
 
         draw_circle(panel.x + 42.0, panel.y + 42.0, 18.0, npc.color);
@@ -1259,6 +1582,11 @@ impl TownScene {
 
 impl Scene for TownScene {
     fn handle_input(&mut self) {
+        if self.elder_trial.is_some() {
+            self.handle_elder_trial_input();
+            return;
+        }
+
         if self.archivist_quiz.is_some() {
             self.handle_archivist_quiz_input();
             return;
@@ -1290,6 +1618,9 @@ impl Scene for TownScene {
             self.interact();
         }
 
+        if is_key_pressed(KeyCode::Q) && self.is_elder_focused() {
+            self.start_elder_trial();
+        }
         if is_key_pressed(KeyCode::Q) && self.is_mechanic_focused() {
             self.start_mechanic_training();
         }
@@ -1304,6 +1635,10 @@ impl Scene for TownScene {
 
     fn update(&mut self) {
         self.animation_time += get_frame_time();
+
+        if self.elder_trial.is_some() {
+            return;
+        }
 
         if self.archivist_quiz.is_some() {
             return;
@@ -1400,21 +1735,41 @@ impl Scene for TownScene {
             4.0,
             Color::from_rgba(192, 208, 226, 255),
         );
-        let objective_panel = Rect::new(44.0, 102.0, screen_width() - 88.0, 66.0);
+        let chapter_label = if self.progress.is_expedition_complete() {
+            "CHAPTER // AFTERMATH"
+        } else {
+            "CHAPTER // TOWN OF ENTRY"
+        };
+        draw_game_text(
+            chapter_label,
+            48.0,
+            106.0,
+            18.0,
+            Color::from_rgba(255, 206, 138, 255),
+        );
+
+        let objective_panel = Rect::new(44.0, 116.0, screen_width() - 88.0, 74.0);
         draw_rectangle(
             objective_panel.x,
             objective_panel.y,
             objective_panel.w,
             objective_panel.h,
-            Color::from_rgba(10, 16, 26, 170),
+            Color::from_rgba(8, 10, 18, 214),
+        );
+        draw_rectangle(
+            objective_panel.x + 8.0,
+            objective_panel.y + 8.0,
+            objective_panel.w - 16.0,
+            objective_panel.h - 16.0,
+            Color::from_rgba(24, 10, 18, 124),
         );
         draw_rectangle_lines(
             objective_panel.x,
             objective_panel.y,
             objective_panel.w,
             objective_panel.h,
-            2.0,
-            Color::from_rgba(108, 162, 208, 120),
+            3.0,
+            Color::from_rgba(196, 98, 124, 168),
         );
         let objective_text = if self.progress.is_expedition_complete() {
             format!(
@@ -1433,16 +1788,21 @@ impl Scene for TownScene {
         draw_wrapped_game_text(
             &objective_text,
             objective_panel.x + 16.0,
-            objective_panel.y + 18.0,
+            objective_panel.y + 24.0,
             objective_panel.w - 32.0,
-            16.0,
+            17.0,
             3.0,
             Color::from_rgba(224, 232, 240, 255),
         );
         let inventory_text = format!(
-            "Золото: {} | Предметы: {} | Роан: {} | Тель: {}",
+            "Золото: {} | Предметы: {} | Иара: {} | Роан: {} | Тель: {}",
             self.progress.gold,
             self.progress.item_count(),
+            if self.progress.is_elder_trial_completed() {
+                "испытание пройдено"
+            } else {
+                "испытание не пройдено"
+            },
             if self.progress.is_mechanic_training_completed() {
                 "пройдена"
             } else {
@@ -1457,11 +1817,11 @@ impl Scene for TownScene {
         draw_wrapped_game_text(
             &inventory_text,
             objective_panel.x + 16.0,
-            objective_panel.y + 42.0,
+            objective_panel.y + 50.0,
             objective_panel.w - 32.0,
             15.0,
             3.0,
-            Color::from_rgba(168, 206, 236, 255),
+            Color::from_rgba(156, 198, 236, 255),
         );
 
         for npc in &self.npcs {
@@ -1472,28 +1832,35 @@ impl Scene for TownScene {
         self.draw_player();
 
         let focus = self.focus_target();
-        let panel = Rect::new(498.0, 302.0, 278.0, 154.0);
+        let panel = Rect::new(486.0, 286.0, 290.0, 174.0);
         draw_rectangle(
             panel.x,
             panel.y,
             panel.w,
             panel.h,
-            Color::from_rgba(18, 26, 40, 238),
+            Color::from_rgba(10, 12, 18, 244),
         );
         draw_rectangle(
             panel.x + 8.0,
             panel.y + 8.0,
             panel.w - 16.0,
             panel.h - 16.0,
-            Color::from_rgba(30, 18, 12, 72),
+            Color::from_rgba(42, 18, 22, 92),
         );
         draw_rectangle_lines(
             panel.x,
             panel.y,
             panel.w,
             panel.h,
-            2.0,
-            Color::from_rgba(255, 204, 120, 200),
+            3.0,
+            Color::from_rgba(255, 224, 164, 214),
+        );
+        draw_game_text(
+            "FOCUS",
+            panel.x + 18.0,
+            panel.y + 18.0,
+            16.0,
+            Color::from_rgba(255, 204, 126, 255),
         );
 
         match focus {
@@ -1503,7 +1870,7 @@ impl Scene for TownScene {
                 draw_game_text(
                     "Шахтный спуск",
                     panel.x + 18.0,
-                    panel.y + 30.0,
+                    panel.y + 42.0,
                     24.0,
                     Color::from_rgba(132, 220, 255, 255),
                 );
@@ -1518,7 +1885,7 @@ impl Scene for TownScene {
                 draw_wrapped_game_text(
                     "Шахта всегда начинается с первой пещеры, а дальше путь идёт цепочкой через внутренние двери.",
                     panel.x + 18.0,
-                    panel.y + 60.0,
+                    panel.y + 74.0,
                     panel.w - 36.0,
                     18.0,
                     4.0,
@@ -1530,7 +1897,7 @@ impl Scene for TownScene {
                         target_level
                     ),
                     panel.x + 18.0,
-                    panel.y + 90.0,
+                    panel.y + 110.0,
                     panel.w - 36.0,
                     16.0,
                     4.0,
@@ -1539,32 +1906,34 @@ impl Scene for TownScene {
                 draw_game_text(
                     "E - спуститься",
                     panel.x + 18.0,
-                    panel.y + 134.0,
+                    panel.y + 154.0,
                     16.0,
                     Color::from_rgba(255, 214, 126, 255),
                 );
             }
             Some(FocusTarget::Npc(index)) => {
                 let npc = &self.npcs[index];
-                draw_game_text(npc.name, panel.x + 18.0, panel.y + 30.0, 24.0, npc.color);
+                draw_game_text(npc.name, panel.x + 18.0, panel.y + 42.0, 24.0, npc.color);
                 draw_game_text(
                     npc.role,
                     panel.x + 18.0,
-                    panel.y + 56.0,
+                    panel.y + 68.0,
                     16.0,
                     Color::from_rgba(210, 220, 235, 255),
                 );
                 draw_wrapped_game_text(
                     &self.npc_preview(index),
                     panel.x + 18.0,
-                    panel.y + 82.0,
+                    panel.y + 96.0,
                     panel.w - 36.0,
                     16.0,
                     4.0,
                     LIGHTGRAY,
                 );
                 draw_game_text(
-                    if index == 1 {
+                    if index == 0 {
+                        "E - говорить, Q - испытание"
+                    } else if index == 1 {
                         "E - говорить, Q - калибровка"
                     } else if index == 2 {
                         "E - говорить, Q - викторина"
@@ -1572,7 +1941,7 @@ impl Scene for TownScene {
                         "E - говорить"
                     },
                     panel.x + 18.0,
-                    panel.y + 134.0,
+                    panel.y + 154.0,
                     16.0,
                     Color::from_rgba(255, 214, 126, 255),
                 );
@@ -1581,14 +1950,14 @@ impl Scene for TownScene {
                 draw_game_text(
                     "Площадь перед шахтой",
                     panel.x + 18.0,
-                    panel.y + 30.0,
+                    panel.y + 42.0,
                     24.0,
                     Color::from_rgba(255, 228, 180, 255),
                 );
                 draw_wrapped_game_text(
                     "Подойдите к шахтному спуску, чтобы продолжить цепочку пещер, или поговорите с жителями за подсказками.",
                     panel.x + 18.0,
-                    panel.y + 62.0,
+                    panel.y + 74.0,
                     panel.w - 36.0,
                     18.0,
                     4.0,
@@ -1597,7 +1966,7 @@ impl Scene for TownScene {
                 draw_wrapped_game_text(
                     "WASD/стрелки - движение. E - взаимодействие. ESC - меню.",
                     panel.x + 18.0,
-                    panel.y + 116.0,
+                    panel.y + 130.0,
                     panel.w - 36.0,
                     16.0,
                     4.0,
@@ -1632,6 +2001,7 @@ impl Scene for TownScene {
         );
 
         self.draw_dialogue_overlay();
+        self.draw_elder_trial_overlay();
         self.draw_mechanic_training_overlay();
         self.draw_archivist_quiz_overlay();
     }
