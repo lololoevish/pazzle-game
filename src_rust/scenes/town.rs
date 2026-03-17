@@ -1,6 +1,7 @@
 use ::rand::{thread_rng, Rng};
 use macroquad::prelude::*;
 
+use crate::audio;
 use crate::game_state::{GameProgress, GameState, ProgressUpdate};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use crate::visual_assets::{
@@ -499,6 +500,7 @@ impl TownScene {
             visible_chars: 0,
             lines,
         });
+        audio::play_ui_confirm();
         self.status_message =
             "Диалог открыт. E или ENTER - дальше, SPACE - допечатать строку, ESC - закрыть."
                 .to_string();
@@ -517,14 +519,17 @@ impl TownScene {
 
         if dialogue.visible_chars < total_chars {
             dialogue.visible_chars = total_chars;
+            audio::play_ui_move();
             return;
         }
 
         if dialogue.line_index + 1 < dialogue.lines.len() {
             dialogue.line_index += 1;
             dialogue.visible_chars = 0;
+            audio::play_ui_move();
         } else {
             self.active_dialogue = None;
+            audio::play_ui_cancel();
             self.status_message =
                 "Диалог завершён. Подойдите к шахте, чтобы продолжить спуск.".to_string();
         }
@@ -559,6 +564,7 @@ impl TownScene {
             won: false,
             failed: false,
         });
+        audio::play_ui_confirm();
         self.status_message =
             "Калибровка механика запущена. Смотрите на последовательность и повторяйте её стрелками."
                 .to_string();
@@ -570,9 +576,11 @@ impl TownScene {
             .apply_update(ProgressUpdate::MechanicTrainingCompleted);
         if first_win {
             self.pending_progress_update = Some(ProgressUpdate::MechanicTrainingCompleted);
+            audio::play_ui_success();
             self.status_message =
                 "Калибровка завершена. Роан выдал 35 золота и предмет «Ключ механика».".to_string();
         } else {
+            audio::play_ui_confirm();
             self.status_message =
                 "Калибровка снова пройдена. Награда уже была получена раньше, но реакция в порядке."
                     .to_string();
@@ -621,6 +629,7 @@ impl TownScene {
                 "Староста загадал число от 1 до 9. Меняйте ответ стрелками и подтверждайте Enter."
                     .to_string(),
         });
+        audio::play_ui_confirm();
         self.status_message =
             "Испытание старосты началось. Найдите число за ограниченное число попыток.".to_string();
     }
@@ -631,10 +640,12 @@ impl TownScene {
             .apply_update(ProgressUpdate::ElderTrialCompleted);
         if first_win {
             self.pending_progress_update = Some(ProgressUpdate::ElderTrialCompleted);
+            audio::play_ui_success();
             self.status_message =
                 "Испытание старосты пройдено. Получено 30 золота и предмет «Талисман старосты»."
                     .to_string();
         } else {
+            audio::play_ui_confirm();
             self.status_message =
                 "Испытание старосты снова пройдено. Награда уже была получена раньше.".to_string();
         }
@@ -649,6 +660,7 @@ impl TownScene {
             passed: false,
             failed: false,
         });
+        audio::play_ui_confirm();
         self.status_message =
             "Архивариус открыл викторину. Выберите ответ стрелками и подтвердите Enter."
                 .to_string();
@@ -660,10 +672,12 @@ impl TownScene {
             .apply_update(ProgressUpdate::ArchivistQuizCompleted);
         if first_win {
             self.pending_progress_update = Some(ProgressUpdate::ArchivistQuizCompleted);
+            audio::play_ui_success();
             self.status_message =
                 "Викторина пройдена. Тель выдал 25 золота и предмет «Печать архивариуса»."
                     .to_string();
         } else {
+            audio::play_ui_confirm();
             self.status_message =
                 "Викторина снова пройдена. Награда уже была получена, но память у вас крепкая."
                     .to_string();
@@ -677,6 +691,7 @@ impl TownScene {
 
         if is_key_pressed(KeyCode::Escape) {
             self.mechanic_training = None;
+            audio::play_ui_cancel();
             self.status_message =
                 "Калибровка остановлена. Если захотите вернуться, подойдите к Роану и нажмите Q."
                     .to_string();
@@ -689,6 +704,7 @@ impl TownScene {
 
         for key in [KeyCode::Up, KeyCode::Right, KeyCode::Down, KeyCode::Left] {
             if is_key_pressed(key) {
+                audio::play_ui_move();
                 if key == game.sequence[game.input_index] {
                     game.input_index += 1;
                     if game.input_index >= game.round {
@@ -709,6 +725,7 @@ impl TownScene {
                     }
                 } else {
                     game.failed = true;
+                    audio::play_ui_cancel();
                     self.status_message =
                         "Калибровка сорвалась: ритм рычага ушёл. Нажмите Q у Роана, чтобы начать заново."
                             .to_string();
@@ -725,6 +742,7 @@ impl TownScene {
 
         if is_key_pressed(KeyCode::Escape) {
             self.archivist_quiz = None;
+            audio::play_ui_cancel();
             self.status_message =
                 "Викторина закрыта. Если захотите вернуться, подойдите к Телю и нажмите Q."
                     .to_string();
@@ -733,6 +751,7 @@ impl TownScene {
 
         if quiz.passed || quiz.failed {
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                audio::play_ui_confirm();
                 self.archivist_quiz = None;
             }
             return;
@@ -740,12 +759,14 @@ impl TownScene {
 
         if quiz.answered {
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                audio::play_ui_confirm();
                 if quiz.question_index + 1 >= Self::ARCHIVIST_QUESTIONS.len() {
                     if quiz.score >= 2 {
                         quiz.passed = true;
                         self.complete_archivist_quiz();
                     } else {
                         quiz.failed = true;
+                        audio::play_ui_cancel();
                         self.status_message =
                             "Тель закрывает фолиант: знаний пока недостаточно. Нажмите Q у архивариуса, чтобы начать заново."
                                 .to_string();
@@ -765,6 +786,7 @@ impl TownScene {
         }
 
         if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+            audio::play_ui_move();
             quiz.selected_option = if quiz.selected_option == 0 {
                 2
             } else {
@@ -773,10 +795,12 @@ impl TownScene {
         }
 
         if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+            audio::play_ui_move();
             quiz.selected_option = (quiz.selected_option + 1) % 3;
         }
 
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            audio::play_ui_confirm();
             let question = &Self::ARCHIVIST_QUESTIONS[quiz.question_index];
             if quiz.selected_option == question.correct {
                 quiz.score += 1;
@@ -798,6 +822,7 @@ impl TownScene {
 
         if is_key_pressed(KeyCode::Escape) {
             self.elder_trial = None;
+            audio::play_ui_cancel();
             self.status_message =
                 "Испытание старосты закрыто. Если захотите вернуться, подойдите к Иара и нажмите Q."
                     .to_string();
@@ -806,19 +831,23 @@ impl TownScene {
 
         if trial.resolved {
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                audio::play_ui_confirm();
                 self.elder_trial = None;
             }
             return;
         }
 
         if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+            audio::play_ui_move();
             trial.guess = if trial.guess >= 9 { 1 } else { trial.guess + 1 };
         }
         if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+            audio::play_ui_move();
             trial.guess = if trial.guess <= 1 { 9 } else { trial.guess - 1 };
         }
 
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            audio::play_ui_confirm();
             trial.attempts_left -= 1;
             if trial.guess == trial.secret {
                 trial.resolved = true;
@@ -829,6 +858,7 @@ impl TownScene {
             } else if trial.attempts_left <= 0 {
                 trial.resolved = true;
                 trial.won = false;
+                audio::play_ui_cancel();
                 trial.hint = format!(
                     "Попытки закончились. Загаданным числом было {}.",
                     trial.secret
@@ -849,6 +879,7 @@ impl TownScene {
     fn interact(&mut self) {
         match self.focus_target() {
             Some(FocusTarget::Entrance) => {
+                audio::play_ui_confirm();
                 self.next_state = Some(GameState::Playing(self.town_entry_level()));
             }
             Some(FocusTarget::Npc(index)) => {
@@ -1691,6 +1722,7 @@ impl Scene for TownScene {
         if self.active_dialogue.is_some() {
             if is_key_pressed(KeyCode::Escape) {
                 self.active_dialogue = None;
+                audio::play_ui_cancel();
                 self.status_message =
                     "Диалог закрыт. Подойдите к шахте, чтобы продолжить спуск.".to_string();
                 return;
@@ -1720,6 +1752,7 @@ impl Scene for TownScene {
         }
 
         if is_key_pressed(KeyCode::Escape) {
+            audio::play_ui_cancel();
             self.next_state = Some(GameState::Menu);
         }
     }

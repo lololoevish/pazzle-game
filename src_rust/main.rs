@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 use std::fs;
 
+mod audio;
 mod game_state;
 mod scenes;
 mod ui_text;
@@ -73,6 +74,7 @@ async fn main() {
     // Настройка окна
     request_new_screen_size(SCREEN_WIDTH, SCREEN_HEIGHT);
     ui_text::init().await;
+    audio::init().await;
 
     // Загрузка прогресса
     let mut game_progress = GameProgress::load().unwrap_or_default();

@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 
+use crate::audio;
 use crate::game_state::{GameState, LevelProgress, ProgressUpdate};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use crate::visual_assets::{
@@ -199,6 +200,7 @@ impl GameplayScene {
     fn start_puzzle(&mut self) {
         self.in_puzzle = true;
         self.show_instruction_overlay = true;
+        audio::play_ui_confirm();
         self.status_message =
             "Вы подошли к печати. Прочитайте плиту, затем начните испытание.".to_string();
     }
@@ -214,6 +216,7 @@ impl GameplayScene {
             self.report_completed_level = true;
         }
 
+        audio::play_ui_success();
         self.sync_status_message();
     }
 
@@ -222,6 +225,7 @@ impl GameplayScene {
             self.current_stage = 1;
             self.setup_level();
             self.show_instruction_overlay = true;
+            audio::play_ui_success();
             self.status_message =
                 "Первая архивная печать сорвана. В глубине пещеры открылась вторая камера памяти."
                     .to_string();
@@ -236,6 +240,7 @@ impl GameplayScene {
         self.puzzle_solved = true;
         self.in_puzzle = false;
         self.show_instruction_overlay = false;
+        audio::play_ui_confirm();
         self.status_message =
             "Повторное решение пропущено. Подойдите к рычагу и откройте уже заработанный проход."
                 .to_string();
@@ -243,6 +248,7 @@ impl GameplayScene {
 
     fn pull_lever(&mut self) {
         if !self.puzzle_solved && !self.level_progress.completed {
+            audio::play_ui_cancel();
             self.status_message =
                 "Рычаг заблокирован. Сначала сорвите печать у алтаря.".to_string();
             return;
@@ -255,6 +261,7 @@ impl GameplayScene {
             level: self.level,
             pulled: true,
         });
+        audio::play_lever();
         self.status_message =
             "Скала отступила, и открылся проход вниз. Нажмите E у двери, чтобы перейти дальше."
                 .to_string();
@@ -1098,9 +1105,11 @@ impl Scene for GameplayScene {
                     || is_key_pressed(KeyCode::Space)
                     || is_key_pressed(KeyCode::E)
                 {
+                    audio::play_ui_confirm();
                     self.show_instruction_overlay = false;
                 }
                 if is_key_pressed(KeyCode::Escape) {
+                    audio::play_ui_cancel();
                     self.in_puzzle = false;
                     self.show_instruction_overlay = false;
                     self.sync_status_message();
@@ -1114,6 +1123,7 @@ impl Scene for GameplayScene {
             }
 
             if is_key_pressed(KeyCode::Escape) {
+                audio::play_ui_cancel();
                 self.in_puzzle = false;
                 self.status_message =
                     "Вы отошли от печати. Возвращайтесь к алтарю, когда будете готовы.".to_string();
@@ -1125,6 +1135,7 @@ impl Scene for GameplayScene {
         }
 
         if is_key_pressed(KeyCode::Escape) {
+            audio::play_ui_cancel();
             self.next_state = Some(GameState::Town);
             return;
         }
@@ -1136,16 +1147,19 @@ impl Scene for GameplayScene {
                 self.pull_lever();
             } else if self.is_near(self.exit_rect, 102.0) {
                 if self.passage_open {
+                    audio::play_ui_confirm();
                     self.next_state = if self.level < 6 {
                         Some(GameState::Playing(self.level + 1))
                     } else {
                         Some(GameState::Victory)
                     };
                 } else {
+                    audio::play_ui_cancel();
                     self.status_message =
                         "Дверь не двигается. Сначала решите печать и опустите рычаг.".to_string();
                 }
             } else {
+                audio::play_ui_cancel();
                 self.status_message =
                     "Здесь нечего трогать. Осмотрите алтарь, рычаг или запечатанную дверь."
                         .to_string();

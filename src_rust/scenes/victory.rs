@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 
+use crate::audio;
 use crate::game_state::{GameProgress, GameState};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use crate::visual_assets::{draw_sprite, item_texture};
@@ -194,10 +195,12 @@ impl VictoryScene {
 impl Scene for VictoryScene {
     fn handle_input(&mut self) {
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            audio::play_ui_confirm();
             self.next_state = Some(GameState::Town);
         }
 
         if is_key_pressed(KeyCode::Escape) {
+            audio::play_ui_cancel();
             self.next_state = Some(GameState::Menu);
         }
     }

@@ -2,6 +2,7 @@ use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use ::rand::random;
 use macroquad::prelude::*;
 
+use crate::audio;
 use crate::game_state::{GameProgress, GameState};
 
 use super::Scene;
@@ -285,8 +286,10 @@ impl Scene for MenuScene {
         if self.reset_confirm_open {
             if is_key_pressed(KeyCode::Escape) {
                 self.reset_confirm_open = false;
+                audio::play_ui_cancel();
             }
             if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                audio::play_ui_confirm();
                 self.next_state = Some(GameState::ResetGame);
             }
             return;
@@ -298,11 +301,13 @@ impl Scene for MenuScene {
                 || is_key_pressed(KeyCode::Space)
             {
                 self.story_overlay_open = false;
+                audio::play_ui_cancel();
             }
             return;
         }
 
         if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+            audio::play_ui_move();
             self.selected_option = if self.selected_option == 0 {
                 self.options.len() - 1
             } else {
@@ -311,10 +316,12 @@ impl Scene for MenuScene {
         }
 
         if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+            audio::play_ui_move();
             self.selected_option = (self.selected_option + 1) % self.options.len();
         }
 
         if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            audio::play_ui_confirm();
             match self.selected_option {
                 0 => self.next_state = Some(GameState::Town),
                 1 => self.reset_confirm_open = true,
