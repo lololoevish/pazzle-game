@@ -801,6 +801,7 @@ impl GameplayScene {
 
     fn draw_world_detail(&self) {
         let mist = (self.cave_animation * 0.8).sin() * 0.5 + 0.5;
+        let accent = self.level_accent();
         let platform = platform_texture();
         let relic = item_texture();
         let gargoyle = enemy_texture();
@@ -875,6 +876,232 @@ impl GameplayScene {
             96.0,
             Color::from_rgba(96, 180, 255, if self.puzzle_solved { 18 } else { 36 }),
         );
+
+        self.draw_level_specific_detail(accent);
+    }
+
+    fn draw_level_specific_detail(&self, accent: Color) {
+        match self.level {
+            3 => self.draw_clockwork_detail(accent),
+            4 => self.draw_mirror_detail(accent),
+            5 => self.draw_crystal_fault_detail(accent),
+            6 => self.draw_core_below_detail(accent),
+            _ => {}
+        }
+    }
+
+    fn draw_clockwork_detail(&self, accent: Color) {
+        let phase = self.cave_animation * 1.4;
+        let ring_centers = [(170.0, 214.0, 40.0), (634.0, 202.0, 52.0)];
+        for (cx, cy, radius) in ring_centers {
+            draw_circle(
+                cx,
+                cy,
+                radius + 14.0,
+                Color::new(accent.r, accent.g, accent.b, 0.07),
+            );
+            draw_circle_lines(cx, cy, radius, 4.0, Color::from_rgba(126, 110, 164, 220));
+            draw_circle_lines(
+                cx,
+                cy,
+                radius - 16.0,
+                2.0,
+                Color::from_rgba(210, 196, 244, 180),
+            );
+            for tick in 0..8 {
+                let angle = phase + tick as f32 * std::f32::consts::TAU / 8.0;
+                let dir = vec2(angle.cos(), angle.sin());
+                let outer = vec2(cx, cy) + dir * (radius + 8.0);
+                let inner = vec2(cx, cy) + dir * (radius - 10.0);
+                draw_line(
+                    inner.x,
+                    inner.y,
+                    outer.x,
+                    outer.y,
+                    3.0,
+                    Color::from_rgba(228, 214, 174, 220),
+                );
+            }
+        }
+
+        let pendulum_x = 546.0;
+        let pendulum_swing = (self.cave_animation * 1.8).sin() * 22.0;
+        draw_line(
+            pendulum_x,
+            144.0,
+            pendulum_x + pendulum_swing,
+            264.0,
+            4.0,
+            Color::from_rgba(162, 150, 190, 220),
+        );
+        draw_circle(
+            pendulum_x + pendulum_swing,
+            264.0,
+            18.0,
+            Color::from_rgba(255, 214, 126, 230),
+        );
+        draw_circle(
+            pendulum_x + pendulum_swing,
+            264.0,
+            32.0,
+            Color::new(accent.r, accent.g, accent.b, 0.12),
+        );
+    }
+
+    fn draw_mirror_detail(&self, accent: Color) {
+        let shimmer = (self.cave_animation * 2.1).sin() * 0.5 + 0.5;
+        let shards = [
+            [vec2(152.0, 188.0), vec2(188.0, 126.0), vec2(218.0, 212.0)],
+            [vec2(610.0, 166.0), vec2(674.0, 142.0), vec2(650.0, 236.0)],
+            [vec2(540.0, 356.0), vec2(592.0, 308.0), vec2(610.0, 402.0)],
+        ];
+
+        for shard in shards {
+            draw_triangle(
+                shard[0],
+                shard[1],
+                shard[2],
+                Color::from_rgba(182, 230, 255, 146),
+            );
+            draw_triangle_lines(
+                shard[0],
+                shard[1],
+                shard[2],
+                2.0,
+                Color::from_rgba(255, 240, 250, 220),
+            );
+        }
+
+        for y in [230.0, 274.0, 318.0] {
+            draw_line(
+                124.0,
+                y,
+                690.0,
+                y + shimmer * 6.0,
+                1.0,
+                Color::new(accent.r, accent.g, accent.b, 0.08),
+            );
+        }
+
+        draw_rectangle(86.0, 160.0, 118.0, 186.0, Color::from_rgba(32, 42, 62, 96));
+        draw_rectangle_lines(
+            86.0,
+            160.0,
+            118.0,
+            186.0,
+            3.0,
+            Color::from_rgba(212, 224, 255, 170),
+        );
+        draw_rectangle(592.0, 148.0, 124.0, 198.0, Color::from_rgba(40, 34, 58, 90));
+        draw_rectangle_lines(
+            592.0,
+            148.0,
+            124.0,
+            198.0,
+            3.0,
+            Color::from_rgba(255, 214, 238, 170),
+        );
+    }
+
+    fn draw_crystal_fault_detail(&self, accent: Color) {
+        let surge = (self.cave_animation * 2.6).sin() * 0.5 + 0.5;
+        for beam_x in [132.0, 246.0, 620.0] {
+            draw_triangle(
+                vec2(beam_x, 498.0),
+                vec2(beam_x + 26.0, 318.0),
+                vec2(beam_x + 52.0, 498.0),
+                Color::from_rgba(72, 198, 186, 160),
+            );
+            draw_triangle(
+                vec2(beam_x + 8.0, 486.0),
+                vec2(beam_x + 26.0, 346.0),
+                vec2(beam_x + 42.0, 486.0),
+                Color::from_rgba(214, 255, 238, 156),
+            );
+            draw_circle(
+                beam_x + 26.0,
+                392.0,
+                26.0 + surge * 18.0,
+                Color::new(accent.r, accent.g, accent.b, 0.09),
+            );
+        }
+
+        for offset in [0.0, 42.0, 90.0] {
+            draw_line(
+                356.0 + offset,
+                494.0,
+                430.0 + offset * 0.4,
+                356.0 - offset * 0.3,
+                3.0,
+                Color::from_rgba(208, 255, 240, 170),
+            );
+            draw_line(
+                356.0 + offset,
+                494.0,
+                330.0 + offset * 0.8,
+                404.0 - offset * 0.2,
+                2.0,
+                Color::from_rgba(120, 244, 210, 146),
+            );
+        }
+    }
+
+    fn draw_core_below_detail(&self, accent: Color) {
+        let pulse = (self.cave_animation * 2.0).sin() * 0.5 + 0.5;
+        let core_center = vec2(398.0, 168.0);
+        draw_circle(
+            core_center.x,
+            core_center.y,
+            34.0 + pulse * 10.0,
+            Color::from_rgba(255, 112, 112, 180),
+        );
+        draw_circle(
+            core_center.x,
+            core_center.y,
+            20.0,
+            Color::from_rgba(255, 232, 172, 240),
+        );
+        draw_circle_lines(
+            core_center.x,
+            core_center.y,
+            56.0 + pulse * 8.0,
+            3.0,
+            Color::new(accent.r, accent.g, accent.b, 0.34),
+        );
+
+        for x in [168.0, 238.0, 548.0, 618.0] {
+            let height = 84.0 + ((x * 0.1) + self.cave_animation * 2.4).sin() * 18.0;
+            draw_rectangle(
+                x,
+                474.0 - height,
+                14.0,
+                height,
+                Color::from_rgba(86, 44, 52, 210),
+            );
+            draw_triangle(
+                vec2(x - 8.0, 474.0 - height),
+                vec2(x + 7.0, 442.0 - height),
+                vec2(x + 22.0, 474.0 - height),
+                Color::from_rgba(255, 154, 118, 220),
+            );
+        }
+
+        for (x1, y1, x2, y2) in [
+            (244.0, 496.0, 310.0, 428.0),
+            (286.0, 496.0, 356.0, 382.0),
+            (520.0, 496.0, 450.0, 390.0),
+            (566.0, 496.0, 490.0, 424.0),
+        ] {
+            draw_line(x1, y1, x2, y2, 3.0, Color::from_rgba(255, 126, 126, 180));
+            draw_line(
+                x2,
+                y2,
+                x2 + 18.0,
+                y2 - 24.0,
+                2.0,
+                Color::from_rgba(255, 214, 160, 146),
+            );
+        }
     }
 
     fn draw_puzzle_shell(&self) {
