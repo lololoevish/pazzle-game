@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 use macroquad::audio::{load_sound_from_bytes, play_sound, stop_sound, PlaySoundParams, Sound};
 
@@ -25,6 +26,7 @@ struct SoundBank {
 
 thread_local! {
     static SOUND_BANK: RefCell<Option<SoundBank>> = const { RefCell::new(None) };
+    static AUDIO_RUNTIME_OK: RefCell<bool> = const { RefCell::new(true) };
 }
 
 pub async fn init() {
@@ -66,19 +68,36 @@ pub async fn init() {
 
 fn play(sound: &Option<Sound>, volume: f32) {
     if let Some(sound) = sound {
-        play_sound(
-            sound,
-            PlaySoundParams {
-                looped: false,
-                volume,
-            },
-        );
+        with_audio_runtime(|| {
+            play_sound(
+                sound,
+                PlaySoundParams {
+                    looped: false,
+                    volume,
+                },
+            );
+        });
     }
 }
 
 fn stop(sound: &Option<Sound>) {
     if let Some(sound) = sound {
-        stop_sound(sound);
+        with_audio_runtime(|| {
+            stop_sound(sound);
+        });
+    }
+}
+
+fn with_audio_runtime(action: impl FnOnce()) {
+    let audio_ok = AUDIO_RUNTIME_OK.with(|flag| *flag.borrow());
+    if !audio_ok {
+        return;
+    }
+
+    if catch_unwind(AssertUnwindSafe(action)).is_err() {
+        AUDIO_RUNTIME_OK.with(|flag| {
+            *flag.borrow_mut() = false;
+        });
     }
 }
 
@@ -106,14 +125,17 @@ pub fn play_music(track: MusicTrack) {
         };
 
         if let Some(sound) = sound {
-            play_sound(
-                sound,
-                PlaySoundParams {
-                    looped: true,
-                    volume: 0.26,
-                },
-            );
-            bank.current_music = Some(track);
+            with_audio_runtime(|| {
+                play_sound(
+                    sound,
+                    PlaySoundParams {
+                        looped: true,
+                        volume: 0.26,
+                    },
+                );
+            });
+            let audio_ok = AUDIO_RUNTIME_OK.with(|flag| *flag.borrow());
+            bank.current_music = if audio_ok { Some(track) } else { None };
         } else {
             bank.current_music = None;
         }
