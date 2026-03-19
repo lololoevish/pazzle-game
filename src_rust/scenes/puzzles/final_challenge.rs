@@ -1,3 +1,4 @@
+use crate::audio;
 use crate::ui_text::{draw_game_text, measure_game_text};
 use macroquad::prelude::*;
 
@@ -88,6 +89,7 @@ impl FinalChallengePuzzle {
     pub fn handle_input(&mut self) {
         if self.failed {
             if is_key_pressed(KeyCode::R) {
+                audio::play_ui_confirm();
                 self.reset();
             }
             return;
@@ -131,6 +133,7 @@ impl FinalChallengePuzzle {
         if self.time_left <= 0.0 {
             self.time_left = 0.0;
             self.failed = true;
+            audio::play_ui_cancel();
             return;
         }
 
@@ -149,6 +152,7 @@ impl FinalChallengePuzzle {
                 self.player.x = self.spawn.x;
                 self.player.y = self.spawn.y;
                 self.hit_cooldown = 1.0;
+                audio::play_ui_cancel();
             }
         }
 
@@ -159,6 +163,7 @@ impl FinalChallengePuzzle {
         for artifact in &mut self.artifacts {
             if !artifact.collected && artifact.pos.distance(player_center) < 24.0 {
                 artifact.collected = true;
+                audio::play_ui_success();
             }
         }
     }

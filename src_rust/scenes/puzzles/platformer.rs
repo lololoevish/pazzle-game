@@ -1,3 +1,4 @@
+use crate::audio;
 use crate::ui_text::draw_game_text;
 use macroquad::prelude::*;
 
@@ -98,6 +99,7 @@ impl PlatformerPuzzle {
         {
             self.velocity.y = -395.0;
             self.on_ground = false;
+            audio::play_ui_confirm();
         }
     }
 
@@ -130,6 +132,7 @@ impl PlatformerPuzzle {
         }
 
         if self.player.y > screen_height() {
+            audio::play_ui_cancel();
             self.reset_player();
         }
 
@@ -144,6 +147,7 @@ impl PlatformerPuzzle {
 
             if player_center.distance(vec2(crystal.x, crystal.y)) < 28.0 {
                 crystal.collected = true;
+                audio::play_ui_success();
             }
         }
     }

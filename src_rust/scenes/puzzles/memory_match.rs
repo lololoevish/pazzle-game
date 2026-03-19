@@ -1,6 +1,7 @@
 use ::rand::{seq::SliceRandom, thread_rng};
 use macroquad::prelude::*;
 
+use crate::audio;
 use crate::ui_text::{draw_game_text, measure_game_text};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -102,8 +103,10 @@ impl MemoryMatchPuzzle {
             self.cards[second].matched = true;
             self.selected_indices.clear();
             self.solved_flash = 0.25;
+            audio::play_ui_success();
         } else {
             self.mismatch_timer = 0.9;
+            audio::play_ui_cancel();
         }
     }
 
@@ -191,6 +194,7 @@ impl MemoryMatchPuzzle {
 
                 self.cards[index].revealed = true;
                 self.selected_indices.push(index);
+                audio::play_ui_confirm();
 
                 if self.selected_indices.len() == 2 {
                     self.resolve_selected_pair();

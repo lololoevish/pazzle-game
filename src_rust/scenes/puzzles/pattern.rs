@@ -1,3 +1,4 @@
+use crate::audio;
 use crate::ui_text::draw_game_text;
 use ::rand::{thread_rng, Rng};
 use macroquad::prelude::*;
@@ -119,12 +120,14 @@ impl PatternPuzzle {
 
     fn handle_button_click(&mut self, button_id: usize) {
         self.player_input.push(button_id);
+        audio::play_ui_confirm();
 
         // Проверяем правильность
         let expected = self.sequence[self.player_input.len() - 1];
 
         if button_id != expected {
             // Ошибка - начинаем сначала
+            audio::play_ui_cancel();
             self.current_round = 1;
             self.generate_sequence();
             self.start_showing_sequence();
@@ -136,8 +139,10 @@ impl PatternPuzzle {
             if self.current_round >= self.max_rounds {
                 // Все раунды пройдены!
                 self.solved = true;
+                audio::play_ui_success();
             } else {
                 // Следующий раунд
+                audio::play_ui_success();
                 self.current_round += 1;
                 self.generate_sequence();
                 self.start_showing_sequence();
