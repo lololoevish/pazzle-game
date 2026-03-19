@@ -4,8 +4,9 @@ use crate::audio;
 use crate::game_state::{GameState, LevelProgress, ProgressUpdate};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use crate::visual_assets::{
-    draw_sprite, enemy_texture, item_texture, lever_texture, platform_texture, player_texture,
-    Facing,
+    clockwork_emblem_texture, core_spire_texture, crystal_cluster_texture, draw_sprite,
+    enemy_texture, item_texture, lever_texture, mirror_shard_texture, platform_texture,
+    player_texture, Facing,
 };
 
 use super::puzzles::{
@@ -892,6 +893,7 @@ impl GameplayScene {
 
     fn draw_clockwork_detail(&self, accent: Color) {
         let phase = self.cave_animation * 1.4;
+        let emblem = clockwork_emblem_texture();
         let ring_centers = [(170.0, 214.0, 40.0), (634.0, 202.0, 52.0)];
         for (cx, cy, radius) in ring_centers {
             draw_circle(
@@ -922,6 +924,14 @@ impl GameplayScene {
                     Color::from_rgba(228, 214, 174, 220),
                 );
             }
+            draw_sprite(
+                &emblem,
+                cx - radius * 0.65,
+                cy - radius * 0.65,
+                radius * 1.3,
+                radius * 1.3,
+                Color::new(1.0, 1.0, 1.0, 0.72),
+            );
         }
 
         let pendulum_x = 546.0;
@@ -950,6 +960,7 @@ impl GameplayScene {
 
     fn draw_mirror_detail(&self, accent: Color) {
         let shimmer = (self.cave_animation * 2.1).sin() * 0.5 + 0.5;
+        let mirror = mirror_shard_texture();
         let shards = [
             [vec2(152.0, 188.0), vec2(188.0, 126.0), vec2(218.0, 212.0)],
             [vec2(610.0, 166.0), vec2(674.0, 142.0), vec2(650.0, 236.0)],
@@ -970,6 +981,14 @@ impl GameplayScene {
                 2.0,
                 Color::from_rgba(255, 240, 250, 220),
             );
+        }
+
+        for (x, y, size, alpha) in [
+            (108.0, 132.0, 82.0, 0.78),
+            (612.0, 118.0, 88.0, 0.86),
+            (520.0, 312.0, 74.0, 0.72),
+        ] {
+            draw_sprite(&mirror, x, y, size, size, Color::new(1.0, 1.0, 1.0, alpha));
         }
 
         for y in [230.0, 274.0, 318.0] {
@@ -1005,6 +1024,7 @@ impl GameplayScene {
 
     fn draw_crystal_fault_detail(&self, accent: Color) {
         let surge = (self.cave_animation * 2.6).sin() * 0.5 + 0.5;
+        let cluster = crystal_cluster_texture();
         for beam_x in [132.0, 246.0, 620.0] {
             draw_triangle(
                 vec2(beam_x, 498.0),
@@ -1023,6 +1043,14 @@ impl GameplayScene {
                 392.0,
                 26.0 + surge * 18.0,
                 Color::new(accent.r, accent.g, accent.b, 0.09),
+            );
+            draw_sprite(
+                &cluster,
+                beam_x - 8.0,
+                286.0 + surge * 8.0,
+                64.0,
+                64.0,
+                Color::new(1.0, 1.0, 1.0, 0.88),
             );
         }
 
@@ -1049,6 +1077,7 @@ impl GameplayScene {
     fn draw_core_below_detail(&self, accent: Color) {
         let pulse = (self.cave_animation * 2.0).sin() * 0.5 + 0.5;
         let core_center = vec2(398.0, 168.0);
+        let spire = core_spire_texture();
         draw_circle(
             core_center.x,
             core_center.y,
@@ -1068,6 +1097,14 @@ impl GameplayScene {
             3.0,
             Color::new(accent.r, accent.g, accent.b, 0.34),
         );
+        draw_sprite(
+            &spire,
+            core_center.x - 38.0,
+            core_center.y - 46.0,
+            76.0,
+            76.0,
+            Color::new(1.0, 1.0, 1.0, 0.92),
+        );
 
         for x in [168.0, 238.0, 548.0, 618.0] {
             let height = 84.0 + ((x * 0.1) + self.cave_animation * 2.4).sin() * 18.0;
@@ -1083,6 +1120,14 @@ impl GameplayScene {
                 vec2(x + 7.0, 442.0 - height),
                 vec2(x + 22.0, 474.0 - height),
                 Color::from_rgba(255, 154, 118, 220),
+            );
+            draw_sprite(
+                &spire,
+                x - 16.0,
+                428.0 - height,
+                44.0,
+                44.0,
+                Color::new(1.0, 1.0, 1.0, 0.72),
             );
         }
 

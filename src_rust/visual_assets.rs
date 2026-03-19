@@ -20,6 +20,10 @@ struct VisualAssets {
     item: Texture2D,
     platform: Texture2D,
     enemy: Texture2D,
+    clockwork_emblem: Texture2D,
+    mirror_shard: Texture2D,
+    crystal_cluster: Texture2D,
+    core_spire: Texture2D,
 }
 
 thread_local! {
@@ -45,6 +49,14 @@ fn with_assets<R>(f: impl FnOnce(&VisualAssets) -> R) -> R {
                 item: load_texture(include_bytes!("../assets/sprites/item.png")),
                 platform: load_texture(include_bytes!("../assets/sprites/platform.png")),
                 enemy: load_texture(include_bytes!("../assets/sprites/enemy.png")),
+                clockwork_emblem: load_texture(include_bytes!(
+                    "../assets/sprites/clockwork_emblem.png"
+                )),
+                mirror_shard: load_texture(include_bytes!("../assets/sprites/mirror_shard.png")),
+                crystal_cluster: load_texture(include_bytes!(
+                    "../assets/sprites/crystal_cluster.png"
+                )),
+                core_spire: load_texture(include_bytes!("../assets/sprites/core_spire.png")),
             };
             *slot.borrow_mut() = Some(assets);
         }
@@ -82,6 +94,22 @@ pub fn platform_texture() -> Texture2D {
 
 pub fn enemy_texture() -> Texture2D {
     with_assets(|assets| assets.enemy.clone())
+}
+
+pub fn clockwork_emblem_texture() -> Texture2D {
+    with_assets(|assets| assets.clockwork_emblem.clone())
+}
+
+pub fn mirror_shard_texture() -> Texture2D {
+    with_assets(|assets| assets.mirror_shard.clone())
+}
+
+pub fn crystal_cluster_texture() -> Texture2D {
+    with_assets(|assets| assets.crystal_cluster.clone())
+}
+
+pub fn core_spire_texture() -> Texture2D {
+    with_assets(|assets| assets.core_spire.clone())
 }
 
 pub fn draw_sprite(texture: &Texture2D, x: f32, y: f32, width: f32, height: f32, tint: Color) {
