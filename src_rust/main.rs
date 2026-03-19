@@ -32,6 +32,16 @@ fn build_scene(state: GameState, progress: &GameProgress) -> Box<dyn Scene> {
     }
 }
 
+fn sync_music(state: GameState) {
+    match state {
+        GameState::Menu => audio::play_music(audio::MusicTrack::Menu),
+        GameState::Town => audio::play_music(audio::MusicTrack::Town),
+        GameState::Playing(_) => audio::play_music(audio::MusicTrack::Cave),
+        GameState::Victory => audio::play_music(audio::MusicTrack::Victory),
+        GameState::ResetGame | GameState::Quit => audio::stop_music(),
+    }
+}
+
 fn draw_transition_overlay(alpha: f32, time: f32) {
     if alpha <= 0.0 {
         return;
@@ -81,6 +91,7 @@ async fn main() {
 
     // Начальная сцена - меню
     let mut current_scene: Box<dyn Scene> = Box::new(MenuScene::new(game_progress.clone()));
+    sync_music(GameState::Menu);
     let mut transition: Option<SceneTransition> = None;
     let mut transition_time = 0.0;
     loop {
@@ -131,15 +142,18 @@ async fn main() {
 
                     if *alpha >= 1.0 {
                         if *next_state == GameState::Quit {
+                            audio::stop_music();
                             should_quit = true;
                         } else if *next_state == GameState::ResetGame {
                             game_progress = GameProgress::default();
                             let _ = fs::remove_file("savegame.json");
                             game_progress.save().ok();
                             current_scene = Box::new(TownScene::new(game_progress.clone()));
+                            sync_music(GameState::Town);
                             transition = Some(SceneTransition::FadeIn { alpha: 1.0 });
                         } else {
                             current_scene = build_scene(*next_state, &game_progress);
+                            sync_music(*next_state);
                             transition = Some(SceneTransition::FadeIn { alpha: 1.0 });
                         }
                     }

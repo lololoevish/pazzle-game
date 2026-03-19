@@ -1,6 +1,14 @@
 use std::cell::RefCell;
 
-use macroquad::audio::{load_sound_from_bytes, play_sound, PlaySoundParams, Sound};
+use macroquad::audio::{load_sound_from_bytes, play_sound, stop_sound, PlaySoundParams, Sound};
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MusicTrack {
+    Menu,
+    Town,
+    Cave,
+    Victory,
+}
 
 struct SoundBank {
     ui_move: Option<Sound>,
@@ -8,6 +16,11 @@ struct SoundBank {
     ui_cancel: Option<Sound>,
     ui_success: Option<Sound>,
     lever: Option<Sound>,
+    music_menu: Option<Sound>,
+    music_town: Option<Sound>,
+    music_cave: Option<Sound>,
+    music_victory: Option<Sound>,
+    current_music: Option<MusicTrack>,
 }
 
 thread_local! {
@@ -31,6 +44,19 @@ pub async fn init() {
         lever: load_sound_from_bytes(include_bytes!("../assets/audio/lever.wav"))
             .await
             .ok(),
+        music_menu: load_sound_from_bytes(include_bytes!("../assets/audio/music_menu.wav"))
+            .await
+            .ok(),
+        music_town: load_sound_from_bytes(include_bytes!("../assets/audio/music_town.wav"))
+            .await
+            .ok(),
+        music_cave: load_sound_from_bytes(include_bytes!("../assets/audio/music_cave.wav"))
+            .await
+            .ok(),
+        music_victory: load_sound_from_bytes(include_bytes!("../assets/audio/music_victory.wav"))
+            .await
+            .ok(),
+        current_music: None,
     };
 
     SOUND_BANK.with(|slot| {
@@ -48,6 +74,65 @@ fn play(sound: &Option<Sound>, volume: f32) {
             },
         );
     }
+}
+
+fn stop(sound: &Option<Sound>) {
+    if let Some(sound) = sound {
+        stop_sound(sound);
+    }
+}
+
+pub fn play_music(track: MusicTrack) {
+    SOUND_BANK.with(|slot| {
+        let mut binding = slot.borrow_mut();
+        let Some(bank) = binding.as_mut() else {
+            return;
+        };
+
+        if bank.current_music == Some(track) {
+            return;
+        }
+
+        stop(&bank.music_menu);
+        stop(&bank.music_town);
+        stop(&bank.music_cave);
+        stop(&bank.music_victory);
+
+        let sound = match track {
+            MusicTrack::Menu => &bank.music_menu,
+            MusicTrack::Town => &bank.music_town,
+            MusicTrack::Cave => &bank.music_cave,
+            MusicTrack::Victory => &bank.music_victory,
+        };
+
+        if let Some(sound) = sound {
+            play_sound(
+                sound,
+                PlaySoundParams {
+                    looped: true,
+                    volume: 0.26,
+                },
+            );
+            bank.current_music = Some(track);
+        } else {
+            bank.current_music = None;
+        }
+    });
+}
+
+pub fn stop_music() {
+    SOUND_BANK.with(|slot| {
+        let mut binding = slot.borrow_mut();
+        let Some(bank) = binding.as_mut() else {
+            return;
+        };
+
+        stop(&bank.music_menu);
+        stop(&bank.music_town);
+        stop(&bank.music_cave);
+        stop(&bank.music_victory);
+        bank.current_music = None;
+    });
 }
 
 pub fn play_ui_move() {
