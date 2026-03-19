@@ -410,7 +410,7 @@ impl Scene for MenuScene {
             Color::from_rgba(204, 210, 226, 255),
         );
 
-        let progress_panel = Rect::new(92.0, 284.0, screen_width() - 184.0, 72.0);
+        let progress_panel = Rect::new(92.0, 278.0, screen_width() - 184.0, 88.0);
         draw_rectangle(
             progress_panel.x,
             progress_panel.y,
@@ -442,7 +442,7 @@ impl Scene for MenuScene {
         draw_wrapped_game_text(
             &progress_text,
             progress_panel.x + 16.0,
-            progress_panel.y + 30.0,
+            progress_panel.y + 46.0,
             progress_panel.w - 32.0,
             17.0,
             3.0,
@@ -457,7 +457,7 @@ impl Scene for MenuScene {
         draw_game_text(
             save_badge,
             progress_panel.x + progress_panel.w - badge_width - 18.0,
-            progress_panel.y - 8.0,
+            progress_panel.y + 18.0,
             16.0,
             if self.has_progress() {
                 Color::from_rgba(255, 214, 126, 255)
@@ -469,14 +469,14 @@ impl Scene for MenuScene {
             draw_game_text(
                 "Финал открыт",
                 progress_panel.x + 16.0,
-                progress_panel.y - 6.0,
+                progress_panel.y + 18.0,
                 16.0,
                 Color::from_rgba(164, 246, 182, 255),
             );
         }
 
-        let menu_start_y = 410.0;
-        let option_height = 68.0;
+        let menu_start_y = 392.0;
+        let option_height = 58.0;
 
         for (i, option) in self.options.iter().enumerate() {
             let y = menu_start_y + i as f32 * option_height;
@@ -489,13 +489,15 @@ impl Scene for MenuScene {
 
             let rect_width = 520.0;
             let rect_x = 112.0;
+            let rect_y = y - 30.0;
+            let rect_h = 52.0;
 
-            draw_rectangle(rect_x, y - 38.0, rect_width, 60.0, bg_color);
+            draw_rectangle(rect_x, rect_y, rect_width, rect_h, bg_color);
             draw_rectangle(
                 rect_x + 8.0,
-                y - 30.0,
+                rect_y + 8.0,
                 rect_width - 16.0,
-                44.0,
+                rect_h - 16.0,
                 if is_selected {
                     Color::from_rgba(136, 44, 64, 196)
                 } else {
@@ -508,31 +510,31 @@ impl Scene for MenuScene {
             } else {
                 Color::from_rgba(116, 90, 104, 220)
             };
-            draw_rectangle_lines(rect_x, y - 38.0, rect_width, 60.0, 2.0, border_color);
+            draw_rectangle_lines(rect_x, rect_y, rect_width, rect_h, 2.0, border_color);
 
-            let text_size = if is_selected { 34.0 } else { 29.0 };
+            let text_size = if is_selected { 28.0 } else { 24.0 };
             let text_color = if is_selected {
                 Color::from_rgba(255, 244, 228, 255)
             } else {
                 Color::from_rgba(194, 188, 194, 255)
             };
 
-            draw_game_text(option, rect_x + 26.0, y - 2.0, text_size, text_color);
+            draw_game_text(option, rect_x + 22.0, y + 2.0, text_size, text_color);
             draw_wrapped_game_text(
                 self.option_hint(i),
-                rect_x + 204.0,
-                y + 1.0,
-                rect_width - 236.0,
-                15.0,
-                3.0,
+                rect_x + 176.0,
+                y - 4.0,
+                rect_width - 198.0,
+                14.0,
+                2.0,
                 Color::from_rgba(185, 198, 215, 255),
             );
 
             if is_selected {
                 let pulse = (self.animation_time * 4.4).sin() * 0.5 + 0.5;
                 let indicator_color = Color::new(1.0, 0.88, 0.62, 0.72 + pulse * 0.28);
-                draw_rectangle(rect_x - 16.0, y - 38.0, 6.0, 60.0, indicator_color);
-                draw_game_text(">", rect_x - 42.0, y + 1.0, 28.0, indicator_color);
+                draw_rectangle(rect_x - 16.0, rect_y, 6.0, rect_h, indicator_color);
+                draw_game_text(">", rect_x - 42.0, y + 2.0, 28.0, indicator_color);
             }
         }
 
