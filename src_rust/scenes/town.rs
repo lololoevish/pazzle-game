@@ -982,8 +982,8 @@ impl TownScene {
                 &platform,
                 x + 8.0,
                 y + height - 24.0,
-                width - 16.0,
-                26.0,
+                32.0,
+                16.0,
                 WHITE,
             );
         }
@@ -1086,8 +1086,8 @@ impl TownScene {
                 &relic,
                 seal.rect.x + seal.rect.w / 2.0 - 12.0,
                 seal.rect.y + 44.0,
-                24.0,
-                24.0,
+                20.0,
+                20.0,
                 if opened {
                     Color::from_rgba(186, 228, 164, 255)
                 } else if completed {
@@ -1127,7 +1127,7 @@ impl TownScene {
             0.0,
             Color::from_rgba(0, 0, 0, 70),
         );
-        draw_sprite(&texture, npc.rect.x - 10.0, y - 6.0, 48.0, 48.0, npc.color);
+        draw_sprite(&texture, npc.rect.x - 10.0, y - 6.0, 32.0, 32.0, npc.color);
 
         if is_focused {
             draw_circle(
@@ -1176,8 +1176,8 @@ impl TownScene {
             &texture,
             self.player.x - 12.0,
             self.player.y - 12.0 - step_bob,
-            52.0,
-            52.0,
+            32.0,
+            32.0,
             WHITE,
         );
     }
@@ -2002,8 +2002,8 @@ impl Scene for TownScene {
                     &relic,
                     panel.x + panel.w - 64.0,
                     panel.y + 18.0,
-                    34.0,
-                    34.0,
+                    24.0,
+                    24.0,
                     WHITE,
                 );
                 draw_wrapped_game_text(

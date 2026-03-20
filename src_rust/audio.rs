@@ -257,10 +257,3 @@ pub fn play_puzzle_fall() {
     });
 }
 
-pub fn play_puzzle_timeout() {
-    SOUND_BANK.with(|slot| {
-        if let Some(bank) = slot.borrow().as_ref() {
-            play(&bank.puzzle_timeout, 0.38);
-        }
-    });
-}
