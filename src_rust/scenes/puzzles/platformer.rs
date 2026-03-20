@@ -153,14 +153,14 @@ impl PlatformerPuzzle {
     }
 
     pub fn draw(&self) {
-        draw_game_text("Соберите все кристаллы", 20.0, 60.0, 28.0, WHITE);
+        draw_game_text("Соберите все кристаллы", 20.0, 130.0, 28.0, WHITE);
         let collected = self
             .crystals
             .iter()
             .filter(|crystal| crystal.collected)
             .count();
         let progress = format!("Кристаллы: {}/{}", collected, self.crystals.len());
-        draw_game_text(&progress, 20.0, 90.0, 20.0, LIGHTGRAY);
+        draw_game_text(&progress, 20.0, 160.0, 20.0, LIGHTGRAY);
 
         for platform in &self.platforms {
             draw_rectangle(

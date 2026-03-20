@@ -22,7 +22,6 @@ struct SoundBank {
     puzzle_success: Option<Sound>,
     puzzle_item: Option<Sound>,
     puzzle_fall: Option<Sound>,
-    puzzle_timeout: Option<Sound>,
     music_menu: Option<Sound>,
     music_town: Option<Sound>,
     music_cave: Option<Sound>,
@@ -65,9 +64,6 @@ pub async fn init() {
             .await
             .ok(),
         puzzle_fall: load_sound_from_bytes(include_bytes!("../assets/audio/ui_cancel.wav"))
-            .await
-            .ok(),
-        puzzle_timeout: load_sound_from_bytes(include_bytes!("../assets/audio/ui_cancel.wav"))
             .await
             .ok(),
         music_menu: load_sound_from_bytes(include_bytes!("../assets/audio/music_menu.wav"))

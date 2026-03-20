@@ -241,14 +241,14 @@ impl MemoryMatchPuzzle {
         let (offset_x, offset_y, card_width, card_height) = self.grid_metrics();
         let matched_pairs = self.cards.iter().filter(|card| card.matched).count() / 2;
 
-        draw_game_text("Мемори: найдите все пары", 20.0, 62.0, 28.0, WHITE);
+        draw_game_text("Мемори: найдите все пары", 20.0, 130.0, 28.0, WHITE);
         let progress = format!(
             "Пар найдено: {}/{} | Ходов: {}",
             matched_pairs,
             self.cards.len() / 2,
             self.attempts
         );
-        draw_game_text(&progress, 20.0, 92.0, 20.0, LIGHTGRAY);
+        draw_game_text(&progress, 20.0, 160.0, 20.0, LIGHTGRAY);
 
         for (index, card) in self.cards.iter().enumerate() {
             let row = index / self.columns;

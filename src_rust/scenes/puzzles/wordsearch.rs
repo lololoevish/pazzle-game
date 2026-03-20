@@ -296,7 +296,7 @@ impl WordSearchPuzzle {
         }
 
         let progress = format!("Найдено: {}/{}", self.found_words.len(), self.words.len());
-        draw_game_text(&progress, 20.0, 60.0, 20.0, WHITE);
+        draw_game_text(&progress, 20.0, 130.0, 20.0, WHITE);
         draw_wrapped_game_text(
             &self.status_message,
             20.0,

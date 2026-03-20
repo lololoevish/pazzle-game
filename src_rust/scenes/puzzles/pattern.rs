@@ -202,14 +202,14 @@ impl PatternPuzzle {
             )
         };
 
-        draw_game_text(&info, 20.0, 60.0, 24.0, WHITE);
+        draw_game_text(&info, 20.0, 130.0, 24.0, WHITE);
 
         // Подсказка
         if !self.showing_sequence {
             draw_game_text(
                 "Кликайте на кнопки в правильном порядке",
                 20.0,
-                90.0,
+                160.0,
                 18.0,
                 GRAY,
             );

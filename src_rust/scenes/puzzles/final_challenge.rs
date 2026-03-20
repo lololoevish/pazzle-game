@@ -182,7 +182,7 @@ impl FinalChallengePuzzle {
         draw_game_text(
             "Финал: соберите артефакты до конца времени",
             20.0,
-            55.0,
+            125.0,
             26.0,
             WHITE,
         );
@@ -194,7 +194,7 @@ impl FinalChallengePuzzle {
         draw_game_text(
             &format!("Таймер: {:.0}", self.time_left.ceil()),
             screen_width() - 160.0,
-            55.0,
+            125.0,
             28.0,
             timer_color,
         );
@@ -207,7 +207,7 @@ impl FinalChallengePuzzle {
         draw_game_text(
             &format!("Артефакты: {}/{}", collected, self.artifacts.len()),
             20.0,
-            82.0,
+            152.0,
             20.0,
             LIGHTGRAY,
         );
