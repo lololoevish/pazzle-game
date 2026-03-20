@@ -521,8 +521,8 @@ impl GameplayScene {
             &relic,
             self.altar_rect.x + self.altar_rect.w / 2.0 - 22.0,
             self.altar_rect.y + 38.0,
-            32.0,
-            32.0,
+            48.0,
+            48.0,
             if self.puzzle_solved {
                 Color::from_rgba(160, 170, 182, 220)
             } else {
@@ -585,8 +585,8 @@ impl GameplayScene {
             &lever,
             self.lever_rect.x - 8.0,
             self.lever_rect.y + 2.0,
-            32.0,
-            32.0,
+            48.0,
+            48.0,
             WHITE,
         );
         let label = if self.passage_open {
@@ -685,8 +685,8 @@ impl GameplayScene {
             &texture,
             self.player.x - 12.0,
             self.player.y - 12.0 - bob,
-            32.0,
-            32.0,
+            48.0,
+            48.0,
             WHITE,
         );
     }
@@ -835,39 +835,39 @@ impl GameplayScene {
         }
 
         for x in [154.0, 266.0, 510.0, 622.0] {
-            draw_sprite(&platform, x, 452.0, 32.0, 16.0, WHITE);
+            draw_sprite(&platform, x, 452.0, 48.0, 24.0, WHITE);
         }
 
         draw_sprite(
             &gargoyle,
             120.0,
             236.0,
-            32.0,
-            32.0,
+            48.0,
+            48.0,
             Color::from_rgba(186, 180, 198, 220),
         );
         draw_sprite(
             &gargoyle,
             618.0,
             232.0,
-            32.0,
-            32.0,
+            48.0,
+            48.0,
             Color::from_rgba(186, 180, 198, 220),
         );
         draw_sprite(
             &relic,
             206.0,
             430.0,
-            24.0,
-            24.0,
+            32.0,
+            32.0,
             Color::from_rgba(170, 232, 255, 220),
         );
         draw_sprite(
             &relic,
             596.0,
             430.0,
-            24.0,
-            24.0,
+            32.0,
+            32.0,
             Color::from_rgba(170, 232, 255, 220),
         );
 
@@ -928,8 +928,8 @@ impl GameplayScene {
                 &emblem,
                 cx - radius * 0.65,
                 cy - radius * 0.65,
-                32.0,
-                32.0,
+                48.0,
+                48.0,
                 Color::new(1.0, 1.0, 1.0, 0.72),
             );
         }
@@ -984,9 +984,9 @@ impl GameplayScene {
         }
 
         for (x, y, size, alpha) in [
-            (108.0, 132.0, 32.0, 0.78),
-            (612.0, 118.0, 32.0, 0.86),
-            (520.0, 312.0, 32.0, 0.72),
+            (108.0, 132.0, 48.0, 0.78),
+            (612.0, 118.0, 48.0, 0.86),
+            (520.0, 312.0, 48.0, 0.72),
         ] {
             draw_sprite(&mirror, x, y, size, size, Color::new(1.0, 1.0, 1.0, alpha));
         }
@@ -1048,8 +1048,8 @@ impl GameplayScene {
                 &cluster,
                 beam_x - 8.0,
                 286.0 + surge * 8.0,
-                32.0,
-                32.0,
+                48.0,
+                48.0,
                 Color::new(1.0, 1.0, 1.0, 0.88),
             );
         }
@@ -1101,8 +1101,8 @@ impl GameplayScene {
             &spire,
             core_center.x - 38.0,
             core_center.y - 46.0,
-            32.0,
-            32.0,
+            48.0,
+            48.0,
             Color::new(1.0, 1.0, 1.0, 0.92),
         );
 
@@ -1125,8 +1125,8 @@ impl GameplayScene {
                 &spire,
                 x - 16.0,
                 428.0 - height,
-                24.0,
-                24.0,
+                32.0,
+                32.0,
                 Color::new(1.0, 1.0, 1.0, 0.72),
             );
         }
