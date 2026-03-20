@@ -17,6 +17,12 @@ struct SoundBank {
     ui_cancel: Option<Sound>,
     ui_success: Option<Sound>,
     lever: Option<Sound>,
+    puzzle_select: Option<Sound>,
+    puzzle_error: Option<Sound>,
+    puzzle_success: Option<Sound>,
+    puzzle_item: Option<Sound>,
+    puzzle_fall: Option<Sound>,
+    puzzle_timeout: Option<Sound>,
     music_menu: Option<Sound>,
     music_town: Option<Sound>,
     music_cave: Option<Sound>,
@@ -44,6 +50,24 @@ pub async fn init() {
             .await
             .ok(),
         lever: load_sound_from_bytes(include_bytes!("../assets/audio/lever.wav"))
+            .await
+            .ok(),
+        puzzle_select: load_sound_from_bytes(include_bytes!("../assets/audio/ui_move.wav"))
+            .await
+            .ok(),
+        puzzle_error: load_sound_from_bytes(include_bytes!("../assets/audio/ui_cancel.wav"))
+            .await
+            .ok(),
+        puzzle_success: load_sound_from_bytes(include_bytes!("../assets/audio/ui_success.wav"))
+            .await
+            .ok(),
+        puzzle_item: load_sound_from_bytes(include_bytes!("../assets/audio/ui_success.wav"))
+            .await
+            .ok(),
+        puzzle_fall: load_sound_from_bytes(include_bytes!("../assets/audio/ui_cancel.wav"))
+            .await
+            .ok(),
+        puzzle_timeout: load_sound_from_bytes(include_bytes!("../assets/audio/ui_cancel.wav"))
             .await
             .ok(),
         music_menu: load_sound_from_bytes(include_bytes!("../assets/audio/music_menu.wav"))
@@ -193,6 +217,54 @@ pub fn play_lever() {
     SOUND_BANK.with(|slot| {
         if let Some(bank) = slot.borrow().as_ref() {
             play(&bank.lever, 0.62);
+        }
+    });
+}
+
+pub fn play_puzzle_select() {
+    SOUND_BANK.with(|slot| {
+        if let Some(bank) = slot.borrow().as_ref() {
+            play(&bank.puzzle_select, 0.40);
+        }
+    });
+}
+
+pub fn play_puzzle_error() {
+    SOUND_BANK.with(|slot| {
+        if let Some(bank) = slot.borrow().as_ref() {
+            play(&bank.puzzle_error, 0.45);
+        }
+    });
+}
+
+pub fn play_puzzle_success() {
+    SOUND_BANK.with(|slot| {
+        if let Some(bank) = slot.borrow().as_ref() {
+            play(&bank.puzzle_success, 0.50);
+        }
+    });
+}
+
+pub fn play_puzzle_item() {
+    SOUND_BANK.with(|slot| {
+        if let Some(bank) = slot.borrow().as_ref() {
+            play(&bank.puzzle_item, 0.35);
+        }
+    });
+}
+
+pub fn play_puzzle_fall() {
+    SOUND_BANK.with(|slot| {
+        if let Some(bank) = slot.borrow().as_ref() {
+            play(&bank.puzzle_fall, 0.40);
+        }
+    });
+}
+
+pub fn play_puzzle_timeout() {
+    SOUND_BANK.with(|slot| {
+        if let Some(bank) = slot.borrow().as_ref() {
+            play(&bank.puzzle_timeout, 0.38);
         }
     });
 }

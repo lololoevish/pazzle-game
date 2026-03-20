@@ -99,7 +99,7 @@ impl PlatformerPuzzle {
         {
             self.velocity.y = -395.0;
             self.on_ground = false;
-            audio::play_ui_confirm();
+            audio::play_puzzle_select();
         }
     }
 
@@ -132,7 +132,7 @@ impl PlatformerPuzzle {
         }
 
         if self.player.y > screen_height() {
-            audio::play_ui_cancel();
+            audio::play_puzzle_fall();
             self.reset_player();
         }
 
@@ -147,7 +147,7 @@ impl PlatformerPuzzle {
 
             if player_center.distance(vec2(crystal.x, crystal.y)) < 28.0 {
                 crystal.collected = true;
-                audio::play_ui_success();
+                audio::play_puzzle_item();
             }
         }
     }

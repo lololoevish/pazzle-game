@@ -103,10 +103,10 @@ impl MemoryMatchPuzzle {
             self.cards[second].matched = true;
             self.selected_indices.clear();
             self.solved_flash = 0.25;
-            audio::play_ui_success();
+            audio::play_puzzle_success();
         } else {
             self.mismatch_timer = 0.9;
-            audio::play_ui_cancel();
+            audio::play_puzzle_error();
         }
     }
 
@@ -194,7 +194,7 @@ impl MemoryMatchPuzzle {
 
                 self.cards[index].revealed = true;
                 self.selected_indices.push(index);
-                audio::play_ui_confirm();
+                audio::play_puzzle_select();
 
                 if self.selected_indices.len() == 2 {
                     self.resolve_selected_pair();
