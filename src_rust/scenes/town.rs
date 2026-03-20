@@ -5,7 +5,7 @@ use crate::audio;
 use crate::game_state::{GameProgress, GameState, ProgressUpdate};
 use crate::ui_text::{draw_game_text, draw_wrapped_game_text, measure_game_text};
 use crate::visual_assets::{
-    draw_sprite, item_texture, npc_texture, platform_texture, player_texture, Facing,
+    draw_sprite, item_texture, npc_texture_by_index, platform_texture, player_texture, Facing,
 };
 
 use super::Scene;
@@ -1117,7 +1117,8 @@ impl TownScene {
     fn draw_npc(&self, npc: &TownNpc, is_focused: bool) {
         let bob = (self.animation_time * 2.3 + npc.rect.x * 0.018).sin() * 3.0;
         let y = npc.rect.y + bob;
-        let texture = npc_texture();
+        let npc_index = self.npcs.iter().position(|n| n.name == npc.name).unwrap_or(0);
+        let texture = npc_texture_by_index(npc_index);
 
         draw_ellipse(
             npc.rect.x + npc.rect.w / 2.0,

@@ -15,7 +15,9 @@ struct VisualAssets {
     player_up: Texture2D,
     player_left: Texture2D,
     player_right: Texture2D,
-    npc: Texture2D,
+    npc_roan: Texture2D,
+    npc_tellah: Texture2D,
+    npc_yore: Texture2D,
     lever: Texture2D,
     item: Texture2D,
     platform: Texture2D,
@@ -44,7 +46,9 @@ fn with_assets<R>(f: impl FnOnce(&VisualAssets) -> R) -> R {
                 player_up: load_texture(include_bytes!("../assets/sprites/player_up.png")),
                 player_left: load_texture(include_bytes!("../assets/sprites/player_left.png")),
                 player_right: load_texture(include_bytes!("../assets/sprites/player_right.png")),
-                npc: load_texture(include_bytes!("../assets/sprites/npc.png")),
+                npc_roan: load_texture(include_bytes!("../assets/sprites/npc_roan.png")),
+                npc_tellah: load_texture(include_bytes!("../assets/sprites/npc_tellah.png")),
+                npc_yore: load_texture(include_bytes!("../assets/sprites/npc_yore.png")),
                 lever: load_texture(include_bytes!("../assets/sprites/lever.png")),
                 item: load_texture(include_bytes!("../assets/sprites/item.png")),
                 platform: load_texture(include_bytes!("../assets/sprites/platform.png")),
@@ -76,8 +80,25 @@ pub fn player_texture(facing: Facing) -> Texture2D {
     })
 }
 
-pub fn npc_texture() -> Texture2D {
-    with_assets(|assets| assets.npc.clone())
+pub fn npc_roan_texture() -> Texture2D {
+    with_assets(|assets| assets.npc_roan.clone())
+}
+
+pub fn npc_tellah_texture() -> Texture2D {
+    with_assets(|assets| assets.npc_tellah.clone())
+}
+
+pub fn npc_yore_texture() -> Texture2D {
+    with_assets(|assets| assets.npc_yore.clone())
+}
+
+pub fn npc_texture_by_index(index: usize) -> Texture2D {
+    match index {
+        0 => npc_yore_texture(),   // Староста Иара
+        1 => npc_roan_texture(),   // Механик Роан
+        2 => npc_tellah_texture(), // Архивариус Тель
+        _ => npc_yore_texture(),
+    }
 }
 
 pub fn lever_texture() -> Texture2D {
