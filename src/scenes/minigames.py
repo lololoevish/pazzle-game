@@ -375,16 +375,16 @@ class MiniGameScene:
         screen.blit(msg, (self.screen_width // 2 - msg.get_width() // 2, 120))
         
         if not self.game_over:
-            # Кнопки выбора
-            y = 180
+            # Кнопки выбора с отступами
+            y = 170
             for i, choice in enumerate(self.choices):
                 color = (100, 150, 200) if self.player_choice != i else (150, 200, 250)
-                rect = pygame.Rect(self.screen_width // 2 - 100, y + i * 60, 200, 50)
+                rect = pygame.Rect(self.screen_width // 2 - 100, y + i * 55, 200, 45)
                 pygame.draw.rect(screen, color, rect, border_radius=10)
                 pygame.draw.rect(screen, (255, 255, 255), rect, 2, border_radius=10)
                 
                 text = self.font_button.render(f"{i+1}. {choice}", True, (255, 255, 255))
-                screen.blit(text, (rect.x + 20, rect.y + 12))
+                screen.blit(text, (rect.x + 20, rect.y + 10))
         else:
             # Конец игры
             result_color = (100, 255, 100) if self.result == 'win' else (255, 100, 100)
@@ -405,19 +405,19 @@ class MiniGameScene:
         q_text = self.font_title.render(q['q'], True, (255, 255, 255))
         screen.blit(q_text, (self.screen_width // 2 - q_text.get_width() // 2, 80))
         
-        # Ответы
-        y = 180
+        # Ответы с отступами
+        y = 160
         for i, option in enumerate(q['options']):
             color = (80, 120, 180)
             if self.selected_option == i:
                 color = (100, 255, 100) if option == q['a'] else (255, 100, 100)
                 
-            rect = pygame.Rect(self.screen_width // 2 - 150, y + i * 70, 300, 55)
+            rect = pygame.Rect(self.screen_width // 2 - 150, y + i * 60, 300, 45)
             pygame.draw.rect(screen, color, rect, border_radius=10)
             pygame.draw.rect(screen, (255, 255, 255), rect, 2, border_radius=10)
             
             text = self.font_button.render(f"{i+1}. {option}", True, (255, 255, 255))
-            screen.blit(text, (rect.x + 20, rect.y + 12))
+            screen.blit(text, (rect.x + 20, rect.y + 10))
             
     def draw_duel(self, screen):
         """Отрисовка дуэли"""
@@ -445,17 +445,17 @@ class MiniGameScene:
         screen.blit(msg, (self.screen_width // 2 - msg.get_width() // 2, 150))
         
         if not self.battle_over and self.turn == 'player':
-            # Атаки
-            y = 250
+            # Атаки с отступами
+            y = 230
             for i, attack in enumerate(self.player_attacks):
                 color = (80, 120, 180)
-                rect = pygame.Rect(self.screen_width // 2 - 150, y + i * 70, 300, 55)
+                rect = pygame.Rect(self.screen_width // 2 - 150, y + i * 60, 300, 45)
                 pygame.draw.rect(screen, color, rect, border_radius=10)
                 pygame.draw.rect(screen, (255, 255, 255), rect, 2, border_radius=10)
                 
                 dmg_text = f"{attack['damage']}" if attack['damage'] > 0 else f"+{-attack['damage']}"
                 text = self.font_button.render(f"{i+1}. {attack['name']} ({dmg_text})", True, (255, 255, 255))
-                screen.blit(text, (rect.x + 20, rect.y + 12))
+                screen.blit(text, (rect.x + 20, rect.y + 10))
         elif self.battle_over:
             result_color = (100, 255, 100) if self.result == 'win' else (255, 100, 100)
             result_text = self.font_title.render(self.message, True, result_color)

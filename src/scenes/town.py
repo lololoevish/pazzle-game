@@ -404,18 +404,19 @@ class TownScene:
         screen.blit(overlay, (0, 0))
         
         if self.story_fade > 0.3:
-            # Текст сюжета
-            y = self.screen_height // 2 - 100
+            # Текст сюжета с отступами
+            y = self.screen_height // 2 - 120
+            line_spacing = 28
             
             for i, line in enumerate(self.story_text):
                 color = (200, 180, 150) if line else (0, 0, 0)
                 text = self.font_story.render(line, True, color)
-                rect = text.get_rect(center=(self.screen_width // 2, y + i * 30))
+                rect = text.get_rect(center=(self.screen_width // 2, y + i * line_spacing))
                 screen.blit(text, rect)
             
             # Подсказка
             hint = self.font_subtitle.render("Нажмите ENTER для продолжения...", True, (150, 150, 150))
-            hint_rect = hint.get_rect(center=(self.screen_width // 2, self.screen_height - 50))
+            hint_rect = hint.get_rect(center=(self.screen_width // 2, self.screen_height - 60))
             screen.blit(hint, hint_rect)
             
     def draw_title(self, screen):
@@ -436,10 +437,11 @@ class TownScene:
         
     def draw_options(self, screen):
         """Отрисовка опций меню"""
-        y_start = 120
+        y_start = 100
+        option_height = 80
         
         for i, option in enumerate(self.options):
-            y = y_start + i * 70
+            y = y_start + i * option_height
             
             # Проверка доступности
             if option['level'] > 0:
@@ -463,16 +465,15 @@ class TownScene:
                 border_color = (100, 50, 50)
             
             # Рисуем фон
-            rect = pygame.Rect(50, y, self.screen_width - 100, 65)
+            rect = pygame.Rect(50, y, self.screen_width - 100, 70)
             pygame.draw.rect(screen, bg_color, rect, border_radius=10)
             pygame.draw.rect(screen, border_color, rect, 2, border_radius=10)
             
             # Статус уровня
             status_x = 70
+            status_y = y + 8
             if option['level'] > 0:
                 if is_completed:
-                    # Пройдено - золотая звезда
-                    star_color = self.colors['completed']
                     status_text = "✓ ПРОЙДЕНО"
                     status_color = (100, 200, 100)
                 elif is_unlocked:
@@ -483,17 +484,19 @@ class TownScene:
                     status_color = self.colors['locked']
                 
                 status_surf = self.font_subtitle.render(status_text, True, status_color)
-                screen.blit(status_surf, (status_x, y + 5))
+                screen.blit(status_surf, (status_x, status_y))
             
             # Название уровня
             text_color = (200, 200, 200) if is_unlocked else (120, 120, 120)
             text = self.font_button.render(option['text'], True, text_color)
-            screen.blit(text, (status_x, y + 22))
+            text_y = status_y + 25
+            screen.blit(text, (status_x, text_y))
             
             # Описание
             if option['desc']:
                 desc = self.font_subtitle.render(option['desc'], True, (140, 140, 140))
-                screen.blit(desc, (status_x, y + 48))
+                desc_y = text_y + 22
+                screen.blit(desc, (status_x, desc_y))
                 
     def draw_hints(self, screen):
         """Отрисовка подсказок"""
