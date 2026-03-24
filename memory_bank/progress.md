@@ -1,13 +1,13 @@
 # Adventure Puzzle Game - Progress
 
-**Дата последнего обновления**: 20 марта 2026
-**Последний проверенный коммит**: 491be47
+**Дата последнего обновления**: 24 марта 2026
+**Последний проверенный коммит**: 246cb08
 
 ## Контроль изменений
 
-- `last_checked_commit`: `491be47`
-- `last_checked_date`: `2026-03-20`
-- Проверка выполнена через `git log 491be47..HEAD`
+- `last_checked_commit`: `246cb08`
+- `last_checked_date`: `2026-03-24`
+- Проверка выполнена через `git log 246cb08..HEAD`
 
 ## ✅ Что готово
 
@@ -488,11 +488,14 @@
 - ✅ Обновлена структура `memory_bank/` по правилам из `memory_bank/AGENTS.md`
 - ✅ AGENTS.md обновлён из GitHub
 - ✅ Исправлено наложение текста в Python-версии (town.py, minigames.py, menu.py)
+- ✅ Проверена целостность Project Deliverables в memory_bank/projectbrief.md
+- ✅ Подтверждена корректная сумма весов всех deliverables (ровно 100%)
 
 **Изменения**:
 - Добавлен файл `plans/gamemaker_migration_plan.md` с детальным планом перехода на GameMaker 2
 - Обновлён `AGENTS.md` с актуальными правилами работы агента
 - `progress.md` и `activeContext.md` синхронизированы с новым планом миграции
 - Исправлены отступы между элементами UI в Python-версии
+- Проверена и подтверждена целостность структуры Project Deliverables с правильными весами
 
 ### 19 марта 2026
