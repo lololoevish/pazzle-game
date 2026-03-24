@@ -7,46 +7,81 @@
     puzzle_solved = false;
     puzzle_active = false;
     puzzle_timer = 0;
+    
+    // Тип головоломки (определяется в наследниках)
+    puzzle_type = "";
+    
+    // Ссылка на скрипт головоломки
+    puzzle_script = undefined;
+    
+    // Данные головоломки
+    puzzle_data = undefined;
 }
 
 // Step Event
 {
     if (puzzle_active) {
         puzzle_timer += 1;
-        puzzle_update();
+        
+        // Обновляем логику головоломки
+        if (puzzle_script != undefined) {
+            scr_puzzle_manager.update_puzzle(puzzle_type);
+        }
+        
+        // Проверяем, решена ли головоломка
+        if (scr_puzzle_manager.is_puzzle_solved(puzzle_type)) {
+            puzzle_complete();
+        }
     }
 }
 
 // Draw Event
 {
     if (puzzle_active) {
-        puzzle_draw();
+        // Отрисовываем головоломку
+        if (puzzle_script != undefined) {
+            scr_puzzle_manager.draw_puzzle(puzzle_type, false);
+        }
     }
 }
 
 // Функции интерфейса головоломки
 function puzzle_start() {
     puzzle_active = true;
-    puzzle_initialized = true;
-    puzzle_init();
+    
+    if (!puzzle_initialized) {
+        puzzle_init();
+        puzzle_initialized = true;
+    }
 }
 
 function puzzle_update() {
-    // Переопределяется в конкретных реализациях
+    // Обновление логики головоломки происходит в скриптах
 }
 
 function puzzle_draw() {
-    // Переопределяется в конкретных реализациях
+    // Отрисовка головоломки происходит в скриптах
 }
 
 function puzzle_init() {
     // Инициализация головоломки
-    // Переопределяется в конкретных реализациях
+    if (puzzle_type != "" && puzzle_script == undefined) {
+        // Инициализируем puzzle manager если он еще не инициализирован
+        if (!variable_instance_exists(global, "puzzle_manager_initialized")) {
+            scr_puzzle_manager.init_puzzle_manager();
+            global.puzzle_manager_initialized = true;
+        }
+        
+        // Создаем экземпляр головоломки
+        puzzle_data = scr_puzzle_manager.create_puzzle(puzzle_type);
+    }
 }
 
 function puzzle_is_solved() {
     // Проверка решения головоломки
-    // Переопределяется в конкретных реализациях
+    if (puzzle_script != undefined) {
+        return scr_puzzle_manager.is_puzzle_solved(puzzle_type);
+    }
     return puzzle_solved;
 }
 
@@ -59,4 +94,9 @@ function puzzle_complete() {
     if (instance_id != noone) {
         instance_id.on_puzzle_solved();
     }
+}
+
+// Функция установки типа головоломки
+function set_puzzle_type(type) {
+    puzzle_type = type;
 }

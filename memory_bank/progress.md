@@ -493,6 +493,20 @@
 - ✅ Создана базовая структура проекта GameMaker в `pazzle-game-gamemaker/`
 - ✅ Реализованы ключевые компоненты: GameManager, Player, Puzzle, Lever
 - ✅ Созданы основные скрипты: GameState, SaveSystem, AudioManager, UIManager
+- ✅ Созданы описательные файлы для всех комнат: главное меню, город-хаб, шесть пещер с головоломками и финальная сцена
+
+**Изменения**:
+- Добавлены объекты: `obj_npc`, `obj_interactable` для взаимодействия с NPC и другими элементами
+- Созданы все шесть типов puzzle-скриптов: `scr_maze_puzzle`, `scr_word_search_puzzle`, `scr_rhythm_puzzle`, `scr_memory_match_puzzle`, `scr_platformer_puzzle`, `scr_final_challenge_puzzle`
+- Разработан `scr_puzzle_manager` для управления различными типами головоломок
+- Обновлены основные компоненты (`obj_game_manager`, `scr_game_state`, `scr_save_system`, `scr_audio_manager`, `scr_ui_manager`) с учетом новой функциональности
+- Обновлены и расширены структуры данных и функциональность для полной интеграции систем
+- Созданы файлы-заглушки для всех необходимых ассетов: спрайты, звуки, музыка, шрифты и эффекты
+- Созданы файлы конфигурации для всех игровых комнат: главное меню, город-хаб и шесть пещер с головоломками
+- Созданы документы тестирования: `TESTING.md` и `UNIT_TESTS.md` для проверки функциональности компонентов
+- Созданы сценарии модульного тестирования для основных компонентов: `test_game_state.gml`, `test_save_system.gml`, `test_audio_manager.gml`, `test_ui_manager.gml`
+- Заменены заглушки на рабочие компоненты: обновление `scr_audio_manager`, `scr_game_state`, `scr_save_system`, `scr_ui_manager` и других скриптов для полнофункциональной работы
+- Созданы конфигурационные файлы для спрайтов: `spr_player.sprite2`, `spr_npc.sprite2`, `spr_lever.sprite2`, `spr_key_objects.sprite2`, `spr_background.sprite2`, `spr_ui_sprites.sprite2`
 
 **Изменения**:
 - Добавлен файл `plans/gamemaker_migration_plan.md` с детальным планом перехода на GameMaker 2

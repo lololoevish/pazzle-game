@@ -24,9 +24,9 @@ ObjectDefinitions:
 - obj_player  
 - obj_puzzle
 - obj_lever
-- obj_exit
 - obj_npc
 - obj_interactable
+- obj_exit
 
 # Комнаты проекта
 Rooms:
@@ -61,3 +61,20 @@ RequiredFeatures:
 TextureGroups: Enabled
 OptimizeSprites: True
 CompressAudio: True
+
+# Состояния игры
+GameStates:
+- MENU
+- TOWN
+- PLAYING
+- VICTORY
+- QUIT
+
+# Уровни
+PuzzleLevels:
+- 1: Maze
+- 2: WordSearch
+- 3: Rhythm
+- 4: Pairs
+- 5: Platformer
+- 6: Final

@@ -1,0 +1,152 @@
+{
+  "spriteId": "spr_npc",
+  "textureGroupId": "Default",
+  "bboxMode": 0,
+  "bboxBottom": 31,
+  "bboxLeft": 0,
+  "bboxRight": 31,
+  "bboxTop": 0,
+  "bbox_horizontal_tolerance": 0,
+  "bbox_vertical_tolerance": 0,
+  "collision_mask": 0,
+  "HTile": false,
+  "VTile": false,
+  "For3D": false,
+  "frames": [
+    {
+      "id": "frame_npc_0001",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_npc_elder",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 16,
+      "yOrigin": 16,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_npc_0001",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_npc_elder",
+        "FrameId": "frame_npc_0001",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_npc_0001",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_npc_elder_idle",
+          "FrameId": "frame_npc_0001",
+          "LayerId": "layer_npc_body"
+        }
+      ]
+    },
+    {
+      "id": "frame_npc_0002",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_npc_mechanic",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 16,
+      "yOrigin": 16,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_npc_0002",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_npc_mechanic",
+        "FrameId": "frame_npc_0002",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_npc_0002",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_npc_mechanic_idle",
+          "FrameId": "frame_npc_0002",
+          "LayerId": "layer_npc_body"
+        }
+      ]
+    },
+    {
+      "id": "frame_npc_0003",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_npc_archivist",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 16,
+      "yOrigin": 16,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_npc_0003",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_npc_archivist",
+        "FrameId": "frame_npc_0003",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_npc_0003",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_npc_archivist_idle",
+          "FrameId": "frame_npc_0003",
+          "LayerId": "layer_npc_body"
+        }
+      ]
+    }
+  ],
+  "sequence": {
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "seq_npc_animations",
+    "timeUnits": 1,
+    "playback": 1,
+    "playbackSpeed": 15.0,
+    "playbackSpeedType": 0,
+    "autoRecord": true,
+    "volume": 1.0,
+    "length": 3.0,
+    "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>"},
+    "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>"},
+    "tracks": [
+      {"resourceType":"SpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+            {"id":"8851f44d-cbc9-4c25-b8d6-f1bca25d52ec","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_npc_elder",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"53a189dc-69d0-457e-8d7a-7b71644e167d","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_npc_mechanic",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"12345678-1234-1234-1234-123456789abc","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_npc_archivist",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},
+      },
+    ],
+    "visibleRange": {"x":0.0,"y":0.0,},
+    "lockOrigin": false,
+    "showBackdrop": true,
+    "showBackdropImage": false,
+    "backdropImagePath": "",
+    "backdropImageOpacity": 0.5,
+    "backdropWidth": 1920,
+    "backdropHeight": 1080,
+    "backdropXOffset": 0.0,
+    "backdropYOffset": 0.0,
+    "xorigin": 16,
+    "yorigin": 16,
+    "eventToFunction": {},
+    "eventStubScript": null
+  }
+}
