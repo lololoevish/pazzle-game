@@ -215,7 +215,11 @@ pazzle-game/
 
 - `docs/migration_tz.md` - Техническое задание на миграцию в GameMaker 2
 - `docs/gms_architecture.md` - Архитектурный документ для GMS2 проекта
+- `docs/TESTING.md` - Документ тестирования GameMaker 2 проекта
+- `docs/UNIT_TESTS.md` - Документ сценариев модульного тестирования
+- `docs/gamemaker_migration_plan.md` - План миграции на GameMaker Studio 2
 - `gamedata/adventure_puzzle/` - Проект GameMaker 2
+- `gamedata/adventure_puzzle/test_scenarios/` - Сценарии модульного тестирования
 
 ## 📊 Сравнение версий
 
