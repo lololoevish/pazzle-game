@@ -136,7 +136,7 @@
 
 ## Работа над GameMaker 2
 
-1. Продолжена реализация плана миграции на GameMaker 2 в соответствии с `plans/gamemaker_migration_plan.md`.
+1. Продолжена реализация плана миграции на GameMaker 2 в соответствии с `docs/gamemaker_migration_plan.md`.
 2. Создана структура основных объектов: `obj_game_manager`, `obj_player`, `obj_puzzle`, `obj_lever`, `obj_npc`, `obj_interactable`.
 3. Реализованы ключевые скрипты: `scr_game_state`, `scr_save_system`, `scr_audio_manager`, `scr_ui_manager`.
 4. Созданы все шесть типов puzzle-скриптов: `scr_maze_puzzle`, `scr_word_search_puzzle`, `scr_rhythm_puzzle`, `scr_memory_match_puzzle`, `scr_platformer_puzzle`, `scr_final_challenge_puzzle`.
@@ -144,12 +144,13 @@
 6. Обновлены основные компоненты для интеграции новых систем.
 7. Созданы файлы-заглушки для всех необходимых ассетов: спрайты, звуки, музыка, шрифты и эффекты.
 8. Созданы файлы конфигурации для всех игровых комнат: главное меню, город-хаб и шесть пещер с головоломками.
-9. Созданы документы тестирования: `TESTING.md` и `UNIT_TESTS.md` для проверки функциональности компонентов.
+9. Созданы документы тестирования: `docs/gms2_testing_strategy.md` и `docs/gms2_unit_test_scenarios.md` для проверки функциональности компонентов.
 10. Созданы сценарии модульного тестирования для основных компонентов: `test_game_state.gml`, `test_save_system.gml`, `test_audio_manager.gml`, `test_ui_manager.gml`.
 11. Замена заглушек на рабочие компоненты: обновление `scr_audio_manager`, `scr_game_state`, `scr_save_system`, `scr_ui_manager` и других скриптов для полнофункциональной работы.
 12. Создание файлов спрайтов: создание конфигурационных файлов для спрайтов игрока, NPC, рычагов, ключевых объектов, фона и UI-элементов.
-13. Созданы архитектурные документы: `docs/gms_architecture.md` и `docs/migration_tz.md` с подробным описанием структуры и требований к миграции.
+13. Созданы архитектурные документы: `docs/gms2_architecture.md` и `docs/migration_tz.md` с подробным описанием структуры и требований к миграции.
 14. Создана структура проекта в `gamedata/adventure_puzzle/` с основными файлами и документацией.
+15. Разработан план переноса игровой логики из Rust-версии: `docs/rust_to_gms2_port_plan.md`.
 
 ## Дополнительные ресурсы
 

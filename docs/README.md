@@ -111,7 +111,7 @@ assets/
 4. **Rust First**: все новые фичи сначала реализуются в Rust-версии.
 
 ## 🔄 План миграции на GameMaker 2
-Проект включает подробный план миграции на GameMaker 2, хранящийся в `plans/gamemaker_migration_plan.md`.
+Проект включает подробный план миграции на GameMaker 2, хранящийся в `docs/gamemaker_migration_plan.md`.
 
 ### Цель миграции
 Создать полноценную версию игры в GameMaker 2 с сохранением всей функциональности Rust-версии:
@@ -136,4 +136,11 @@ assets/
 8. Полировка и оптимизация
 9. Сборка и релиз
 
-Подробности смотрите в `plans/gamemaker_migration_plan.md`.
+Подробности смотрите в `docs/gamemaker_migration_plan.md`.
+
+## 📚 Дополнительная документация
+- `docs/gamemaker_migration_plan.md` - План миграции на GameMaker Studio 2
+- `docs/gms2_architecture.md` - Архитектурный документ для GMS2 версии
+- `docs/rust_to_gms2_port_plan.md` - План переноса логики из Rust-версии в GameMaker
+- `docs/gms2_testing_strategy.md` - Документ стратегии тестирования для GMS2 проекта
+- `docs/gms2_unit_test_scenarios.md` - Документ сценариев модульного тестирования для GMS2
