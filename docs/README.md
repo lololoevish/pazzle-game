@@ -144,3 +144,6 @@ assets/
 - `docs/rust_to_gms2_port_plan.md` - План переноса логики из Rust-версии в GameMaker
 - `docs/gms2_testing_strategy.md` - Документ стратегии тестирования для GMS2 проекта
 - `docs/gms2_unit_test_scenarios.md` - Документ сценариев модульного тестирования для GMS2
+- `docs/deltarune_mechanics_integration_plan.md` - План интеграции механик из Deltarune
+- `docs/asset_integration_plan.md` - План интеграции ассетов из Rust в GameMaker
+- `docs/gms2_asset_migration_technical_spec.md` - Техническая спецификация миграции ассетов

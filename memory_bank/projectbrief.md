@@ -148,12 +148,13 @@ pazzle-game/
 | DELIV-05 | Аудио-подсистема: музыка, звуки, обратная связь | completed | 8 |
 | DELIV-06 | Актуальная документация, Memory Bank и архитектурная синхронизация | completed | 8 |
 | DELIV-07 | Миграция на GameMaker 2: полная функциональная копия Rust-версии | completed | 12 |
-| DELIV-08 | Импорт ассетов и структура проекта GameMaker 2 | in_progress | 8 |
+| DELIV-08 | Импорт ассетов и структура проекта GameMaker 2 | completed | 8 |
 | DELIV-09 | Документация по тестированию компонентов | completed | 8 |
 | DELIV-10 | Сценарии тестирования основных компонентов | completed | 8 |
 | DELIV-11 | Замена заглушек на рабочие компоненты | completed | 8 |
 | DELIV-12 | Создание файлов спрайтов | completed | 7 |
 | DELIV-13 | План переноса логики из Rust в GameMaker 2 | completed | 8 |
+| DELIV-14 | Интеграция механик из Deltarune | in_progress | 10 |
 
 ## 🗺 План разработки
 
