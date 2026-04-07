@@ -5,231 +5,391 @@
 
 // Инициализация параметров игрока
 var player_config = {
-    speed_normal: 150,        // Обычная скорость движения
-    speed_diagonal: 100,      // Скорость при диагональном движении
-    jump_strength: -10,       // Сила прыжка (отрицательное значение, т.к. координаты растут вниз)
-    gravity: 0.5,             // Гравитация
-    max_fall_speed: 12,       // Максимальная скорость падения
-    interaction_distance: 96, // Дистанция взаимодействия
-    facing_direction: 0       // Направление взгляда: 0-вниз, 1-влево, 2-вправо, 3-вверх
+    topdown_speed: 220,
+    topdown_diagonal_speed: 180,
+    topdown_acceleration: 10.0,
+    topdown_deceleration: 14.0,
+    platformer_move_speed: 260,
+    platformer_ground_acceleration: 2200,
+    platformer_ground_deceleration: 2600,
+    platformer_air_acceleration: 1600,
+    platformer_air_deceleration: 1400,
+    jump_speed: 560,
+    jump_cut_speed: 220,
+    gravity_rise_hold: 1350,
+    gravity_rise_release: 2500,
+    gravity_fall: 2850,
+    max_fall_speed: 900,
+    coyote_time: 0.5,
+    jump_buffer_time: 0.15,
+    interaction_distance: 96,
+    facing_direction: 0
 };
 
 // Состояния игрока
 var player_states = {
-    NORMAL: "normal",         // Обычное состояние
-    INTERACTING: "interacting", // Взаимодействие
-    PUZZLE: "puzzle",        // Состояние головоломки
-    MENU: "menu",            // Меню
-    DIALOG: "dialog"         // Диалог
+    NORMAL: "normal",
+    INTERACTING: "interacting",
+    PUZZLE: "puzzle",
+    MENU: "menu",
+    DIALOG: "dialog"
 };
 
 // Глобальные переменные объекта
 current_state = player_states.NORMAL;
-speed = player_config.speed_normal;
+movement_mode = "topdown";
 facing_direction = player_config.facing_direction;
 interaction_enabled = true;
 
-// Переменные для плавного движения
+// Сглаживание top-down движения
 current_move_x = 0;
 current_move_y = 0;
 move_target_x = 0;
 move_target_y = 0;
 
-// Переменные для физики прыжков
-hspeed = 0;                      // Горизонтальная скорость
-vspeed = 0;                      // Вертикальная скорость
-gravity = player_config.gravity; // Гравитация
-on_ground = false;               // На земле ли игрок
-can_double_jump = false;         // Можно ли сделать второй прыжок
-jumps_remaining = 1;             // Оставшиеся прыжки (0 - нельзя прыгать, 1 - основной прыжок, 2 - двойной прыжок)
-max_fall_speed = player_config.max_fall_speed; // Максимальная скорость падения
+// Физика platformer-режима
+hspeed = 0;
+vspeed = 0;
+on_ground = false;
+coyote_timer = 0;
+jump_buffer_timer = 0;
+jump_held = false;
 
 // Create Event
 {
-    // Инициализация в Create событии
-    depth = -1;  // Игрок должен быть поверх других объектов
-    solid = true;  // Игрок может сталкиваться с другими объектами
-    
-    // Устанавливаем начальное состояние
+    depth = -1;
+    solid = true;
+
     current_state = player_states.NORMAL;
-    
-    // Устанавливаем начальную позицию, если не задана
+    movement_mode = "topdown";
+    facing_direction = player_config.facing_direction;
+    interaction_enabled = true;
+
     if (!is_numeric(x)) x = 100;
     if (!is_numeric(y)) y = 100;
-    
-    // Инициализируем переменные для плавного движения
+
     current_move_x = 0;
     current_move_y = 0;
     move_target_x = 0;
     move_target_y = 0;
-    
-    // Инициализируем переменные для физики
+
     hspeed = 0;
     vspeed = 0;
-    gravity = player_config.gravity;
     on_ground = false;
-    
-    // Настройка прыжков: 1 означает только одиночный прыжок, 2 - разрешает двойной прыжок
-    // В текущей реализации двойной прыжок отключен
-    jumps_remaining = 1; // Максимум прыжков разрешено
-    current_jumps_used = 0; // Сколько прыжков уже использовано
-    max_fall_speed = player_config.max_fall_speed;
+    coyote_timer = 0;
+    jump_buffer_timer = 0;
+    jump_held = false;
 }
 
 // Step Event
 {
-    handle_movement();
+    var dt = get_delta_seconds();
+    handle_movement(dt);
     handle_interaction();
-    check_collisions();
 }
 
-// Обработка движения в Step событии
-function handle_movement() {
+function get_delta_seconds() {
+    return clamp(delta_time / 1000000, 0, 0.05);
+}
+
+function get_horizontal_input() {
+    var input_x = 0;
+
+    if (keyboard_check(vk_left) || keyboard_check(ord("A"))) {
+        input_x -= 1;
+    }
+    if (keyboard_check(vk_right) || keyboard_check(ord("D"))) {
+        input_x += 1;
+    }
+
+    return input_x;
+}
+
+function get_vertical_input() {
+    var input_y = 0;
+
+    if (keyboard_check(vk_up) || keyboard_check(ord("W"))) {
+        input_y -= 1;
+    }
+    if (keyboard_check(vk_down) || keyboard_check(ord("S"))) {
+        input_y += 1;
+    }
+
+    return input_y;
+}
+
+function approach(current, target, amount) {
+    if (current < target) {
+        return min(current + amount, target);
+    }
+
+    if (current > target) {
+        return max(current - amount, target);
+    }
+
+    return target;
+}
+
+function get_collision_objects() {
+    var objects = [];
+
+    if (object_exists(obj_interactable)) array_push(objects, obj_interactable);
+    if (object_exists(obj_lever)) array_push(objects, obj_lever);
+    if (object_exists(obj_npc)) array_push(objects, obj_npc);
+
+    return objects;
+}
+
+function collides_at(test_x, test_y) {
+    var collision_objects = get_collision_objects();
+
+    for (var i = 0; i < array_length(collision_objects); i++) {
+        var count = instance_number(collision_objects[i]);
+
+        for (var j = 0; j < count; j++) {
+            var inst = instance_find(collision_objects[i], j);
+            if (inst != noone && inst != id) {
+                var is_solid_instance = variable_instance_exists(inst, "solid") && inst.solid;
+                if (is_solid_instance && place_meeting(test_x, test_y, inst)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+function get_sprite_width_safe() {
+    if (sprite_index != -1 && sprite_exists(sprite_index)) {
+        return bbox_right - bbox_left;
+    }
+
+    return 16;
+}
+
+function get_sprite_height_safe() {
+    if (sprite_index != -1 && sprite_exists(sprite_index)) {
+        return bbox_bottom - bbox_top;
+    }
+
+    return 16;
+}
+
+function move_axis(amount, is_horizontal) {
+    var remaining = amount;
+
+    while (abs(remaining) > 0) {
+        var step = clamp(remaining, -1, 1);
+
+        if (is_horizontal) {
+            if (!collides_at(x + step, y)) {
+                x += step;
+            } else {
+                hspeed = 0;
+                break;
+            }
+        } else {
+            if (!collides_at(x, y + step)) {
+                y += step;
+            } else {
+                if (step > 0) {
+                    on_ground = true;
+                    coyote_timer = player_config.coyote_time;
+                }
+                vspeed = 0;
+                break;
+            }
+        }
+
+        remaining -= step;
+    }
+}
+
+function handle_movement(dt) {
     if (current_state != player_states.NORMAL) {
-        return;  // Не двигаемся если не в нормальном состоянии
+        return;
     }
-    
-    // Плавное управление с ускорением и замедлением
-    var target_move_x = 0;
-    var target_move_y = 0;
-    
-    // Проверяем нажатия клавиш
-    if (keyboard_check(vk_left) || keyboard_check(ord('A'))) {
-        target_move_x = -1;
-        facing_direction = 1;  // Влево
+
+    if (movement_mode == "platformer") {
+        handle_platformer_movement(dt);
+    } else {
+        handle_topdown_movement(dt);
     }
-    if (keyboard_check(vk_right) || keyboard_check(ord('D'))) {
-        target_move_x = 1;
-        facing_direction = 2;  // Вправо
+}
+
+function handle_topdown_movement(dt) {
+    var input_x = get_horizontal_input();
+    var input_y = get_vertical_input();
+
+    if (abs(input_x) > abs(input_y) && input_x != 0) {
+        facing_direction = (input_x > 0) ? 2 : 1;
+    } else if (input_y != 0) {
+        facing_direction = (input_y > 0) ? 0 : 3;
     }
-    
-    // Обработка прыжка
-    if (keyboard_check_pressed(vk_space) || keyboard_check_pressed(vk_up) || keyboard_check_pressed(ord('W'))) {
-        jump();
+
+    move_target_x = input_x;
+    move_target_y = input_y;
+
+    var accel = player_config.topdown_acceleration * dt;
+    var decel = player_config.topdown_deceleration * dt;
+
+    if (move_target_x != 0) {
+        current_move_x = approach(current_move_x, move_target_x, accel);
+    } else {
+        current_move_x = approach(current_move_x, 0, decel);
     }
-    
-    // Параметры для плавного ускорения/замедления
-    var acceleration = 0.2;    // Ускорение
-    var deceleration = 0.15;   // Замедление
-    
-    // Получаем текущую цель движения по X
-    if (target_move_x != move_target_x) {
-        move_target_x = target_move_x;
+
+    if (move_target_y != 0) {
+        current_move_y = approach(current_move_y, move_target_y, accel);
+    } else {
+        current_move_y = approach(current_move_y, 0, decel);
     }
-    
-    // Плавное изменение горизонтальной скорости к целевому значению
-    if (current_move_x != move_target_x) {
-        if (abs(current_move_x - move_target_x) < acceleration) {
-            current_move_x = move_target_x;
-        } else if (current_move_x < move_target_x) {
-            current_move_x += acceleration;
-        } else {
-            current_move_x -= acceleration;
+
+    var speed_scale = 1.0;
+    if (current_move_x != 0 && current_move_y != 0) {
+        speed_scale = player_config.topdown_diagonal_speed / player_config.topdown_speed;
+    }
+
+    var move_x = current_move_x * player_config.topdown_speed * speed_scale * dt;
+    var move_y = current_move_y * player_config.topdown_speed * speed_scale * dt;
+
+    hspeed = move_x / max(dt, 0.0001);
+    vspeed = 0;
+    on_ground = false;
+    coyote_timer = 0;
+    jump_buffer_timer = 0;
+    jump_held = false;
+
+    move_axis(move_x, true);
+    move_axis(move_y, false);
+
+    keep_inside_room();
+    update_animation();
+}
+
+function handle_platformer_movement(dt) {
+    var input_x = get_horizontal_input();
+    var jump_pressed = keyboard_check_pressed(vk_space)
+        || keyboard_check_pressed(vk_up)
+        || keyboard_check_pressed(ord("W"));
+    var jump_down = keyboard_check(vk_space)
+        || keyboard_check(vk_up)
+        || keyboard_check(ord("W"));
+    var jump_released = keyboard_check_released(vk_space)
+        || keyboard_check_released(vk_up)
+        || keyboard_check_released(ord("W"));
+
+    if (input_x != 0) {
+        facing_direction = (input_x > 0) ? 2 : 1;
+    }
+
+    if (jump_pressed) {
+        jump_buffer_timer = player_config.jump_buffer_time;
+    } else {
+        jump_buffer_timer = max(0, jump_buffer_timer - dt);
+    }
+
+    if (on_ground) {
+        coyote_timer = player_config.coyote_time;
+    } else {
+        coyote_timer = max(0, coyote_timer - dt);
+    }
+
+    var target_hspeed = input_x * player_config.platformer_move_speed;
+    var accel = player_config.platformer_air_acceleration;
+    var decel = player_config.platformer_air_deceleration;
+
+    if (on_ground) {
+        accel = player_config.platformer_ground_acceleration;
+        decel = player_config.platformer_ground_deceleration;
+    }
+
+    if (input_x != 0) {
+        hspeed = approach(hspeed, target_hspeed, accel * dt);
+    } else {
+        hspeed = approach(hspeed, 0, decel * dt);
+    }
+
+    if (jump_buffer_timer > 0 && (on_ground || coyote_timer > 0)) {
+        vspeed = -player_config.jump_speed;
+        on_ground = false;
+        coyote_timer = 0;
+        jump_buffer_timer = 0;
+        jump_held = true;
+    }
+
+    if (jump_released && vspeed < -player_config.jump_cut_speed) {
+        vspeed = -player_config.jump_cut_speed;
+    }
+
+    var gravity_value = player_config.gravity_fall;
+    if (vspeed < 0) {
+        gravity_value = jump_down
+            ? player_config.gravity_rise_hold
+            : player_config.gravity_rise_release;
+    }
+
+    jump_held = jump_down;
+    vspeed = min(vspeed + gravity_value * dt, player_config.max_fall_speed);
+
+    on_ground = false;
+    move_axis(hspeed * dt, true);
+    move_axis(vspeed * dt, false);
+
+    keep_inside_room();
+    update_animation();
+}
+
+function keep_inside_room() {
+    var left_bound = (sprite_index != -1 && sprite_exists(sprite_index)) ? bbox_left : 0;
+    var right_bound = (sprite_index != -1 && sprite_exists(sprite_index)) ? bbox_right : 1;
+    var top_bound = (sprite_index != -1 && sprite_exists(sprite_index)) ? bbox_top : 0;
+    var bottom_bound = (sprite_index != -1 && sprite_exists(sprite_index)) ? bbox_bottom : 1;
+
+    x = clamp(x, left_bound, room_width - right_bound);
+
+    if (movement_mode == "platformer") {
+        if (y <= top_bound) {
+            y = top_bound;
+            vspeed = max(0, vspeed);
         }
-    }
-    
-    // Применяем замедление, когда не движемся горизонтально
-    if (move_target_x == 0 && abs(current_move_x) > 0) {
-        if (current_move_x > 0) {
-            current_move_x = max(0, current_move_x - deceleration);
-        } else {
-            current_move_x = min(0, current_move_x + deceleration);
-        }
-    }
-    
-    // Устанавливаем горизонтальную скорость
-    hspeed = current_move_x * speed * delta_time;
-    
-    // Применяем гравитацию
-    if (!on_ground) {
-        vspeed += gravity;
-        if (vspeed > max_fall_speed) {
-            vspeed = max_fall_speed;
+
+        if (y >= room_height - bottom_bound) {
+            y = room_height - bottom_bound;
+            vspeed = 0;
+            on_ground = true;
+            coyote_timer = player_config.coyote_time;
         }
     } else {
-        // Когда на земле, сбрасываем счетчик использованных прыжков
-        current_jumps_used = 0;
-    }
-    
-    // Вычисляем вектор движения с учетом гравитации
-    var move_vector_x = hspeed;
-    var move_vector_y = vspeed * delta_time;
-    
-    // Двигаем игрока (учитываем коллизии если solid=true)
-    x += move_vector_x;
-    y += move_vector_y;
-    
-    // Ограничиваем движения в пределах комнаты
-    // bbox_left, bbox_right, bbox_top, bbox_bottom - это границы спрайта
-    // если спрайт не назначен, используем размеры объекта
-    var left_bound = (sprite_index != -1) ? bbox_left : 0;
-    var right_bound = (sprite_index != -1) ? bbox_right : 1;
-    var top_bound = (sprite_index != -1) ? bbox_top : 0;
-    var bottom_bound = (sprite_index != -1) ? bbox_bottom : 1;
-    
-    if (is_numeric(left_bound) && is_numeric(room_width) && is_numeric(right_bound)) {
-        x = clamp(x, left_bound, room_width - right_bound);
-    }
-    if (is_numeric(top_bound) && is_numeric(room_height) && is_numeric(bottom_bound)) {
         y = clamp(y, top_bound, room_height - bottom_bound);
     }
-    
-    // Обновляем анимацию
-    update_animation(hspeed, vspeed);
 }
 
-// Функция прыжка
-function jump() {
-    // Прыжок возможен только если на земле или если разрешен двойной прыжок
-    if (on_ground) {
-        // Обычный прыжок
-        vspeed = player_config.jump_strength;
-        on_ground = false;
-        current_jumps_used = 1; // Засчитываем первый прыжок
-    }
-    // В текущей реализации двойной прыжок отключен
-    // Для включения двойного прыжка раскомментируйте следующую часть:
-    /*
-    else if (current_jumps_used < jumps_remaining) {
-        // Второй прыжок (если разрешен)
-        vspeed = player_config.jump_strength * 0.8; // Чуть слабее основного прыжка
-        current_jumps_used++;
-    }
-    */
-}
-    // Двойной прыжок отключен в текущей реализации.
-    // Для включения двойного прыжка раскомментируйте следующую часть:
-    /*
-    else if (jumps_remaining > 0) {
-        // Второй прыжок (если разрешен)
-        vspeed = player_config.jump_strength * 0.8; // Чуть слабее основного прыжка
-        jumps_remaining--;
-    }
-    */
-}
+function update_animation() {
+    var is_moving = false;
 
-// Обновление анимации
-function update_animation(move_x, move_y) {
-    // В зависимости от направления и движения выбираем спрайт
-    // move_x и move_y теперь соответствуют hspeed и vspeed
-    if (abs(hspeed) > 0.1 || abs(vspeed) > 0.1) { // Пороговое значение чтобы отличать движение от нуля
-        // Игрок двигается
+    if (movement_mode == "platformer") {
+        is_moving = abs(hspeed) > 8 || abs(vspeed) > 8;
+    } else {
+        is_moving = abs(current_move_x) > 0.05 || abs(current_move_y) > 0.05;
+    }
+
+    if (is_moving) {
         if (global.spr_player_walk != undefined && global.spr_player_walk != -1) {
             sprite_index = global.spr_player_walk;
         }
     } else {
-        // Игрок стоит
         if (global.spr_player_idle != undefined && global.spr_player_idle != -1) {
             sprite_index = global.spr_player_idle;
         }
     }
-    
-    // Выбираем кадр анимации в зависимости от направления
+
     switch (facing_direction) {
-        case 0: image_index = 0; break;  // Вниз
-        case 1: image_index = 1; break;  // Влево
-        case 2: image_index = 2; break;  // Вправо
-        case 3: image_index = 3; break;  // Вверх
+        case 0: image_index = 0; break;
+        case 1: image_index = 1; break;
+        case 2: image_index = 2; break;
+        case 3: image_index = 3; break;
     }
 }
 
@@ -238,30 +398,25 @@ function handle_interaction() {
     if (!interaction_enabled || current_state != player_states.NORMAL) {
         return;
     }
-    
-    // Проверяем нажатие кнопки взаимодействия
-    if (keyboard_check_pressed(ord('E')) || keyboard_check_pressed(vk_enter)) {
+
+    if (keyboard_check_pressed(ord("E")) || keyboard_check_pressed(vk_enter)) {
         check_and_interact();
     }
 }
 
 // Проверка и выполнение взаимодействия
 function check_and_interact() {
-    // Находим ближайший интерактивный объект
     var closest_interactable = undefined;
     var closest_distance = player_config.interaction_distance;
-    
-    // Проверяем все интерактивные объекты в комнате
-    var interactables = [obj_interactable, obj_lever, obj_altar, obj_exit_door, obj_npc];
-    
+    var interactables = [obj_interactable, obj_lever, obj_npc];
+
     for (var i = 0; i < array_length(interactables); i++) {
         var count = instance_number(interactables[i]);
-        
+
         for (var j = 0; j < count; j++) {
             var inst = instance_find(interactables[i], j);
             if (inst != noone) {
                 var dist = point_distance(x, y, inst.x, inst.y);
-                
                 if (dist < closest_distance) {
                     closest_distance = dist;
                     closest_interactable = inst;
@@ -269,155 +424,80 @@ function check_and_interact() {
             }
         }
     }
-    
-    // Если нашли объект для взаимодействия
+
     if (closest_interactable != undefined) {
-        // Проверяем, может ли объект взаимодействовать
-        if (closest_interactable.can_interact) {
-            // Запускаем взаимодействие
-            if (closest_interactable.on_interact != undefined) {
+        var can_use = true;
+
+        if (variable_instance_exists(closest_interactable, "can_interact")) {
+            can_use = closest_interactable.can_interact;
+        } else if (variable_instance_exists(closest_interactable, "interactable")) {
+            can_use = closest_interactable.interactable;
+        }
+
+        if (can_use) {
+            if (variable_instance_exists(closest_interactable, "on_interact")) {
                 closest_interactable.on_interact();
             }
-            
-            // Играем звук взаимодействия
-            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-                scr_audio_manager.play_event_sound("ui_confirm");
-            }
+            safe_play_event_sound("ui_confirm");
         } else {
-            // Объект не может взаимодействовать
-            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-                scr_audio_manager.play_event_sound("ui_cancel");
-            }
+            safe_play_event_sound("ui_cancel");
         }
     } else {
-        // Нет доступных объектов для взаимодействия
-        if (script_exists(scr_ui_manager) && scr_ui_manager.show_message != undefined) {
-            scr_ui_manager.show_message("Здесь не с чем взаимодействовать");
-        }
-        if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-            scr_audio_manager.play_event_sound("ui_cancel");
-        }
+        safe_show_message("Здесь не с чем взаимодействовать");
+        safe_play_event_sound("ui_cancel");
+    }
+}
+
+function safe_play_event_sound(event_name) {
+    if (script_exists(scr_audio_manager) && script_exists(play_event_sound)) {
+        play_event_sound(event_name);
+    }
+}
+
+function safe_show_message(text) {
+    if (script_exists(scr_ui_manager) && script_exists(show_message)) {
+        show_message(text);
     }
 }
 
 // Функция проверки столкновений
 function check_collisions() {
-    // Проверяем столкновения с платформами/объектами
-    // Здесь будет основная логика коллизий
-    
-    // Сбрасываем состояние на земле
-    var was_on_ground = on_ground;
-    on_ground = false;
-    
-    // Находим все платформы или твердые объекты в комнате
-    // Пока что просто проверяем, касается ли игрок "земли" (нижней части комнаты)
-    // или других твердых объектов
-    
-    // Упрощенная проверка коллизии с "землей" и платформами
-    // Для полноценной реализации нужна проверка столкновений с конкретными объектами
-    
-    // Проверяем, не уперся ли игрок в платформу снизу (при падении)
-    var test_x = x + bbox_left;
-    var test_y = y + bbox_top;
-    var test_width = bbox_right - bbox_left;
-    var test_height = bbox_bottom - bbox_top;
-    
-    // Проверяем столкновение с полом комнаты
-    if (test_y + test_height >= room_height) {
-        y = room_height - test_height;
-        vspeed = 0;
-        on_ground = true;
-    }
-    
-    // Проверяем столкновение с потолком
-    if (test_y <= 0) {
-        y = 1; // чуть ниже нуля, чтобы не застрять
-        vspeed = 0;
-    }
-    
-    // Проверяем столкновение со стенами
-    if (test_x <= 0) {
-        x = 1;
-        hspeed = 0;
-    } else if (test_x + test_width >= room_width) {
-        x = room_width - test_width - 1;
-        hspeed = 0;
-    }
-    
-        // Проверяем столкновения с любыми твердыми объектами в комнате
-    // Для примера проверим столкновения с объектами типа obj_interactable (включая платформы)
-    // Это упрощенная проверка, в реальном проекте нужно использовать конкретные объекты платформ
-    var solid_objects = [obj_interactable, obj_lever, obj_altar, obj_exit_door, obj_npc]; // Пример
-    
-    // Получаем размеры спрайта для расчетов столкновений
-    var player_width = (sprite_index != -1 && sprite_exists(sprite_index)) ? bbox_right - bbox_left : 16;
-    var player_height = (sprite_index != -1 && sprite_exists(sprite_index)) ? bbox_bottom - bbox_top : 16;
-    
-    for (var i = 0; i < array_length(solid_objects); i++) {
-        var count = instance_number(solid_objects[i]);
-        
-        for (var j = 0; j < count; j++) {
-            var inst = instance_find(solid_objects[i], j);
-            if (inst != noone) {
-                // Проверяем пересечение - используем bbox если спрайт существует
-                if (place_meeting(x + hspeed, y, inst) || place_meeting(x + hspeed, y + player_height, inst)) {
-                    // Столкновение по горизонтали
-                    hspeed = 0;
-                }
-                
-                if (place_meeting(x, y + vspeed, inst)) {
-                    // Столкновение сверху или снизу
-                    if (vspeed > 0) { // Падение вниз
-                        // Вычисляем корректную позицию, чтобы игрок не заходил внутрь объекта
-                        y = inst.y - player_height;
-                        vspeed = 0;
-                        on_ground = true;
-                    } else if (vspeed < 0) { // Движение вверх (удар головой)
-                        y = inst.y + (inst.bbox_bottom - inst.bbox_top);
-                        vspeed = 0;
-                    }
-                }
-            }
-        }
-    }
-    
-    // Если игрок был на земле, а теперь нет - значит оторвался
-    if (was_on_ground && !on_ground) {
-        // Возможно, нужна дополнительная логика
-    }
+    // Коллизии обрабатываются в move_axis().
 }
 
 // Функция перехода в состояние головоломки
 function enter_puzzle_state(puzzle_type) {
     current_state = player_states.PUZZLE;
-    
-    // Скрываем игрока или делаем неактивным
     visible = false;
     solid = false;
-    
-    // Уведомляем систему о начале головоломки
-    if (script_exists(scr_ui_manager) && scr_ui_manager.show_message != undefined) {
-        scr_ui_manager.show_message("Вход в головоломку " + string(puzzle_type));
-    }
+    hspeed = 0;
+    vspeed = 0;
+    current_move_x = 0;
+    current_move_y = 0;
+    move_target_x = 0;
+    move_target_y = 0;
+    jump_buffer_timer = 0;
+    coyote_timer = 0;
+    jump_held = false;
+    safe_show_message("Вход в головоломку " + string(puzzle_type));
 }
 
 // Функция выхода из состояния головоломки
 function exit_puzzle_state() {
     current_state = player_states.NORMAL;
-    
-    // Возвращаем видимость и коллизии игрока
     visible = true;
     solid = true;
-    
-    // Сбрасываем физические параметры при выходе из головоломки
-    vspeed = 0;
     hspeed = 0;
+    vspeed = 0;
+    current_move_x = 0;
+    current_move_y = 0;
+    move_target_x = 0;
+    move_target_y = 0;
     on_ground = false;
-    current_jumps_used = 0;
-    
-    if (script_exists(scr_ui_manager) && scr_ui_manager.show_message != undefined) {
-        scr_ui_manager.show_message("Выход из головоломки");
-    }
+    jump_buffer_timer = 0;
+    coyote_timer = 0;
+    jump_held = false;
+    safe_show_message("Выход из головоломки");
 }
 
 // Функция проверки расстояния до объекта
@@ -432,16 +512,15 @@ function distance_to_object(other_object) {
 // Функция поворота к объекту
 function face_object(target_x, target_y) {
     var angle_to_target = point_direction(x, y, target_x, target_y);
-    
-    // Определяем ближайшее направление
+
     if (angle_to_target >= 315 || angle_to_target < 45) {
-        facing_direction = 3;  // Вверх
+        facing_direction = 3;
     } else if (angle_to_target >= 45 && angle_to_target < 135) {
-        facing_direction = 2;  // Вправо
+        facing_direction = 2;
     } else if (angle_to_target >= 135 && angle_to_target < 225) {
-        facing_direction = 0;  // Вниз
+        facing_direction = 0;
     } else if (angle_to_target >= 225 && angle_to_target < 315) {
-        facing_direction = 1;  // Влево
+        facing_direction = 1;
     }
 }
 
@@ -450,43 +529,59 @@ function get_current_state() {
     return current_state;
 }
 
+function set_movement_mode(new_mode) {
+    if (new_mode != "topdown" && new_mode != "platformer") {
+        return;
+    }
+
+    movement_mode = new_mode;
+    hspeed = 0;
+    vspeed = 0;
+    current_move_x = 0;
+    current_move_y = 0;
+    move_target_x = 0;
+    move_target_y = 0;
+    on_ground = false;
+    coyote_timer = 0;
+    jump_buffer_timer = 0;
+    jump_held = false;
+}
+
 // Функция установки состояния игрока
 function set_state(new_state) {
-    if (player_states[new_state] != undefined) {
-        current_state = new_state;
-        
-        // В зависимости от состояния выполняем действия
-        switch (new_state) {
-            case player_states.NORMAL:
-                interaction_enabled = true;
-                visible = true;
-                solid = true;
-                break;
-            case player_states.INTERACTING:
-                interaction_enabled = false;
-                break;
-            case player_states.PUZZLE:
-                interaction_enabled = false;
-                visible = false;
-                solid = false;
-                break;
-            case player_states.DIALOG:
-                interaction_enabled = false;
-                break;
-        }
+    current_state = new_state;
+
+    switch (new_state) {
+        case player_states.NORMAL:
+            interaction_enabled = true;
+            visible = true;
+            solid = true;
+            break;
+        case player_states.INTERACTING:
+        case player_states.DIALOG:
+            interaction_enabled = false;
+            break;
+        case player_states.PUZZLE:
+            interaction_enabled = false;
+            visible = false;
+            solid = false;
+            break;
     }
 }
 
 // Функция получения информации о игроке
 function get_player_info() {
-    var info = {
+    return {
         x: x,
         y: y,
         state: current_state,
+        movement_mode: movement_mode,
         facing_direction: facing_direction,
         interaction_enabled: interaction_enabled,
-        speed: speed
+        hspeed: hspeed,
+        vspeed: vspeed,
+        on_ground: on_ground,
+        coyote_timer: coyote_timer,
+        jump_buffer_timer: jump_buffer_timer
     };
-    
-    return info;
 }
