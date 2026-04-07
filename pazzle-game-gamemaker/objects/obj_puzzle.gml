@@ -7,6 +7,7 @@
     puzzle_solved = false;
     puzzle_active = false;
     puzzle_timer = 0;
+    puzzle_level = 1;
     
     // Тип головоломки (определяется в наследниках)
     puzzle_type = "";
@@ -25,11 +26,11 @@
         
         // Обновляем логику головоломки
         if (puzzle_script != undefined) {
-            scr_puzzle_manager.update_puzzle(puzzle_type);
+            update_puzzle(puzzle_type);
         }
         
         // Проверяем, решена ли головоломка
-        if (scr_puzzle_manager.is_puzzle_solved(puzzle_type)) {
+        if (is_puzzle_solved(puzzle_type)) {
             puzzle_complete();
         }
     }
@@ -40,7 +41,7 @@
     if (puzzle_active) {
         // Отрисовываем головоломку
         if (puzzle_script != undefined) {
-            scr_puzzle_manager.draw_puzzle(puzzle_type, false);
+            draw_puzzle(puzzle_type, false);
         }
     }
 }
@@ -68,19 +69,19 @@ function puzzle_init() {
     if (puzzle_type != "" && puzzle_script == undefined) {
         // Инициализируем puzzle manager если он еще не инициализирован
         if (!variable_instance_exists(global, "puzzle_manager_initialized")) {
-            scr_puzzle_manager.init_puzzle_manager();
+            init_puzzle_manager();
             global.puzzle_manager_initialized = true;
         }
         
         // Создаем экземпляр головоломки
-        puzzle_data = scr_puzzle_manager.create_puzzle(puzzle_type);
+        puzzle_data = create_puzzle(puzzle_type);
     }
 }
 
 function puzzle_is_solved() {
     // Проверка решения головоломки
     if (puzzle_script != undefined) {
-        return scr_puzzle_manager.is_puzzle_solved(puzzle_type);
+        return is_puzzle_solved(puzzle_type);
     }
     return puzzle_solved;
 }
@@ -92,7 +93,7 @@ function puzzle_complete() {
     // Сообщение менеджеру об успешном прохождении
     var instance_id = instance_nearest(x, y, obj_game_manager);
     if (instance_id != noone) {
-        instance_id.on_puzzle_solved();
+        instance_id.on_puzzle_solved(puzzle_level);
     }
 }
 

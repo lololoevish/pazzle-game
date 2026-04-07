@@ -223,7 +223,7 @@ function solve_puzzle() {
     solved = true;
     
     // Воспроизводим звук успеха
-    scr_audio_manager.play_sfx("puzzle_success");
+    play_sfx("puzzle_success");
 }
 
 // Функция сброса головоломки

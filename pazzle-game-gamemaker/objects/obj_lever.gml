@@ -7,6 +7,7 @@
     solid = true;
     lever_pulled = false;
     lever_interaction_distance = 32;
+    puzzle_level = 1;
 }
 
 // Step Event
@@ -14,9 +15,6 @@
     // Проверка, находится ли игрок рядом
     var player_dist = distance_to_object(obj_player);
     if (player_dist <= lever_interaction_distance && !lever_pulled) {
-        // Показываем возможность взаимодействия
-        draw_interaction_prompt();
-        
         // Проверяем нажатие E для взаимодействия
         if (keyboard_check_pressed(ord('E')) || keyboard_check_pressed(vk_enter)) {
             pull_lever();
@@ -47,11 +45,11 @@ function pull_lever() {
         lever_pulled = true;
         
         // Воспроизводим звук
-        scr_audio_manager.play_sfx("lever");
+        play_sfx("lever");
         
         // Обновляем состояние уровня
         var gm = instance_nearest(x, y, obj_game_manager);
-        if (gm != noone) {
+        if (gm != noone && variable_instance_exists(gm, "on_lever_pulled")) {
             gm.on_lever_pulled(puzzle_level);
         }
         
@@ -63,9 +61,11 @@ function pull_lever() {
 // Функция открытия выхода
 function open_exit() {
     // Находим выход и открываем его
-    var exit_inst = instance_nearest(x, y, obj_exit);
-    if (exit_inst != noone) {
+    if (object_exists(obj_exit)) {
+        var exit_inst = instance_nearest(x, y, obj_exit);
+        if (exit_inst != noone) {
         exit_inst.open_door();
+        }
     }
 }
 

@@ -9,16 +9,16 @@
     scr_init_globals();
     
     // Установка музыки для текущего состояния
-    if (script_exists(scr_audio_manager) && scr_audio_manager.play_music_by_state != undefined) {
-        scr_audio_manager.play_music_by_state(global.game_state);
+    if (script_exists(scr_audio_manager)) {
+        play_music_by_state(global.game_state);
     }
 }
 
 // Step Event
 {
     // Обновление UI
-    if (script_exists(scr_ui_manager) && scr_ui_manager.update_ui != undefined) {
-        scr_ui_manager.update_ui(delta_time);
+    if (script_exists(scr_ui_manager)) {
+        update_ui(delta_time / 1000000);
     }
     
     // Обработка состояний игры
@@ -54,8 +54,8 @@
 
 // Draw Event
 {
-    if (script_exists(scr_ui_manager) && scr_ui_manager.draw_ui != undefined) {
-        scr_ui_manager.draw_ui();
+    if (script_exists(scr_ui_manager)) {
+        draw_ui();
     }
 }
 
@@ -83,8 +83,8 @@ function handle_victory_state() {
 function handle_input() {
     // Обработка переходов между состояниями
     if (keyboard_check_pressed(vk_escape)) {
-        if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-            scr_audio_manager.play_event_sound("ui_cancel");
+        if (script_exists(scr_audio_manager)) {
+            play_event_sound("ui_cancel");
         }
         switch(global.game_state) {
             case "playing_level_1":
@@ -105,26 +105,22 @@ function handle_input() {
 // Функция обработки завершения головоломки
 function on_puzzle_solved(level_num) {
     // Отмечаем уровень как завершенный
-    if (script_exists(scr_game_controller)) {
-        scr_game_controller.complete_level(level_num);
-    }
+    complete_level(level_num);
     
     // Сохраняем игру
     if (script_exists(scr_save_system)) {
-        scr_save_system.save_game();
+        save_game();
     }
 }
 
 // Функция обработки опускания рычага
 function on_lever_pulled(level_num) {
     // Отмечаем, что рычаг опущен
-    if (script_exists(scr_game_controller)) {
-        scr_game_controller.set_lever_pulled(level_num, true);
-    }
+    set_level_lever_pulled(level_num, true);
     
     // Сохраняем игру
     if (script_exists(scr_save_system)) {
-        scr_save_system.save_game();
+        save_game();
     }
     
     // Проверяем, не завершена ли экспедиция

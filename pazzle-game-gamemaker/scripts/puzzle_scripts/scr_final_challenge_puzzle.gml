@@ -113,7 +113,7 @@ function handle_player_movement() {
     if ((keyboard_check_pressed(vk_space) || keyboard_check_pressed(vk_up) || keyboard_check_pressed(ord('W'))) && player.on_ground) {
         player.vspeed = player.jump_strength;
         player.on_ground = false;
-        scr_audio_manager.play_sfx("interaction");
+        play_sfx("interaction");
     }
 }
 
@@ -201,7 +201,7 @@ function check_collisions() {
                 // Увеличиваем сложность с каждым собранным артефактом
                 difficulty_factor = 1.0 + (collected_artifacts * 0.1);
                 
-                scr_audio_manager.play_sfx("puzzle_success");
+                play_sfx("puzzle_success");
             }
         }
     }
@@ -213,7 +213,7 @@ function check_collisions() {
                                    obstacles[i].x + obstacles[i].width, obstacles[i].y + obstacles[i].height)) {
             // Столкновение с препятствием - сбрасываем позицию игрока
             reset_player_position();
-            scr_audio_manager.play_sfx("cancel");
+            play_sfx("cancel");
         }
     }
 }
@@ -326,7 +326,7 @@ function solve_puzzle() {
     solved = true;
     
     // Воспроизводим звук успеха
-    scr_audio_manager.play_sfx("puzzle_completed");
+    play_sfx("puzzle_completed");
 }
 
 // Функция сброса уровня

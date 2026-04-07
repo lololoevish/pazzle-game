@@ -134,8 +134,8 @@ function reset_game() {
     global.expedition_complete = false;
     
     // Восстанавливаем начальные параметры
-    if (script_exists(scr_game_controller) && scr_game_controller.init_global_vars != undefined) {
-        scr_game_controller.init_global_vars();
+    if (script_exists(scr_game_state) && script_exists(init_global_vars)) {
+        init_global_vars();
     } else {
         // Если скрипт недоступен, инициализируем вручную
         if (!global_exists("initialized")) {

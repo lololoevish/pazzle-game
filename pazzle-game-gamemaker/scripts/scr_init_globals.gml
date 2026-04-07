@@ -58,5 +58,5 @@ if (!global_exists("initialized")) {
 
 // Загрузка сохранения, если есть
 if (script_exists(scr_save_system)) {
-    scr_save_system.load_game();
+    load_game();
 }

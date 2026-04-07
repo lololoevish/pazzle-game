@@ -23,9 +23,6 @@
     // Проверка, находится ли игрок рядом
     var player_dist = distance_to_object(obj_player);
     if (player_dist <= interaction_distance && !in_dialogue) {
-        // Показываем возможность взаимодействия
-        draw_interaction_prompt();
-        
         // Проверяем нажатие E для взаимодействия
         if (keyboard_check_pressed(ord('E')) || keyboard_check_pressed(vk_enter)) {
             start_interaction();
@@ -60,7 +57,7 @@ function start_interaction() {
     in_dialogue = true;
     
     // Воспроизводим звук
-    scr_audio_manager.play_sfx("dialogue_start");
+    play_sfx("dialogue_start");
     
     // Открываем диалог в зависимости от типа NPC
     switch(npc_type) {
@@ -81,31 +78,35 @@ function start_interaction() {
 // Функция завершения взаимодействия
 function end_interaction() {
     in_dialogue = false;
-    scr_ui_manager.hide_npc_dialogue();
+    hide_npc_dialogue();
 }
 
 // Специфичные функции для разных NPC
 function start_elder_trial() {
     // Испытание старосты Иара на угадывание числа
-    scr_ui_manager.show_npc_dialogue("Староста Иара", "Хочешь испытать свою удачу? Угадай число от 1 до 10 за 3 попытки!");
-    scr_ui_manager.show_mini_game("elder_trial");
+    show_npc_dialogue("Староста Иара", "Хочешь испытать свою удачу? Угадай число от 1 до 10 за 3 попытки!");
+    show_mini_game("elder_trial");
 }
 
 function start_mechanic_minigame() {
     // Калибровка механика Роана
-    scr_ui_manager.show_npc_dialogue("Механик Роан", "Помоги мне откалибровать мои приборы!");
-    scr_ui_manager.show_mini_game("mechanic_calibration");
+    show_npc_dialogue("Механик Роан", "Помоги мне откалибровать мои приборы!");
+    show_mini_game("mechanic_calibration");
 }
 
 function start_archivist_quiz() {
     // Викторина архивариуса Теля
-    scr_ui_manager.show_npc_dialogue("Архивариус Тель", "Проверим, хорошо ли ты знаешь правила экспедиции?");
-    scr_ui_manager.show_mini_game("archivist_quiz");
+    show_npc_dialogue("Архивариус Тель", "Проверим, хорошо ли ты знаешь правила экспедиции?");
+    show_mini_game("archivist_quiz");
 }
 
 function start_generic_dialogue() {
     // Обычный диалог
-    scr_ui_manager.show_npc_dialogue(npc_name, string(array_get(dialogue, 0)));
+    var first_line = "...";
+    if (array_length(npc_dialogue) > 0) {
+        first_line = string(npc_dialogue[0]);
+    }
+    show_npc_dialogue(npc_name, first_line);
 }
 
 // Функция взаимодействия (для универсального интерфейса)

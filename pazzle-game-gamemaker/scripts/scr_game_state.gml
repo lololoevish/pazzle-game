@@ -52,6 +52,57 @@ function set_lever_pulled(state, level_num) {
     ds_map_replace(state.progress, key, true);
 }
 
+// Совместимость с новой глобальной моделью прогресса
+function complete_level(level_num) {
+    if (level_num >= 1 && level_num <= 6) {
+        global.game_progress.levels[level_num - 1].completed = true;
+        if (script_exists(play_event_sound)) {
+            play_event_sound("level_complete");
+        }
+    }
+}
+
+function set_level_lever_pulled(level_num, pulled) {
+    if (level_num >= 1 && level_num <= 6) {
+        global.game_progress.levels[level_num - 1].lever_pulled = pulled;
+        if (level_num == 6 && pulled) {
+            global.expedition_complete = true;
+        }
+        if (pulled && script_exists(play_event_sound)) {
+            play_event_sound("lever_pull");
+        }
+    }
+}
+
+function count_completed_levels() {
+    var count = 0;
+    for (var i = 0; i < 6; i++) {
+        if (global.game_progress.levels[i].completed) {
+            count++;
+        }
+    }
+    return count;
+}
+
+function count_opened_levels() {
+    var count = 0;
+    for (var i = 0; i < 6; i++) {
+        if (global.game_progress.levels[i].lever_pulled || i == 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+function get_current_objective_level() {
+    for (var i = 0; i < 6; i++) {
+        if (!global.game_progress.levels[i].lever_pulled) {
+            return i + 1;
+        }
+    }
+    return 6;
+}
+
 // Функция проверки, открыта ли следующая пещера
 function is_next_cave_unlocked(state, level_num) {
     if (level_num < 6) {
@@ -182,6 +233,6 @@ function init_global_vars() {
     
     // Загрузка сохранения, если есть (всегда выполняем, даже если уже инициализировано)
     if (script_exists(scr_save_system)) {
-        scr_save_system.load_game();
+        load_game();
     }
 }

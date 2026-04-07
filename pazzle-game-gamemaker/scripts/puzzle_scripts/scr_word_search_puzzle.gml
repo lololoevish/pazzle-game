@@ -248,7 +248,7 @@ function check_word(start_x, start_y, end_x, end_y) {
                 word_found = true;
                 
                 // Воспроизводим звук успеха
-                scr_audio_manager.play_sfx("puzzle_success");
+                play_sfx("puzzle_success");
                 
                 break;
             }
@@ -330,7 +330,7 @@ function solve_puzzle() {
     solved = true;
     
     // Воспроизводим звук успеха
-    scr_audio_manager.play_sfx("puzzle_completed");
+    play_sfx("puzzle_completed");
 }
 
 // Функция сброса головоломки

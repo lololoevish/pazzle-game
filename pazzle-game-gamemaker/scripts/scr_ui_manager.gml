@@ -23,7 +23,13 @@ var ui_elements = {
     notifications: [],      // Уведомления
     dialogs: [],           // Диалоги
     menus: [],             // Меню
-    overlays: []           // Оверлеи
+    overlays: [],          // Оверлеи
+    message: undefined,
+    hud_visible: true,
+    npc_dialogue_active: false,
+    npc_dialogue_name: "",
+    mini_game_active: false,
+    mini_game_type: ""
 };
 
 // Функция показа уведомления
@@ -113,15 +119,15 @@ function handle_dialog_input() {
         
         if (keyboard_check_pressed(vk_up) || keyboard_check_pressed(ord('W'))) {
             dialog.selected_option = max(0, dialog.selected_option - 1);
-            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-                scr_audio_manager.play_event_sound("ui_move");
+            if (script_exists(scr_audio_manager)) {
+                play_event_sound("ui_move");
             }
         }
         
         if (keyboard_check_pressed(vk_down) || keyboard_check_pressed(ord('S'))) {
             dialog.selected_option = min(array_length(dialog.options) - 1, dialog.selected_option + 1);
-            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-                scr_audio_manager.play_event_sound("ui_move");
+            if (script_exists(scr_audio_manager)) {
+                play_event_sound("ui_move");
             }
         }
         
@@ -130,15 +136,15 @@ function handle_dialog_input() {
                 dialog.callback(dialog.selected_option);
             }
             array_delete(ui_elements.dialogs, array_length(ui_elements.dialogs) - 1, 1);
-            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-                scr_audio_manager.play_event_sound("ui_confirm");
+            if (script_exists(scr_audio_manager)) {
+                play_event_sound("ui_confirm");
             }
         }
         
         if (keyboard_check_pressed(vk_escape)) {
             array_delete(ui_elements.dialogs, array_length(ui_elements.dialogs) - 1, 1);
-            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
-                scr_audio_manager.play_event_sound("ui_cancel");
+            if (script_exists(scr_audio_manager)) {
+                play_event_sound("ui_cancel");
             }
         }
     }
@@ -251,9 +257,9 @@ function update_message(dt) {
 
 // Функция отображения прогресса экспедиции
 function draw_expedition_progress(x, y, width, height) {
-    var progress = scr_game_controller.get_current_objective_level();
-    var opened = scr_game_controller.count_opened_levels();
-    var completed = scr_game_controller.count_completed_levels();
+    var progress = get_current_objective_level();
+    var opened = count_opened_levels();
+    var completed = count_completed_levels();
     
     draw_set_color(c_gray);
     draw_rectangle(x, y, x + width, y + height);
@@ -308,18 +314,25 @@ function draw_npc_progress(x, y) {
 
 // Функция отрисовки UI
 function draw_ui() {
-    // Отрисовываем все UI элементы сверху вниз
-    
-    // Основное сообщение
+    if (!ui_elements.hud_visible) {
+        draw_dialog();
+        return;
+    }
+
     draw_message();
-    
-    // Уведомления
     draw_notifications();
-    
-    // Диалог
     draw_dialog();
-    
-    // Восстанавливаем цвет
+
+    if (ui_elements.npc_dialogue_active) {
+        draw_set_color(c_white);
+        draw_text(24, window_get_height() - 96, ui_elements.npc_dialogue_name + ": " + ui_elements.message.text);
+    }
+
+    if (ui_elements.mini_game_active) {
+        draw_set_color(c_yellow);
+        draw_text(24, 24, "Мини-игра: " + ui_elements.mini_game_type);
+    }
+
     draw_set_color(c_white);
 }
 
@@ -327,6 +340,7 @@ function draw_ui() {
 function update_ui(dt) {
     update_notifications(dt);
     update_message(dt);
+    handle_dialog_input();
 }
 
 // Функция проверки коллизии с UI элементом
@@ -344,4 +358,59 @@ function init_ui() {
         ui_config.font_default = font_get_default();
     }
     ui_elements.message = undefined;
+}
+
+function show_hud() {
+    ui_elements.hud_visible = true;
+}
+
+function hide_hud() {
+    ui_elements.hud_visible = false;
+}
+
+function hide_dialog() {
+    if (array_length(ui_elements.dialogs) > 0) {
+        array_delete(ui_elements.dialogs, array_length(ui_elements.dialogs) - 1, 1);
+    }
+}
+
+function show_npc_dialogue(name, text) {
+    ui_elements.npc_dialogue_active = true;
+    ui_elements.npc_dialogue_name = name;
+    show_message(text, 9999);
+}
+
+function hide_npc_dialogue() {
+    ui_elements.npc_dialogue_active = false;
+    ui_elements.npc_dialogue_name = "";
+    ui_elements.message = undefined;
+}
+
+function show_mini_game(game_type) {
+    ui_elements.mini_game_active = true;
+    ui_elements.mini_game_type = game_type;
+}
+
+function hide_mini_game() {
+    ui_elements.mini_game_active = false;
+    ui_elements.mini_game_type = "";
+}
+
+function complete_mini_game(game_type) {
+    switch (game_type) {
+        case "elder_trial":
+            global.game_progress.elder_trial_completed = true;
+            global.game_progress.gold += 30;
+            break;
+        case "mechanic_calibration":
+            global.game_progress.mechanic_training_completed = true;
+            global.game_progress.gold += 35;
+            break;
+        case "archivist_quiz":
+            global.game_progress.archivist_quiz_completed = true;
+            global.game_progress.gold += 25;
+            break;
+    }
+
+    show_notification("Активность завершена", 2, c_lime);
 }

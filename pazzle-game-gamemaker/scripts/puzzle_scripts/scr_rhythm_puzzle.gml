@@ -86,7 +86,7 @@ function show_pattern() {
     waiting_input = false;
     
     // Воспроизводим звук начала паттерна
-    scr_audio_manager.play_sfx("puzzle_success");
+    play_sfx("puzzle_success");
 }
 
 // Функция обработки ввода игрока
@@ -109,13 +109,13 @@ function handle_player_input() {
         array_push(player_sequence, button_pressed);
         
         // Воспроизводим звук нажатия
-        scr_audio_manager.play_sfx("interaction");
+        play_sfx("interaction");
         
         // Проверяем, совпадает ли с правильной последовательностью
         var current_position = array_length_1d(player_sequence) - 1;
         if (player_sequence[current_position] != sequence[current_position]) {
             // Ошибка
-            scr_audio_manager.play_sfx("cancel");
+            play_sfx("cancel");
             reset_round();
         } else if (array_length_1d(player_sequence) == array_length_1d(sequence)) {
             // Правильный ввод завершен
@@ -215,7 +215,7 @@ function solve_puzzle() {
     solved = true;
     
     // Воспроизводим звук успеха
-    scr_audio_manager.play_sfx("puzzle_completed");
+    play_sfx("puzzle_completed");
 }
 
 // Функция сброса головоломки

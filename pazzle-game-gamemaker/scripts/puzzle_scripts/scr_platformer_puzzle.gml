@@ -1,5 +1,11 @@
 // Скрипт головоломки "Платформер" для GameMaker
 
+function approach(current, target, amount) {
+    if (current < target) return min(current + amount, target);
+    if (current > target) return max(current - amount, target);
+    return target;
+}
+
 // Функция инициализации головоломки
 function init() {
     // Параметры игрока
@@ -8,12 +14,18 @@ function init() {
         y: 400,
         width: 20,
         height: 20,
-        speed: 4,
+        speed: 260,
         hspeed: 0,
         vspeed: 0,
-        gravity: 0.5,
-        jump_strength: -10,
-        on_ground: false
+        jump_speed: 560,
+        jump_cut_speed: 220,
+        gravity_rise_hold: 1350,
+        gravity_rise_release: 2500,
+        gravity_fall: 2850,
+        max_fall_speed: 900,
+        on_ground: false,
+        coyote_timer: 0,
+        jump_buffer_timer: 0
     };
     
     // Платформы
@@ -88,31 +100,62 @@ function update() {
 
 // Функция обработки движения игрока
 function handle_player_movement() {
-    // Горизонтальное движение
-    player.hspeed = 0;
-    if (keyboard_check(vk_right) || keyboard_check(ord('D'))) {
-        player.hspeed = player.speed;
+    var dt = clamp(delta_time / 1000000, 0, 0.05);
+    var input_x = 0;
+    var jump_pressed = keyboard_check_pressed(vk_space) || keyboard_check_pressed(vk_up) || keyboard_check_pressed(ord('W'));
+    var jump_down = keyboard_check(vk_space) || keyboard_check(vk_up) || keyboard_check(ord('W'));
+    var jump_released = keyboard_check_released(vk_space) || keyboard_check_released(vk_up) || keyboard_check_released(ord('W'));
+
+    if (keyboard_check(vk_right) || keyboard_check(ord('D'))) input_x += 1;
+    if (keyboard_check(vk_left) || keyboard_check(ord('A'))) input_x -= 1;
+
+    var target_hspeed = input_x * player.speed;
+    var accel = player.on_ground ? 2200 : 1600;
+    var decel = player.on_ground ? 2600 : 1400;
+
+    if (input_x != 0) {
+        player.hspeed = approach(player.hspeed, target_hspeed, accel * dt);
+    } else {
+        player.hspeed = approach(player.hspeed, 0, decel * dt);
     }
-    if (keyboard_check(vk_left) || keyboard_check(ord('A'))) {
-        player.hspeed = -player.speed;
+
+    if (jump_pressed) {
+        player.jump_buffer_timer = 0.15;
+    } else {
+        player.jump_buffer_timer = max(0, player.jump_buffer_timer - dt);
     }
-    
-    // Прыжок
-    if ((keyboard_check_pressed(vk_space) || keyboard_check_pressed(vk_up) || keyboard_check_pressed(ord('W'))) && player.on_ground) {
-        player.vspeed = player.jump_strength;
+
+    if (player.on_ground) {
+        player.coyote_timer = 0.5;
+    } else {
+        player.coyote_timer = max(0, player.coyote_timer - dt);
+    }
+
+    if (player.jump_buffer_timer > 0 && (player.on_ground || player.coyote_timer > 0)) {
+        player.vspeed = -player.jump_speed;
         player.on_ground = false;
-        scr_audio_manager.play_sfx("interaction");
+        player.coyote_timer = 0;
+        player.jump_buffer_timer = 0;
+        play_sfx("interaction");
     }
+
+    if (jump_released && player.vspeed < -player.jump_cut_speed) {
+        player.vspeed = -player.jump_cut_speed;
+    }
+
+    var gravity_value = player.gravity_fall;
+    if (player.vspeed < 0) {
+        gravity_value = jump_down ? player.gravity_rise_hold : player.gravity_rise_release;
+    }
+
+    player.vspeed = min(player.vspeed + gravity_value * dt, player.max_fall_speed);
 }
 
 // Функция обновления физики игрока
 function update_player_physics() {
-    // Применяем гравитацию
-    player.vspeed += player.gravity;
-    
     // Обновляем позицию
-    player.x += player.hspeed;
-    player.y += player.vspeed;
+    player.x += player.hspeed * clamp(delta_time / 1000000, 0, 0.05);
+    player.y += player.vspeed * clamp(delta_time / 1000000, 0, 0.05);
     
     // Проверяем границы комнаты
     if (player.x < 0) player.x = 0;
@@ -166,7 +209,7 @@ function check_collisions() {
                 // Собрали кристалл
                 crystals[i].collected = true;
                 collected_crystals++;
-                scr_audio_manager.play_sfx("puzzle_success");
+                play_sfx("puzzle_success");
             }
         }
     }
@@ -262,7 +305,7 @@ function solve_puzzle() {
     solved = true;
     
     // Воспроизводим звук успеха
-    scr_audio_manager.play_sfx("puzzle_completed");
+    play_sfx("puzzle_completed");
 }
 
 // Функция сброса уровня
@@ -272,6 +315,9 @@ function reset_level() {
     player.y = 400;
     player.hspeed = 0;
     player.vspeed = 0;
+    player.coyote_timer = 0;
+    player.jump_buffer_timer = 0;
+    player.on_ground = false;
     
     // Сбрасываем кристаллы
     collected_crystals = 0;

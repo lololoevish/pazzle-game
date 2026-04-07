@@ -238,6 +238,42 @@ function play_event_sound(event_type) {
     }
 }
 
+// Совместимость со старым API
+function play_sfx(sound_name) {
+    switch (sound_name) {
+        case "confirm":
+        case "dialogue_start":
+        case "interaction":
+            play_event_sound("ui_confirm");
+            break;
+        case "cancel":
+            play_event_sound("ui_cancel");
+            break;
+        case "move":
+            play_event_sound("ui_move");
+            break;
+        case "success":
+            play_event_sound("ui_success");
+            break;
+        case "lever":
+            play_event_sound("lever_pull");
+            break;
+        case "puzzle_success":
+            play_event_sound("puzzle_solve");
+            break;
+        case "puzzle_completed":
+            play_event_sound("level_complete");
+            break;
+        default:
+            play_event_sound(sound_name);
+            break;
+    }
+}
+
+function initialize_audio() {
+    return init_audio_manager();
+}
+
 // Функция получения списка доступных аудио-устройств
 function get_audio_devices() {
     var devices = [];

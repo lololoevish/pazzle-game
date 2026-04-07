@@ -117,13 +117,13 @@ function handle_card_click(card_index) {
             matched_cards[second_selected] = true;
             
             // Воспроизводим звук успеха
-            scr_audio_manager.play_sfx("puzzle_success");
+            play_sfx("puzzle_success");
             
             // Проверяем, все ли пары найдены
             check_completion();
         } else {
             // Несовпадение - воспроизводим звук ошибки
-            scr_audio_manager.play_sfx("cancel");
+            play_sfx("cancel");
         }
         
         // Убираем выбор через задержку
@@ -135,7 +135,7 @@ function handle_card_click(card_index) {
         revealed_cards[first_selected] = true;
         
         // Воспроизводим звук выбора
-        scr_audio_manager.play_sfx("interaction");
+        play_sfx("interaction");
         
         waiting_second = true;
     }
@@ -235,7 +235,7 @@ function solve_puzzle() {
     solved = true;
     
     // Воспроизводим звук успеха
-    scr_audio_manager.play_sfx("puzzle_completed");
+    play_sfx("puzzle_completed");
 }
 
 // Функция сброса головоломки
