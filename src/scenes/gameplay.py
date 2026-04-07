@@ -1195,15 +1195,40 @@ class GameplayScene:
                 self.player.x < px + pw and
                 player_bottom >= py and 
                 player_bottom <= py + 20 and
-                self.player.vy > 0):
+                self.player.current_dy > 0):  # Изменено на current_dy
                 
                 self.player.y = py - self.player.height
-                self.player.vy = 0
+                self.player.current_dy = 0  # Изменено на current_dy
                 self.player_on_ground = True
                 
+        # Горизонтальное движение для платформера
+        # Обработка горизонтального движения с ускорением/замедлением
+        keys_pressed = pygame.key.get_pressed()  # Добавляем получение состояния клавиш
+        target_dx = 0
+        if keys_pressed[pygame.K_LEFT] or keys_pressed[pygame.K_a]:
+            target_dx = -self.player.speed * 0.7  # Меньше скорость для платформера
+        if keys_pressed[pygame.K_RIGHT] or keys_pressed[pygame.K_d]:
+            target_dx = self.player.speed * 0.7  # Меньше скорость для платформера
+            
+        # Применение горизонтального движения
+        if hasattr(self.player, 'target_dx'):
+            self.player.target_dx = target_dx
+        else:
+            # Для обратной совместимости
+            if target_dx != 0:
+                self.player.x += target_dx
+                self.player.x = max(0, min(self.player.x, self.screen_width - self.player.width))
+        
         # Прыжок
         if keys_pressed[pygame.K_SPACE] and self.player_on_ground:
-            self.player.vy = -12
+            if hasattr(self.player, 'current_dy'):
+                self.player.current_dy = -10  # Обновлено значение для плавного движения
+            else:
+                # Для обратной совместимости
+                if not hasattr(self.player, 'vy'):
+                    self.player.vy = -10
+                else:
+                    self.player.vy = -10
             
     def draw_platforms(self, screen):
         """Отрисовка платформ"""

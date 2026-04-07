@@ -10,6 +10,14 @@ class Player:
         self.speed = speed
         self.rect = pygame.Rect(x, y, width, height)
         
+        # Параметры для плавного движения
+        self.target_dx = 0
+        self.target_dy = 0
+        self.current_dx = 0
+        self.current_dy = 0
+        self.acceleration = 0.5  # Ускорение
+        self.deceleration = 0.3  # Замедление
+        
         # Анимация
         self.anim_frame = 0
         self.anim_speed = 0.15
@@ -40,8 +48,8 @@ class Player:
                 
         self.x += dx
         self.y += dy
-        self.rect.x = self.x
-        self.rect.y = self.y
+        self.rect.x = int(self.x)  # Конвертируем в int для pygame.Rect
+        self.rect.y = int(self.y)
         self.is_moving = (dx != 0 or dy != 0)
         
         # Определяем направление движения
@@ -68,22 +76,61 @@ class Player:
         
     def update(self, keys_pressed):
         """Обновление позиции игрока в зависимости от нажатых клавиш"""
-        dx, dy = 0, 0
+        # Определяем целевое направление
+        target_dx, target_dy = 0, 0
         
         if keys_pressed[pygame.K_LEFT] or keys_pressed[pygame.K_a]:
-            dx = -self.speed
+            target_dx = -self.speed
         if keys_pressed[pygame.K_RIGHT] or keys_pressed[pygame.K_d]:
-            dx = self.speed
+            target_dx = self.speed
         if keys_pressed[pygame.K_UP] or keys_pressed[pygame.K_w]:
-            dy = -self.speed
+            target_dy = -self.speed
         if keys_pressed[pygame.K_DOWN] or keys_pressed[pygame.K_s]:
-            dy = self.speed
+            target_dy = self.speed
             
-        if dx != 0 or dy != 0:
-            self.move(dx=dx, dy=dy)
+        # Плавное изменение скорости к целевому значению
+        if self.target_dx != target_dx or self.target_dy != target_dy:
+            self.target_dx = target_dx
+            self.target_dy = target_dy
+            
+        # Обновляем текущую скорость с учетом ускорения/замедления
+        if self.current_dx != self.target_dx:
+            if abs(self.current_dx - self.target_dx) < self.acceleration:
+                self.current_dx = self.target_dx
+            elif self.current_dx < self.target_dx:
+                self.current_dx += self.acceleration
+            else:
+                self.current_dx -= self.acceleration
+                
+        if self.current_dy != self.target_dy:
+            if abs(self.current_dy - self.target_dy) < self.acceleration:
+                self.current_dy = self.target_dy
+            elif self.current_dy < self.target_dy:
+                self.current_dy += self.acceleration
+            else:
+                self.current_dy -= self.acceleration
+                
+        # Если обе команды равны нулю, применяем замедление
+        if self.target_dx == 0 and abs(self.current_dx) > 0:
+            if self.current_dx > 0:
+                self.current_dx = max(0, self.current_dx - self.deceleration)
+            else:
+                self.current_dx = min(0, self.current_dx + self.deceleration)
+                
+        if self.target_dy == 0 and abs(self.current_dy) > 0:
+            if self.current_dy > 0:
+                self.current_dy = max(0, self.current_dy - self.deceleration)
+            else:
+                self.current_dy = min(0, self.current_dy + self.deceleration)
+        
+        # Применяем движение
+        if abs(self.current_dx) > 0.1 or abs(self.current_dy) > 0.1:  # Порог для маленькой величины
+            self.move(dx=self.current_dx, dy=self.current_dy)
             self.is_moving = True
         else:
             self.is_moving = False
+            self.current_dx = 0
+            self.current_dy = 0
             
         # Обновление анимации
         if self.is_moving:
