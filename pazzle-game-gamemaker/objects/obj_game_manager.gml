@@ -1,56 +1,51 @@
-// Game Manager Object для GameMaker
-// Управляет состоянем игры, переходами между сценами
+/*
+ * Game Manager Object для GameMaker
+ * Управляет состоянием игры, переходами между сценами
+ */
 
 // Create Event
 {
-    // Инициализация глобального состояния игры
-    if (!variable_instance_exists(global, "game_state")) {
-        // Загрузка сохранений
-        if (file_exists("savegame.json")) {
-            global.game_state = scr_save_system.load_game();
-        } else {
-            // Если нет сохранений, начинаем новую игру
-            global.game_state = scr_save_system.reset_game();
-        }
-    }
-    
-    // Инициализация аудио
-    scr_audio_manager.initialize_audio();
-    
-    // Установка начального состояния если оно не установлено
-    if (!variable_instance_exists(global, "current_state")) {
-        global.current_state = global.game_state.current_state;
-    }
+    // Инициализация глобальных переменных
+    scr_init_globals();
     
     // Установка музыки для текущего состояния
-    update_music_by_state();
+    if (script_exists(scr_audio_manager) && scr_audio_manager.play_music_by_state != undefined) {
+        scr_audio_manager.play_music_by_state(global.game_state);
+    }
 }
 
 // Step Event
 {
     // Обновление UI
-    scr_ui_manager.update_ui();
+    if (script_exists(scr_ui_manager) && scr_ui_manager.update_ui != undefined) {
+        scr_ui_manager.update_ui(delta_time);
+    }
     
     // Обработка состояний игры
-    switch(global.game_state.current_state) {
-        case "MENU":
+    switch(global.game_state) {
+        case "menu":
             // Логика меню
             handle_menu_state();
             break;
-        case "TOWN":
+        case "town":
             // Логика города
             handle_town_state();
             break;
-        case "PLAYING":
+        case "playing_level_1":
+        case "playing_level_2":
+        case "playing_level_3":
+        case "playing_level_4":
+        case "playing_level_5":
+        case "playing_level_6":
             // Логика игры
             handle_playing_state();
             break;
-        case "VICTORY":
+        case "victory":
             // Логика финальной сцены
             handle_victory_state();
             break;
         default:
-            global.game_state.current_state = "MENU";
+            global.game_state = "menu";
     }
     
     // Обработка ввода
@@ -59,24 +54,8 @@
 
 // Draw Event
 {
-    scr_ui_manager.draw_ui();
-}
-
-// Функция обновления музыки по состоянию
-function update_music_by_state() {
-    switch(global.game_state.current_state) {
-        case "MENU":
-            scr_audio_manager.play_music("menu");
-            break;
-        case "TOWN":
-            scr_audio_manager.play_music("town");
-            break;
-        case "PLAYING":
-            scr_audio_manager.play_music("cave");
-            break;
-        case "VICTORY":
-            scr_audio_manager.play_music("victory");
-            break;
+    if (script_exists(scr_ui_manager) && scr_ui_manager.draw_ui != undefined) {
+        scr_ui_manager.draw_ui();
     }
 }
 
@@ -104,9 +83,16 @@ function handle_victory_state() {
 function handle_input() {
     // Обработка переходов между состояниями
     if (keyboard_check_pressed(vk_escape)) {
-        scr_audio_manager.play_sfx("cancel");
-        switch(global.game_state.current_state) {
-            case "PLAYING":
+        if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
+            scr_audio_manager.play_event_sound("ui_cancel");
+        }
+        switch(global.game_state) {
+            case "playing_level_1":
+            case "playing_level_2":
+            case "playing_level_3":
+            case "playing_level_4":
+            case "playing_level_5":
+            case "playing_level_6":
                 // Можно добавить меню паузы
                 break;
             default:
@@ -116,80 +102,34 @@ function handle_input() {
     }
 }
 
-// Функция перехода между комнатами
-function change_room(room_name) {
-    switch(room_name) {
-        case "rm_menu":
-            room_goto(rm_menu);
-            global.game_state.current_state = "MENU";
-            break;
-        case "rm_town":
-            room_goto(rm_town);
-            global.game_state.current_state = "TOWN";
-            break;
-        case "rm_cave_maze":
-            room_goto(rm_cave_maze);
-            global.game_state.current_state = "PLAYING";
-            global.game_state.current_level = 1;
-            break;
-        case "rm_cave_archive":
-            room_goto(rm_cave_archive);
-            global.game_state.current_state = "PLAYING";
-            global.game_state.current_level = 2;
-            break;
-        case "rm_cave_rhythm":
-            room_goto(rm_cave_rhythm);
-            global.game_state.current_state = "PLAYING";
-            global.game_state.current_level = 3;
-            break;
-        case "rm_cave_pairs":
-            room_goto(rm_cave_pairs);
-            global.game_state.current_state = "PLAYING";
-            global.game_state.current_level = 4;
-            break;
-        case "rm_cave_platformer":
-            room_goto(rm_cave_platformer);
-            global.game_state.current_state = "PLAYING";
-            global.game_state.current_level = 5;
-            break;
-        case "rm_cave_final":
-            room_goto(rm_cave_final);
-            global.game_state.current_state = "PLAYING";
-            global.game_state.current_level = 6;
-            break;
-        case "rm_victory":
-            room_goto(rm_victory);
-            global.game_state.current_state = "VICTORY";
-            break;
-        default:
-            room_goto(rm_menu);
-            global.game_state.current_state = "MENU";
+// Функция обработки завершения головоломки
+function on_puzzle_solved(level_num) {
+    // Отмечаем уровень как завершенный
+    if (script_exists(scr_game_controller)) {
+        scr_game_controller.complete_level(level_num);
     }
     
-    // Обновляем музыку в соответствии с новым состоянием
-    update_music_by_state();
-}
-
-// Функция обработки завершения головоломки
-function on_puzzle_solved() {
-    // Отмечаем уровень как завершенный
-    scr_game_state.set_level_completed(global.game_state, global.game_state.current_level);
-    
     // Сохраняем игру
-    scr_save_system.save_game(global.game_state);
+    if (script_exists(scr_save_system)) {
+        scr_save_system.save_game();
+    }
 }
 
 // Функция обработки опускания рычага
 function on_lever_pulled(level_num) {
     // Отмечаем, что рычаг опущен
-    scr_game_state.set_lever_pulled(global.game_state, level_num);
+    if (script_exists(scr_game_controller)) {
+        scr_game_controller.set_lever_pulled(level_num, true);
+    }
     
     // Сохраняем игру
-    scr_save_system.save_game(global.game_state);
+    if (script_exists(scr_save_system)) {
+        scr_save_system.save_game();
+    }
     
     // Проверяем, не завершена ли экспедиция
-    if (scr_game_state.is_expedition_completed(global.game_state)) {
-        // Если экспедиция завершена, переходим к финальной сцене
-        change_room("rm_victory");
+    if (global.expedition_complete) {
+        // Если экспедиция завершена, можно выполнить дополнительные действия
+        global.game_state = "victory";
     }
 }

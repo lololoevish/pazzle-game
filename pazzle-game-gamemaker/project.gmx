@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<assets>
+  <argument kind="string" name="display_name">Adventure Puzzle Game</argument>
+  <argument kind="string" name="description">Приключенческая игра с головоломками</argument>
+  <argument kind="string" name="author">Developer</argument>
+  <argument kind="real" name="version_major">1</argument>
+  <argument kind="real" name="version_minor">0</argument>
+  <argument kind="real" name="version_revision">0</argument>
+  <argument kind="real" name="version_build">0</argument>
+  
+  <!-- Настройки игры -->
+  <Config>
+    <options>
+      <option name="option_windows_display_cursor">True</option>
+      <option name="option_windows_borderless">False</option>
+      <option name="option_windows_fullscreen">False</option>
+      <option name="option_windows_vsync">True</option>
+      <option name="option_windows_resizeable">True</option>
+      <option name="option_windows_allow_fullscreen_switching">False</option>
+      <option name="option_windows_interpolate_pixels">False</option>
+      <option name="option_windows_working_directory">.</option>
+      <option name="option_windows_splash_screens"></option>
+      <option name="option_windows_use_splash">False</option>
+      <option name="option_windows_start_fullscreen">False</option>
+      <option name="option_windows_allow_window_resize">True</option>
+      <option name="option_windows_enable_steam">False</option>
+      <option name="option_windows_disable_sandbox">False</option>
+      <option name="option_windows_language"><![CDATA[0]]></option>
+    </options>
+  </Config>
+  
+  <!-- Объекты -->
+  <objects>
+    <object id="0" name="obj_game_manager">
+      <events>
+        <event name="create">obj_game_manager.gml</event>
+        <event name="step">obj_game_manager.gml</event>
+        <event name="draw">obj_game_manager.gml</event>
+      </events>
+    </object>
+    <object id="1" name="obj_player">
+      <events>
+        <event name="create">obj_player.gml</event>
+        <event name="step">obj_player.gml</event>
+        <event name="draw">obj_player.gml</event>
+      </events>
+    </object>
+    <object id="2" name="obj_puzzle">
+      <events>
+        <event name="create">obj_puzzle.gml</event>
+        <event name="step">obj_puzzle.gml</event>
+        <event name="draw">obj_puzzle.gml</event>
+      </events>
+    </object>
+    <object id="3" name="obj_lever">
+      <events>
+        <event name="create">obj_lever.gml</event>
+        <event name="step">obj_lever.gml</event>
+        <event name="draw">obj_lever.gml</event>
+      </events>
+    </object>
+    <object id="4" name="obj_npc">
+      <events>
+        <event name="create">obj_npc.gml</event>
+        <event name="step">obj_npc.gml</event>
+        <event name="draw">obj_npc.gml</event>
+      </events>
+    </object>
+    <object id="5" name="obj_interactable">
+      <events>
+        <event name="create">obj_interactable.gml</event>
+        <event name="step">obj_interactable.gml</event>
+        <event name="draw">obj_interactable.gml</event>
+      </events>
+    </object>
+  </objects>
+  
+  <!-- Комнаты -->
+  <rooms>
+    <room id="0" name="rm_main">
+      <creation_code>rm_main.gml</creation_code>
+    </room>
+  </rooms>
+  
+  <!-- Скрипты -->
+  <scripts>
+    <script id="0" name="scr_game_state">scr_game_state.gml</script>
+    <script id="1" name="scr_save_system">scr_save_system.gml</script>
+    <script id="2" name="scr_audio_manager">scr_audio_manager.gml</script>
+    <script id="3" name="scr_ui_manager">scr_ui_manager.gml</script>
+    <script id="4" name="scr_game_controller">scr_game_controller.gml</script>
+    <script id="5" name="scr_init_globals">scr_init_globals.gml</script>
+  </scripts>
+  
+  <!-- Шрифты -->
+  <fonts>
+    <font id="0" name="fnt_default">
+      <fontname>Tahoma</fontname>
+      <size>12</size>
+      <bold>false</bold>
+      <italic>false</italic>
+    </font>
+  </fonts>
+  
+  <!-- Загрузочный экран -->
+  <splash />
+</assets>

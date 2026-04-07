@@ -1,129 +1,259 @@
-// Аудио менеджер для GameMaker
-// Управляет музыкой и звуковыми эффектами
+/*
+ * Аудио-менеджер
+ * Управляет воспроизведением музыки и звуковых эффектов
+ */
 
-// Глобальные переменные для аудио
-globalvar audio_manager_initialized;
-if (!variable_instance_exists(global, "audio_manager_initialized")) {
-    global.audio_manager_initialized = false;
-}
+// Инициализация аудио-параметров
+var audio_config = {
+    master_volume: 1.0,
+    music_volume: 0.7,
+    sfx_volume: 0.9,
+    current_music: undefined,
+    music_playing: false,
+    sfx_channel: 0
+};
 
-// Инициализация аудио менеджера
-function initialize_audio() {
-    if (!global.audio_manager_initialized) {
-        // Инициализация аудио ресурсов
-        // В реальном проекте это будут ссылки на реальные аудио файлы
-        // Для заглушки используем индекс -1 (не найдено) и будем обрабатывать это в play_функциях
-        
-        // Создаем структуру для аудио
-        if (!variable_instance_exists(global, "audio_resources")) {
-            global.audio_resources = {
-                sfx: {
-                    confirm: -1,      // В реальном проекте будет asset_get_index("snd_ui_confirm")
-                    cancel: -1,       // asset_get_index("snd_ui_cancel")
-                    move: -1,         // asset_get_index("snd_ui_move")
-                    success: -1,      // asset_get_index("snd_ui_success")
-                    lever: -1,        // asset_get_index("snd_lever")
-                    interaction: -1,  // asset_get_index("snd_interaction")
-                    puzzle_success: -1,    // asset_get_index("snd_puzzle_success")
-                    puzzle_completed: -1   // asset_get_index("snd_puzzle_completed")
-                },
-                music: {
-                    menu: -1,      // asset_get_index("mus_menu")
-                    town: -1,      // asset_get_index("mus_town")
-                    cave: -1,      // asset_get_index("mus_cave")
-                    victory: -1    // asset_get_index("mus_victory")
-                }
-            };
+// Функция проигрывания музыки
+function play_music(sound_index) {
+    // Проверяем, что ресурс не пустой/не определен
+    if (sound_index != undefined && sound_index != -1 && sound_exists(sound_index)) {
+        // Если проигрывается другая музыка, останавливаем её
+        if (audio_config.music_playing && audio_config.current_music != sound_index) {
+            stop_music();
         }
         
-        // Настройки аудио
-        if (!variable_instance_exists(global, "sfx_volume")) global.sfx_volume = 1.0;
-        if (!variable_instance_exists(global, "music_volume")) global.music_volume = 1.0;
-        if (!variable_instance_exists(global, "audio_muted")) global.audio_muted = false;
-        if (!variable_instance_exists(global, "bgm_channel")) global.bgm_channel = -1;
+        // Устанавливаем громкость музыки
+        audio_sound_set_gain(sound_index, audio_config.music_volume * audio_config.master_volume, 0);
         
-        global.audio_manager_initialized = true;
+        // Проигрываем музыку в цикле
+        audio_play_sound(sound_index, audio_config.sfx_channel, true);
+        audio_config.current_music = sound_index;
+        audio_config.music_playing = true;
+    } else {
+        // Если звук не существует, просто показываем предупреждение, но не вызываем ошибку
+        // show_debug_message("WARNING: Music sound '" + string(sound_index) + "' does not exist");
     }
 }
 
-// Проигрывание SFX
-function play_sfx(sound_name) {
-    if (global.audio_muted) return; // Если звук отключен, ничего не проигрываем
-    
-    // Временная функция для воспроизведения звуков
-    // В реальном проекте будет использовать asset_get_index и audio_play_sound
-    
-    var sound_asset = -1;
-    
-    // Сопоставляем названия звуков с ресурсами
-    if (global.audio_resources != undefined) {
-        if (global.audio_resources.sfx[sound_name] != undefined) {
-            sound_asset = global.audio_resources.sfx[sound_name];
-        }
-    }
-    
-    // Если звук не определен, используем обобщенную логику
-    if (sound_asset == -1) {
-        // Вместо реального воспроизведения выводим debug для тестирования
-        show_debug_message("SFX played: " + string(sound_name));
-        return;
-    }
-    
-    // В реальном проекте было бы:
-    // if (asset_get_type(sound_asset) == asset_sound) {
-    //     audio_play_sound(sound_asset, global.sfx_volume, false);
-    // }
-}
-
-// Проигрывание музыки
-function play_music(music_name, looping = true) {
-    if (global.audio_muted) return; // Если звук отключен, ничего не проигрываем
-    
-    // Остановить текущую музыку
-    if (global.bgm_channel != -1) {
-        audio_stop_sound(global.bgm_channel);
-        global.bgm_channel = -1;
-    }
-    
-    var music_asset = -1;
-    
-    // Сопоставляем названия музыки с ресурсами
-    if (global.audio_resources != undefined) {
-        if (global.audio_resources.music[music_name] != undefined) {
-            music_asset = global.audio_resources.music[music_name];
-        }
-    }
-    
-    // Если музыка не определена, используем обобщенную логику
-    if (music_asset == -1) {
-        // Вместо реального воспроизведения выводим debug для тестирования
-        show_debug_message("Music played: " + string(music_name) + ", looping: " + string(looping));
-        return;
-    }
-    
-    // В реальном проекте было бы:
-    // if (asset_get_type(music_asset) == asset_sound) {
-    //     global.bgm_channel = audio_play_sound(music_asset, global.music_volume, looping);
-    // }
-}
-
-// Остановка музыки
+// Функция остановки музыки
 function stop_music() {
-    if (global.bgm_channel != -1) {
-        audio_stop_sound(global.bgm_channel);
-        global.bgm_channel = -1;
+    if (audio_config.music_playing && audio_config.current_music != undefined) {
+        audio_stop_sound(audio_config.current_music);
+        audio_config.music_playing = false;
+        audio_config.current_music = undefined;
     }
 }
 
-// Установка громкости
-function set_volume(sfx_vol = -1, music_vol = -1) {
-    if (sfx_vol != -1) global.sfx_volume = clamp(sfx_vol, 0, 1);
-    if (music_vol != -1) global.music_volume = clamp(music_vol, 0, 1);
+// Функция проигрывания звукового эффекта
+function play_sound(sound_index) {
+    // Проверяем, что ресурс не пустой/не определен
+    if (sound_index != undefined && sound_index != -1 && sound_exists(sound_index)) {
+        // Устанавливаем громкость SFX
+        audio_sound_set_gain(sound_index, audio_config.sfx_volume * audio_config.master_volume, 0);
+        
+        // Проигрываем звук
+        audio_play_sound(sound_index, audio_config.sfx_channel, false);
+    } else {
+        // Если звук не существует, просто показываем предупреждение, но не вызываем ошибку
+        // show_debug_message("WARNING: Sound effect '" + string(sound_index) + "' does not exist");
+    }
 }
 
-// Отключение/включение звука
-function toggle_mute() {
-    global.audio_muted = !global.audio_muted;
+// Функция установки громкости
+function set_volume(volume_type, value) {
+    // Ограничиваем значение громкости от 0 до 1
+    value = clamp(value, 0, 1);
+    
+    switch (volume_type) {
+        case "master":
+            audio_config.master_volume = value;
+            break;
+        case "music":
+            audio_config.music_volume = value;
+            // Применяем новую громкость к текущей музыке
+            if (audio_config.music_playing && audio_config.current_music != undefined) {
+                audio_sound_set_gain(audio_config.current_music, 
+                                   audio_config.music_volume * audio_config.master_volume, 0);
+            }
+            break;
+        case "sfx":
+            audio_config.sfx_volume = value;
+            break;
+        default:
+            show_debug_message("WARNING: Unknown volume type '" + volume_type + "'");
+            break;
+    }
+}
+
+// Функция получения текущей громкости
+function get_volume(volume_type) {
+    switch (volume_type) {
+        case "master":
+            return audio_config.master_volume;
+        case "music":
+            return audio_config.music_volume;
+        case "sfx":
+            return audio_config.sfx_volume;
+        default:
+            show_debug_message("WARNING: Unknown volume type '" + volume_type + "'");
+            return 0;
+    }
+}
+
+// Функция паузы музыки
+function pause_music() {
+    if (audio_config.music_playing && audio_config.current_music != undefined) {
+        audio_pause_sound(audio_config.current_music);
+    }
+}
+
+// Функция возобновления музыки
+function resume_music() {
+    if (audio_config.current_music != undefined) {
+        audio_resume_sound(audio_config.current_music);
+        audio_config.music_playing = true;
+    }
+}
+
+// Функция проверки состояния аудио
+function is_audio_available() {
+    // Проверяем, доступна ли аудио-система
+    return audio_system() != audio_no_system;
+}
+
+// Функция инициализации аудио-системы
+function init_audio_system() {
+    if (!is_audio_available()) {
+        show_debug_message("WARNING: Audio system not available, running in silent mode");
+        // В случае недоступности системы, устанавливаем все громкости в 0
+        audio_config.master_volume = 0;
+        audio_config.music_volume = 0;
+        audio_config.sfx_volume = 0;
+        return false;
+    }
+    return true;
+}
+
+// Функция для удобного воспроизведения музыки по названию состояния
+function play_music_by_state(game_state) {
+    var sound_to_play = get_sound_resource("snd_menu_bg");
+    
+    switch (game_state) {
+        case "menu":
+            sound_to_play = get_sound_resource("snd_menu_bg");
+            break;
+        case "town":
+            sound_to_play = get_sound_resource("snd_town_bg");
+            break;
+        case "playing_level_1":
+        case "playing_level_2":
+        case "playing_level_3":
+        case "playing_level_4":
+        case "playing_level_5":
+        case "playing_level_6":
+            sound_to_play = get_sound_resource("snd_level_bg");
+            break;
+        case "victory":
+            sound_to_play = get_sound_resource("snd_victory_bg");
+            break;
+        default:
+            show_debug_message("WARNING: No music defined for state '" + game_state + "'");
+            break;
+    }
+    
+    if (sound_to_play != undefined && sound_to_play != -1) {
+        play_music(sound_to_play);
+    }
+}
+
+// Вспомогательная функция для получения ресурса по имени
+function get_sound_resource(name) {
+    // Возвращаем -1 если ресурс не найден, чтобы избежать ошибок
+    // В реальном проекте эти переменные будут определены в ресурсах
+    switch (name) {
+        case "snd_menu_bg": return (global.snd_menu_bg == undefined) ? -1 : global.snd_menu_bg;
+        case "snd_town_bg": return (global.snd_town_bg == undefined) ? -1 : global.snd_town_bg;
+        case "snd_level_bg": return (global.snd_level_bg == undefined) ? -1 : global.snd_level_bg;
+        case "snd_victory_bg": return (global.snd_victory_bg == undefined) ? -1 : global.snd_victory_bg;
+        case "snd_ui_move": return (global.snd_ui_move == undefined) ? -1 : global.snd_ui_move;
+        case "snd_ui_confirm": return (global.snd_ui_confirm == undefined) ? -1 : global.snd_ui_confirm;
+        case "snd_ui_cancel": return (global.snd_ui_cancel == undefined) ? -1 : global.snd_ui_cancel;
+        case "snd_ui_success": return (global.snd_ui_success == undefined) ? -1 : global.snd_ui_success;
+        case "snd_lever_pull": return (global.snd_lever_pull == undefined) ? -1 : global.snd_lever_pull;
+        case "snd_level_complete": return (global.snd_level_complete == undefined) ? -1 : global.snd_level_complete;
+        case "snd_reward_obtained": return (global.snd_reward_obtained == undefined) ? -1 : global.snd_reward_obtained;
+        case "snd_puzzle_solve": return (global.snd_puzzle_solve == undefined) ? -1 : global.snd_puzzle_solve;
+        case "snd_player_move": return (global.snd_player_move == undefined) ? -1 : global.snd_player_move;
+        case "snd_player_jump": return (global.snd_player_jump == undefined) ? -1 : global.snd_player_jump;
+        case "snd_item_collect": return (global.snd_item_collect == undefined) ? -1 : global.snd_item_collect;
+        default: return -1;
+    }
+}
+
+// Функция для удобного воспроизведения звуков событий
+function play_event_sound(event_type) {
+    var sound_to_play = undefined;
+    
+    switch (event_type) {
+        case "ui_move":
+            sound_to_play = get_sound_resource("snd_ui_move");
+            break;
+        case "ui_confirm":
+            sound_to_play = get_sound_resource("snd_ui_confirm");
+            break;
+        case "ui_cancel":
+            sound_to_play = get_sound_resource("snd_ui_cancel");
+            break;
+        case "ui_success":
+            sound_to_play = get_sound_resource("snd_ui_success");
+            break;
+        case "lever_pull":
+            sound_to_play = get_sound_resource("snd_lever_pull");
+            break;
+        case "level_complete":
+            sound_to_play = get_sound_resource("snd_level_complete");
+            break;
+        case "reward_obtained":
+            sound_to_play = get_sound_resource("snd_reward_obtained");
+            break;
+        case "puzzle_solve":
+            sound_to_play = get_sound_resource("snd_puzzle_solve");
+            break;
+        case "player_move":
+            sound_to_play = get_sound_resource("snd_player_move");
+            break;
+        case "player_jump":
+            sound_to_play = get_sound_resource("snd_player_jump");
+            break;
+        case "item_collect":
+            sound_to_play = get_sound_resource("snd_item_collect");
+            break;
+        default:
+            show_debug_message("WARNING: No sound defined for event '" + event_type + "'");
+            break;
+    }
+    
+    if (sound_to_play != undefined && sound_to_play != -1) {
+        play_sound(sound_to_play);
+    }
+}
+
+// Функция получения списка доступных аудио-устройств
+function get_audio_devices() {
+    var devices = [];
+    var count = audio_get_recorder_count();
+    
+    for (var i = 0; i < count; i++) {
+        var device_info = audio_get_recorder_info(i);
+        array_push(devices, device_info);
+    }
+    
+    return devices;
+}
+
+// Функция установки аудио-устройства
+function set_audio_device(device_index) {
+    // Может быть реализована позже для переключения устройств
 }
 
 // Вспомогательная функция для ограничения значений
@@ -131,4 +261,9 @@ function clamp(val, min, max) {
     if (val < min) return min;
     if (val > max) return max;
     return val;
+}
+
+// Функция инициализации
+function init_audio_manager() {
+    init_audio_system();
 }

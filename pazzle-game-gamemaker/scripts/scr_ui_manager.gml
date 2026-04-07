@@ -1,272 +1,347 @@
-// UI менеджер для GameMaker
-// Управление интерфейсом пользователя
+/*
+ * UI-менеджер
+ * Управляет интерфейсом пользователя
+ */
 
-// Глобальные переменные для UI
-globalvar ui_initialized;
-if (!variable_instance_exists(global, "ui_initialized")) {
-    global.ui_initialized = false;
+// Инициализация UI параметров
+var ui_config = {
+    ui_scale: 1.0,
+    ui_alpha: 1.0,
+    font_default: (global.fnt_default != undefined) ? global.fnt_default : font_get_default(),
+    font_size_normal: 16,
+    font_size_large: 24,
+    font_size_small: 12,
+    color_text: c_white,
+    color_highlight: c_yellow,
+    color_error: c_red,
+    color_success: c_lime,
+    ui_elements: []
+};
+
+// Структура для хранения UI элементов
+var ui_elements = {
+    notifications: [],      // Уведомления
+    dialogs: [],           // Диалоги
+    menus: [],             // Меню
+    overlays: []           // Оверлеи
+};
+
+// Функция показа уведомления
+function show_notification(text, duration, color) {
+    if (color == undefined) color = ui_config.color_text;
+    if (duration == undefined) duration = 2;  // 2 секунды по умолчанию
+    
+    var notification = {
+        text: text,
+        duration: duration,
+        color: color,
+        timer: 0,
+        active: true
+    };
+    
+    // Добавляем в начало массива, чтобы новые уведомления были поверх
+    array_insert(ui_elements.notifications, 0, notification);
+    
+    // Ограничиваем количество активных уведомлений
+    if (array_length(ui_elements.notifications) > 5) {
+        array_delete(ui_elements.notifications, 5, array_length(ui_elements.notifications) - 5);
+    }
 }
 
-// Инициализация UI
-function initialize_ui() {
-    if (!global.ui_initialized) {
-        // Создаем структуру UI элементов
-        if (!variable_instance_exists(global, "ui_elements")) {
-            global.ui_elements = {
-                hud_visible: true,
-                dialog_box: false,
-                menu_active: false,
-                current_dialog: "",
-                dialog_choices: ds_list_create(),  // используем ds_list для лучшей совместимости
-                npc_dialogue_active: false,
-                npc_dialogue_name: "",
-                mini_game_active: false,
-                mini_game_type: "",
-                input_buffer: "",  // для ввода текста
-                show_cursor: true  // показывать ли курсор
-            };
-        }
+// Функция обновления уведомлений
+function update_notifications(dt) {
+    for (var i = array_length(ui_elements.notifications) - 1; i >= 0; i--) {
+        var note = ui_elements.notifications[i];
+        note.timer += dt;
         
-        global.ui_initialized = true;
-    }
-}
-
-// Показать HUD
-function show_hud() {
-    global.ui_elements.hud_visible = true;
-}
-
-// Скрыть HUD
-function hide_hud() {
-    global.ui_elements.hud_visible = false;
-}
-
-// Показать диалог
-function show_dialog(text, choices = []) {
-    global.ui_elements.dialog_box = true;
-    global.ui_elements.current_dialog = text;
-    
-    // Очищаем старые выборы
-    if (ds_list_empty(global.ui_elements.dialog_choices) == false) {
-        ds_list_clear(global.ui_elements.dialog_choices);
-    }
-    
-    // Добавляем новые выборы
-    for (var i = 0; i < array_length_1d(choices); i++) {
-        ds_list_add(global.ui_elements.dialog_choices, choices[i]);
-    }
-}
-
-// Скрыть диалог
-function hide_dialog() {
-    global.ui_elements.dialog_box = false;
-    global.ui_elements.current_dialog = "";
-    
-    if (ds_list_empty(global.ui_elements.dialog_choices) == false) {
-        ds_list_clear(global.ui_elements.dialog_choices);
-    }
-}
-
-// Показать NPC диалог
-function show_npc_dialogue(npc_name, dialogue_text) {
-    global.ui_elements.npc_dialogue_active = true;
-    global.ui_elements.npc_dialogue_name = npc_name;
-    global.ui_elements.current_dialog = dialogue_text;
-}
-
-// Скрыть NPC диалог
-function hide_npc_dialogue() {
-    global.ui_elements.npc_dialogue_active = false;
-    global.ui_elements.npc_dialogue_name = "";
-    global.ui_elements.current_dialog = "";
-    
-    if (ds_list_empty(global.ui_elements.dialog_choices) == false) {
-        ds_list_clear(global.ui_elements.dialog_choices);
-    }
-}
-
-// Показать мини-игру
-function show_mini_game(game_type) {
-    global.ui_elements.mini_game_active = true;
-    global.ui_elements.mini_game_type = game_type;
-}
-
-// Скрыть мини-игру
-function hide_mini_game() {
-    global.ui_elements.mini_game_active = false;
-    global.ui_elements.mini_game_type = "";
-}
-
-// Показать меню
-function show_menu(menu_type) {
-    global.ui_elements.menu_active = true;
-    // Здесь логика отображения конкретного типа меню
-}
-
-// Скрыть меню
-function hide_menu() {
-    global.ui_elements.menu_active = false;
-}
-
-// Отрисовка UI
-function draw_ui() {
-    // Инициализация UI если нужно
-    initialize_ui();
-    
-    if (global.ui_elements.hud_visible) {
-        // Отображение информации о прогрессе, золоте и т.д.
-        draw_set_color(c_white);
-        if (font_exists(fnt_default)) {
-            draw_set_font(fnt_default);
-        }
-        
-        // Отображение текущего состояния
-        draw_text(10, 10, "Состояние: " + string(global.game_state.current_state));
-        
-        // Отображение информации о прогрессе в зависимости от состояния
-        if (variable_instance_exists(global, "game_state")) {
-            if (global.game_state.current_state == "TOWN") {
-                // В городе отображаем золото и прогресс
-                draw_text(10, 30, "Золото: " + string(global.game_state.gold));
-                
-                // Отображаем количество открытых уровней
-                var unlocked_levels = 0;
-                var i;
-                for (i = 1; i <= 6; i ++) {
-                    if (scr_game_state.is_lever_pulled(global.game_state, i)) {
-                        unlocked_levels += 1;
-                    }
-                }
-                draw_text(10, 50, "Открытые пещеры: " + string(unlocked_levels) + "/6");
-            } else if (global.game_state.current_state == "PLAYING") {
-                draw_text(10, 30, "Уровень: " + string(global.game_state.current_level));
-                draw_text(10, 50, "Золото: " + string(global.game_state.gold));
-            }
+        if (note.timer >= note.duration) {
+            array_delete(ui_elements.notifications, i, 1);
         }
     }
-    
-    // Отображение NPC диалога
-    if (global.ui_elements.npc_dialogue_active && string_length(global.ui_elements.current_dialog) > 0) {
-        // Рисуем диалоговое окно
-        draw_set_color(c_black);
-        draw_set_alpha(0.8);
-        draw_rectangle(25, display_get_gui_height() - 180, display_get_gui_width() - 25, display_get_gui_height() - 25, false);
+}
+
+// Функция отрисовки уведомлений
+function draw_notifications() {
+    var base_y = 20;
+    for (var i = 0; i < min(array_length(ui_elements.notifications), 5); i++) {
+        var note = ui_elements.notifications[i];
+        var alpha = 1.0;
         
-        // Заголовок с именем NPC
-        draw_set_color(c_yellow);
+        // Плавное исчезновение в конце
+        var remaining = note.duration - note.timer;
+        if (remaining < 0.5) {
+            alpha = remaining / 0.5;
+        }
+        
+        draw_set_alpha(alpha);
+        draw_set_color(note.color);
+        draw_set_font(ui_config.font_default);
+        draw_set_halign(fa_center);
         draw_set_valign(fa_top);
-        draw_text(40, display_get_gui_height() - 170, global.ui_elements.npc_dialogue_name);
         
-        // Текст диалога
-        draw_set_color(c_white);
-        draw_set_halign(fa_left);
-        draw_text_ext(40, display_get_gui_height() - 145, global.ui_elements.current_dialog, display_get_gui_width() - 80, 80);
+        var x = window_get_width() / 2;
+        var y = base_y + i * 30;
         
-        // Показываем подсказку о продолжении
-        draw_set_color(c_gray);
-        draw_text(display_get_gui_width() - 120, display_get_gui_height() - 40, "Нажмите E для продолжения");
-    }
-    
-    // Отображение стандартного диалога
-    else if (global.ui_elements.dialog_box) {
-        // Рисуем диалоговое окно
+        // Печатаем текст с эффектом затенения
         draw_set_color(c_black);
-        draw_set_alpha(0.7);
-        draw_rectangle(50, display_get_gui_height() - 150, display_get_gui_width() - 50, display_get_gui_height() - 50, false);
-        draw_set_color(c_white);
-        draw_set_alpha(1.0);
-        draw_text(70, display_get_gui_height() - 130, global.ui_elements.current_dialog);
+        draw_text(x+1, y+1, note.text);
+        draw_set_color(note.color);
+        draw_text(x, y, note.text);
         
-        // Если есть выбор - отображаем варианты
-        if (ds_list_empty(global.ui_elements.dialog_choices) == false) {
-            for (var i = 0; i < ds_list_size(global.ui_elements.dialog_choices); i++) {
-                var choice_text = ds_list_find_value(global.ui_elements.dialog_choices, i);
-                draw_text(70, display_get_gui_height() - 110 + i * 20, string(i+1) + ". " + string(choice_text));
-            }
-        }
-    }
-    
-    // Отображение мини-игры (если активна)
-    if (global.ui_elements.mini_game_active) {
-        draw_mini_game_interface();
+        draw_set_alpha(1.0);
     }
 }
 
-// Отрисовка интерфейса мини-игры
-function draw_mini_game_interface() {
-    // Интерфейс для конкретной мини-игры
+// Функция показа диалога
+function show_dialog(text, options, callback) {
+    var dialog = {
+        text: text,
+        options: options,
+        callback: callback,
+        selected_option: 0,
+        active: true,
+        timer: 0
+    };
+    
+    array_push(ui_elements.dialogs, dialog);
+}
+
+// Функция обработки ввода в диалоге
+function handle_dialog_input() {
+    if (array_length(ui_elements.dialogs) > 0) {
+        var dialog = ui_elements.dialogs[array_length(ui_elements.dialogs) - 1];
+        
+        if (keyboard_check_pressed(vk_up) || keyboard_check_pressed(ord('W'))) {
+            dialog.selected_option = max(0, dialog.selected_option - 1);
+            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
+                scr_audio_manager.play_event_sound("ui_move");
+            }
+        }
+        
+        if (keyboard_check_pressed(vk_down) || keyboard_check_pressed(ord('S'))) {
+            dialog.selected_option = min(array_length(dialog.options) - 1, dialog.selected_option + 1);
+            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
+                scr_audio_manager.play_event_sound("ui_move");
+            }
+        }
+        
+        if (keyboard_check_pressed(vk_enter) || keyboard_check_pressed(ord('E')) || mouse_check_button_pressed(mb_left)) {
+            if (dialog.callback != undefined) {
+                dialog.callback(dialog.selected_option);
+            }
+            array_delete(ui_elements.dialogs, array_length(ui_elements.dialogs) - 1, 1);
+            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
+                scr_audio_manager.play_event_sound("ui_confirm");
+            }
+        }
+        
+        if (keyboard_check_pressed(vk_escape)) {
+            array_delete(ui_elements.dialogs, array_length(ui_elements.dialogs) - 1, 1);
+            if (script_exists(scr_audio_manager) && scr_audio_manager.play_event_sound != undefined) {
+                scr_audio_manager.play_event_sound("ui_cancel");
+            }
+        }
+    }
+}
+
+// Функция отрисовки диалога
+function draw_dialog() {
+    if (array_length(ui_elements.dialogs) > 0) {
+        var dialog = ui_elements.dialogs[array_length(ui_elements.dialogs) - 1];
+        
+        // Рисуем оверлей
+        draw_set_alpha(0.7);
+        draw_set_color(c_black);
+        draw_rectangle(0, 0, window_get_width(), window_get_height());
+        draw_set_alpha(1.0);
+        
+        // Рисуем панель диалога
+        var panel_width = min(window_get_width() * 0.8, 600);
+        var panel_height = 200 + array_length(dialog.options) * 30;
+        var panel_x = (window_get_width() - panel_width) / 2;
+        var panel_y = (window_get_height() - panel_height) / 2;
+        
+        draw_set_color(c_navy);
+        draw_rectangle(panel_x, panel_y, panel_x + panel_width, panel_y + panel_height);
+        draw_set_color(c_lightgray);
+        draw_rectangle_border(panel_x, panel_y, panel_x + panel_width, panel_y + panel_height, 4);
+        
+        // Рисуем текст
+        draw_set_color(ui_config.color_text);
+        draw_set_font(ui_config.font_default);
+        draw_set_halign(fa_left);
+        draw_set_valign(fa_top);
+        
+        draw_text_ext(dialog.text, panel_x + 20, panel_y + 20, panel_width - 40, 24);
+        
+        // Рисуем опции
+        for (var i = 0; i < array_length(dialog.options); i++) {
+            var option_y = panel_y + 100 + i * 30;
+            if (i == dialog.selected_option) {
+                draw_set_color(ui_config.color_highlight);
+                draw_rectangle(panel_x + 15, option_y - 5, panel_x + panel_width - 15, option_y + 25);
+            } else {
+                draw_set_color(ui_config.color_text);
+            }
+            
+            draw_text(panel_x + 20, option_y, "> " + dialog.options[i]);
+        }
+        
+        draw_set_color(ui_config.color_text);
+        draw_text(panel_x + 20, panel_y + panel_height - 30, "ENTER - выбрать, ESC - отмена");
+    }
+}
+
+// Функция отображения сообщения
+function show_message(text, duration) {
+    if (duration == undefined) duration = 3;
+    
+    var msg = {
+        text: text,
+        duration: duration,
+        timer: 0,
+        active: true
+    };
+    
+    // Очищаем предыдущее сообщение
+    ui_elements.message = msg;
+}
+
+// Функция отрисовки основного сообщения
+function draw_message() {
+    if (ui_elements.message != undefined && ui_elements.message.active) {
+        var msg = ui_elements.message;
+        var alpha = 1.0;
+        
+        // Плавное появление и исчезновение
+        if (msg.timer < 0.5) {
+            alpha = msg.timer / 0.5;
+        } else if (msg.duration - msg.timer < 0.5) {
+            alpha = (msg.duration - msg.timer) / 0.5;
+        }
+        
+        draw_set_alpha(alpha);
+        draw_set_color(ui_config.color_text);
+        draw_set_font(ui_config.font_default);
+        draw_set_halign(fa_center);
+        draw_set_valign(fa_middle);
+        
+        var x = window_get_width() / 2;
+        var y = window_get_height() - 50;
+        
+        // Фон сообщения
+        draw_set_color(c_black);
+        draw_rectangle(x - 150, y - 20, x + 150, y + 20);
+        draw_set_color(ui_config.color_text);
+        
+        draw_text(x, y, msg.text);
+        draw_set_alpha(1.0);
+    }
+}
+
+// Функция обновления основного сообщения
+function update_message(dt) {
+    if (ui_elements.message != undefined) {
+        ui_elements.message.timer += dt;
+        if (ui_elements.message.timer >= ui_elements.message.duration) {
+            ui_elements.message.active = false;
+        }
+    }
+}
+
+// Функция отображения прогресса экспедиции
+function draw_expedition_progress(x, y, width, height) {
+    var progress = scr_game_controller.get_current_objective_level();
+    var opened = scr_game_controller.count_opened_levels();
+    var completed = scr_game_controller.count_completed_levels();
+    
+    draw_set_color(c_gray);
+    draw_rectangle(x, y, x + width, y + height);
+    
     draw_set_color(c_blue);
-    draw_set_alpha(0.8);
-    draw_rectangle(100, 100, display_get_gui_width() - 100, display_get_gui_height() - 100, false);
+    draw_rectangle(x, y, x + (opened / 6) * width, y + height);
     
     draw_set_color(c_white);
-    draw_text(120, 120, "Мини-игра: " + string(global.ui_elements.mini_game_type));
+    draw_set_font(ui_config.font_default);
+    draw_set_halign(fa_center);
+    draw_set_valign(fa_middle);
     
-    // Завершающая инструкция
-    draw_text(120, 140, "Нажмите пробел для завершения");
+    var text = string(completed) + "/6 уровней пройдено, цель: уровень " + string(progress);
+    draw_text(x + width/2, y + height/2, text);
+}
+
+// Функция отображения инвентаря
+function show_inventory() {
+    // Показываем окно инвентаря с золотом и предметами
+    var progress = global.game_progress;
+    var inventory_text = "Золото: " + string(progress.gold) + "\nПредметы:\n";
+    
+    for (var i = 0; i < array_length(progress.items); i++) {
+        inventory_text += "- " + string(progress.items[i]) + "\n";
+    }
+    
+    show_dialog(inventory_text, ["Закрыть"], function(selected) {});
+}
+
+// Функция отображения прогресса NPC заданий
+function draw_npc_progress(x, y) {
+    var progress = global.game_progress;
+    var npc_status = "NPC задания:\n";
+    
+    npc_status += "Механик: ";
+    npc_status += progress.mechanic_training_completed ? "Завершено" : "Не завершено";
+    npc_status += "\n";
+    
+    npc_status += "Архивариус: ";
+    npc_status += progress.archivist_quiz_completed ? "Завершено" : "Не завершено";
+    npc_status += "\n";
+    
+    npc_status += "Староста: ";
+    npc_status += progress.elder_trial_completed ? "Завершено" : "Не завершено";
+    
+    draw_set_color(c_white);
+    draw_set_font(ui_config.font_default);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+    draw_text(x, y, npc_status);
+}
+
+// Функция отрисовки UI
+function draw_ui() {
+    // Отрисовываем все UI элементы сверху вниз
+    
+    // Основное сообщение
+    draw_message();
+    
+    // Уведомления
+    draw_notifications();
+    
+    // Диалог
+    draw_dialog();
+    
+    // Восстанавливаем цвет
+    draw_set_color(c_white);
 }
 
 // Функция обновления UI
-function update_ui() {
-    // Инициализация UI если нужно
-    initialize_ui();
-    
-    // Обработка ввода для UI элементов
-    if (keyboard_check_pressed(ord('E')) && global.ui_elements.npc_dialogue_active) {
-        hide_npc_dialogue();
-    }
-    
-    if (keyboard_check_pressed(vk_space) && global.ui_elements.mini_game_active) {
-        // Завершаем мини-игру и возвращаемся в хаб
-        complete_mini_game(global.ui_elements.mini_game_type);
-        hide_mini_game();
-    }
+function update_ui(dt) {
+    update_notifications(dt);
+    update_message(dt);
 }
 
-// Функция завершения мини-игры
-function complete_mini_game(game_type) {
-    if (!variable_instance_exists(global, "game_state")) {
-        // Если глобальное состояние игры не существует, создаем его
-        global.game_state = scr_game_state.create_new_game_state();
-    }
-    
-    // Обновляем состояние игры в зависимости от типа мини-игры
-    switch(game_type) {
-        case "elder_trial":
-            global.game_state.elder_trial_completed = true;
-            // Добавляем награду
-            global.game_state.gold += 50;
-            break;
-        case "mechanic_calibration":
-            global.game_state.mechanic_training_completed = true;
-            // Добавляем награду
-            global.game_state.gold += 30;
-            ds_list_add(global.game_state.items, "инструменты механика");
-            break;
-        case "archivist_quiz":
-            global.game_state.archivist_quiz_completed = true;
-            // Добавляем награду
-            global.game_state.gold += 40;
-            ds_list_add(global.game_state.items, "книга древностей");
-            break;
-    }
-    
-    // Сохраняем игру
-    scr_save_system.save_game(global.game_state);
+// Функция проверки коллизии с UI элементом
+function ui_element_collision(x, y, element) {
+    return (x >= element.x && x <= element.x + element.width &&
+            y >= element.y && y <= element.y + element.height);
 }
 
-// Функция для отображения всплывающих сообщений
-function show_popup_message(message, duration = 60) {  // 60 тиков = 1 секунда при 60 FPS
-    // В реальном проекте здесь будет реализация всплывающего сообщения
-    show_debug_message("Popup: " + message);
-}
-
-// Функция получения текущего состояния UI
-function get_ui_state() {
-    return {
-        hud_visible: global.ui_elements.hud_visible,
-        dialog_active: global.ui_elements.dialog_box || global.ui_elements.npc_dialogue_active,
-        current_dialog: global.ui_elements.current_dialog,
-        mini_game_active: global.ui_elements.mini_game_active
-    };
+// Функция инициализации UI
+function init_ui() {
+    // Проверяем, определен ли глобальный шрифт
+    if (global.fnt_default != undefined) {
+        ui_config.font_default = global.fnt_default;
+    } else {
+        ui_config.font_default = font_get_default();
+    }
+    ui_elements.message = undefined;
 }

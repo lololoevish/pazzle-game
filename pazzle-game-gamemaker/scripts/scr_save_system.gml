@@ -1,153 +1,277 @@
-// Система сохранений GameMaker
-// Сохраняет и загружает прогресс в формате JSON
+/*
+ * Система сохранений
+ * Отвечает за сохранение и загрузку игрового прогресса
+ */
 
-// Функция сохранения
-function save_game(game_state) {
-    // Преобразуем ds_map и ds_list в формат, подходящий для JSON
-    var json_safe_state = convert_state_for_json(game_state);
-    var json_string = json_encode(json_safe_state);
+// Имя файла сохранения
+var SAVE_FILE_NAME = "adventure_puzzle_save";
+
+// Функция сохранения игры
+function save_game() {
+    var save_struct = {
+        game_state: global.game_state,
+        game_progress: {},
+        expedition_complete: global.expedition_complete
+    };
     
-    // Сохраняем в JSON файл как в Rust-версии
-    var file = file_text_open_write("savegame.json");
+    // Копируем структуру прогресса
+    save_struct.game_progress.levels = [];
+    for (var i = 0; i < array_length(global.game_progress.levels); i++) {
+        var level_data = {};
+        level_data.completed = global.game_progress.levels[i].completed;
+        level_data.lever_pulled = global.game_progress.levels[i].lever_pulled;
+        array_push(save_struct.game_progress.levels, level_data);
+    }
+    
+    save_struct.game_progress.gold = global.game_progress.gold;
+    save_struct.game_progress.mechanic_training_completed = global.game_progress.mechanic_training_completed;
+    save_struct.game_progress.archivist_quiz_completed = global.game_progress.archivist_quiz_completed;
+    save_struct.game_progress.elder_trial_completed = global.game_progress.elder_trial_completed;
+    
+    // Сохраняем список предметов
+    save_struct.game_progress.items = [];
+    for (var i = 0; i < array_length(global.game_progress.items); i++) {
+        array_push(save_struct.game_progress.items, global.game_progress.items[i]);
+    }
+    
+    // Сохраняем структуру в файл
+    var file = file_text_open_write(SAVE_FILE_NAME + ".sav");
     if (file != -1) {
-        file_text_write_string(file, json_string);
+        file_text_write_string(file, json_stringify(save_struct));
         file_text_close(file);
     }
     
-    // Также сохраняем в INI для резервного копирования
-    ini_open("savegame.ini");
-    ini_write_string("game_data", "state", json_string);
+    // Также можно сохранить через ini как резерв
+    var ini_file = ini_open(SAVE_FILE_NAME + ".ini");
+    ini_write_string("save", "data", json_stringify(save_struct));
     ini_close();
-    
-    show_debug_message("Игра сохранена");
 }
 
-// Функция загрузки
+// Функция загрузки игры
 function load_game() {
-    var loaded_state;
+    var loaded_data = undefined;
     
-    if (file_exists("savegame.json")) {
-        var file = file_text_open_read("savegame.json");
-        if (file != -1) {
-            var json_string = file_text_read_string(file);
-            file_text_close(file);
-            
-            // Проверяем, что строка не пустая
-            if (string_length(json_string) > 0) {
-                var json_data = json_decode(json_string);
-                
-                // Преобразуем данные обратно в формат с ds_map и ds_list
-                loaded_state = convert_json_to_state(json_data);
-            }
+    // Пробуем загрузить из файла
+    var file = file_text_open_read(SAVE_FILE_NAME + ".sav");
+    if (file != -1) {
+        var content = file_text_read_all(file);
+        file_text_close(file);
+        
+        if (content != "") {
+            loaded_data = json_parse(content);
         }
     }
     
-    // Если загрузка из JSON не удалась, пробуем из INI
-    if (loaded_state == undefined) {
-        if (ini_file_exists("savegame.ini")) {
-            ini_open("savegame.ini");
-            var json_string = ini_read_string("game_data", "state", "{}");
-            ini_close();
-            
-            if (string_length(json_string) > 0) {
-                var json_data = json_decode(json_string);
-                loaded_state = convert_json_to_state(json_data);
+    // Если не удалось загрузить из .sav, пробуем из .ini
+    if (loaded_data == undefined) {
+        var ini_file = ini_open(SAVE_FILE_NAME + ".ini");
+        if (ini_section_exists(ini_file, "save")) {
+            var content = ini_read_string("save", "data", "");
+            if (content != "") {
+                loaded_data = json_parse(content);
             }
         }
+        ini_close();
     }
     
-    // Если ничего не удалось загрузить, создаем новую игру
-    if (loaded_state == undefined) {
-        loaded_state = scr_game_state.create_new_game_state();
+    if (loaded_data != undefined) {
+        // Восстанавливаем состояние игры
+        global.game_state = loaded_data.game_state;
+        global.expedition_complete = loaded_data.expedition_complete;
+        
+        // Восстанавливаем прогресс уровней
+        var levels_data = loaded_data.game_progress.levels;
+        for (var i = 0; i < array_length(levels_data); i++) {
+            global.game_progress.levels[i].completed = levels_data[i].completed;
+            global.game_progress.levels[i].lever_pulled = levels_data[i].lever_pulled;
+        }
+        
+        global.game_progress.gold = loaded_data.game_progress.gold;
+        global.game_progress.mechanic_training_completed = loaded_data.game_progress.mechanic_training_completed;
+        global.game_progress.archivist_quiz_completed = loaded_data.game_progress.archivist_quiz_completed;
+        global.game_progress.elder_trial_completed = loaded_data.game_progress.elder_trial_completed;
+        
+        // Восстанавливаем список предметов
+        global.game_progress.items = [];
+        var items_data = loaded_data.game_progress.items;
+        for (var i = 0; i < array_length(items_data); i++) {
+            array_push(global.game_progress.items, items_data[i]);
+        }
+        
+        return true;
+    } else {
+        // Если не удалось загрузить, инициализируем начальные значения
+        initialize_default_progress();
+        return false;
     }
-    
-    return loaded_state;
 }
 
-// Инициализация новой игры
+// Функция инициализации начального прогресса
+function initialize_default_progress() {
+    for (var i = 0; i < 6; i++) {
+        global.game_progress.levels[i].completed = false;
+        global.game_progress.levels[i].lever_pulled = false;
+    }
+    
+    global.game_progress.gold = 100;
+    global.game_progress.mechanic_training_completed = false;
+    global.game_progress.archivist_quiz_completed = false;
+    global.game_progress.elder_trial_completed = false;
+    
+    // Очищаем список предметов
+    global.game_progress.items = [];
+}
+
+// Функция сброса игры
 function reset_game() {
-    var new_state = scr_game_state.create_new_game_state();
+    // Удаляем файл сохранения
+    file_delete(SAVE_FILE_NAME + ".sav");
+    file_delete(SAVE_FILE_NAME + ".ini");
     
-    // Сохраняем новую игру в файл
-    save_game(new_state);
+    // Инициализируем начальные значения
+    initialize_default_progress();
+    global.game_state = "menu";
+    global.expedition_complete = false;
     
-    return new_state;
+    // Восстанавливаем начальные параметры
+    if (script_exists(scr_game_controller) && scr_game_controller.init_global_vars != undefined) {
+        scr_game_controller.init_global_vars();
+    } else {
+        // Если скрипт недоступен, инициализируем вручную
+        if (!global_exists("initialized")) {
+            // Инициализация аудио-ресурсов
+            global.snd_menu_bg = -1;
+            global.snd_town_bg = -1;
+            global.snd_level_bg = -1;
+            global.snd_victory_bg = -1;
+            global.snd_ui_move = -1;
+            global.snd_ui_confirm = -1;
+            global.snd_ui_cancel = -1;
+            global.snd_ui_success = -1;
+            global.snd_lever_pull = -1;
+            global.snd_level_complete = -1;
+            global.snd_reward_obtained = -1;
+            global.snd_puzzle_solve = -1;
+            global.snd_player_move = -1;
+            global.snd_player_jump = -1;
+            global.snd_item_collect = -1;
+
+            // Инициализация спрайтов
+            global.spr_player_idle = -1;
+            global.spr_player_walk = -1;
+
+            // Инициализация шрифтов
+            global.fnt_default = font_get_default();
+
+            // Инициализация основных игровых состояний
+            global.game_state = "menu";
+
+            // Инициализация прогресса игры
+            global.game_progress = {
+                levels: [
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false}
+                ],
+                gold: 100,
+                items: [], // Используем массив вместо ds_list для простоты
+                mechanic_training_completed: false,
+                archivist_quiz_completed: false,
+                elder_trial_completed: false
+            };
+
+            // Статус экспедиции
+            global.expedition_complete = false;
+            
+            // Флаг инициализации
+            global.initialized = true;
+        }
+        
+        // Загрузка сохранения, если есть (всегда выполняем, даже если уже инициализировано)
+        load_game();
+    }
 }
 
-// Вспомогательная функция преобразования состояния для JSON
-function convert_state_for_json(game_state) {
-    var json_state = {};
-    json_state.current_state = game_state.current_state;
-    json_state.current_level = game_state.current_level;
-    json_state.gold = game_state.gold;
-    json_state.elder_trial_completed = game_state.elder_trial_completed;
-    json_state.mechanic_training_completed = game_state.mechanic_training_completed;
-    json_state.archivist_quiz_completed = game_state.archivist_quiz_completed;
+// Функция проверки наличия сохранения
+function has_save() {
+    return file_exists(SAVE_FILE_NAME + ".sav") || file_exists(SAVE_FILE_NAME + ".ini");
+}
+
+// Функция получения информации о сохранении
+function get_save_info() {
+    var info = {
+        exists: false,
+        game_state: "",
+        gold: 0,
+        levels_completed: 0,
+        levels_opened: 0,
+        items_count: 0,
+        expedition_progress: 0
+    };
     
-    // Преобразуем ds_map прогресса в JSON-совместимый формат
-    json_state.progress = {};
-    if (ds_map_exists(game_state.progress, "size")) {
-        var keys = ds_map_keys(game_state.progress);
-        var i;
-        for (i = 0; i < ds_map_size(game_state.progress); i++) {
-            var key = ds_map_get_key(game_state.progress, i);
-            var value = ds_map_get_value(game_state.progress, key);
-            json_state.progress[key] = value;
+    var file = file_text_open_read(SAVE_FILE_NAME + ".sav");
+    if (file != -1) {
+        var content = file_text_read_all(file);
+        file_text_close(file);
+        
+        if (content != "") {
+            var loaded_data = json_parse(content);
+            info.exists = true;
+            info.game_state = loaded_data.game_state;
+            info.gold = loaded_data.game_progress.gold;
+            
+            // Подсчитываем количество завершенных уровней
+            for (var i = 0; i < array_length(loaded_data.game_progress.levels); i++) {
+                if (loaded_data.game_progress.levels[i].completed) {
+                    info.levels_completed++;
+                }
+                if (loaded_data.game_progress.levels[i].lever_pulled) {
+                    info.levels_opened++;
+                }
+            }
+            
+            info.items_count = array_length(loaded_data.game_progress.items);
+            info.expedition_progress = info.levels_opened;
         }
     }
     
-    // Преобразуем ds_list предметов
-    json_state.items = [];
-    if (ds_list_empty(game_state.items) == false) {
-        for (var i = 0; i < ds_list_size(game_state.items); i++) {
-            array_push(json_state.items, ds_list_find_value(game_state.items, i));
-        }
-    }
-    
-    return json_state;
+    return info;
 }
 
-// Вспомогательная функция преобразования JSON в состояние
-function convert_json_to_state(json_data) {
-    var game_state = scr_game_state.create_new_game_state();
+// Функция конвертации Rust-сохранения (если потребуется в будущем)
+function convert_rust_save(rust_data) {
+    // Эта функция будет реализована позже для миграции данных из Rust-версии
+    // Пока что просто возвращаем структуру, соответствующую нашей системе
+    var converted = {
+        game_state: "town",  // После загрузки скорее всего будем в городе
+        game_progress: {
+            levels: [],
+            gold: rust_data.gold,
+            items: array_copy(rust_data.items),
+            mechanic_training_completed: rust_data.mechanic_training_completed,
+            archivist_quiz_completed: rust_data.archivist_quiz_completed,
+            elder_trial_completed: rust_data.elder_trial_completed
+        },
+        expedition_complete: rust_data.is_expedition_complete
+    };
     
-    if (json_data.current_state != undefined) game_state.current_state = json_data.current_state;
-    if (json_data.current_level != undefined) game_state.current_level = json_data.current_level;
-    if (json_data.gold != undefined) game_state.gold = json_data.gold;
-    if (json_data.elder_trial_completed != undefined) game_state.elder_trial_completed = json_data.elder_trial_completed;
-    if (json_data.mechanic_training_completed != undefined) game_state.mechanic_training_completed = json_data.mechanic_training_completed;
-    if (json_data.archivist_quiz_completed != undefined) game_state.archivist_quiz_completed = json_data.archivist_quiz_completed;
-    
-    // Восстанавливаем прогресс
-    if (json_data.progress != undefined) {
-        var progress_map = json_data.progress;
-        var key;
-        for (key in progress_map) {
-            ds_map_replace(game_state.progress, key, progress_map[key]);
+    // Преобразуем уровни
+    for (var i = 0; i < 6; i++) {
+        var level_info = {
+            completed: false,
+            lever_pulled: false
+        };
+        
+        if (i < array_length(rust_data.levels)) {
+            level_info.completed = rust_data.levels[i].completed;
+            level_info.lever_pulled = rust_data.levels[i].lever_pulled;
         }
+        
+        array_push(converted.game_progress.levels, level_info);
     }
     
-    // Восстанавливаем предметы
-    if (json_data.items != undefined) {
-        for (var i = 0; i < array_length_1d(json_data.items); i++) {
-            ds_list_add(game_state.items, json_data.items[i]);
-        }
-    }
-    
-    return game_state;
-}
-
-// Функция проверки существования сохранения
-function has_saved_game() {
-    return file_exists("savegame.json") || ini_file_exists("savegame.ini");
-}
-
-// Функция удаления сохранения
-function delete_save() {
-    if (file_exists("savegame.json")) {
-        file_delete("savegame.json");
-    }
-    if (ini_file_exists("savegame.ini")) {
-        file_delete("savegame.ini");
-    }
+    return converted;
 }
