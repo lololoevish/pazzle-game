@@ -26,6 +26,12 @@ speed = player_config.speed_normal;
 facing_direction = player_config.facing_direction;
 interaction_enabled = true;
 
+// Переменные для плавного движения
+current_move_x = 0;
+current_move_y = 0;
+move_target_x = 0;
+move_target_y = 0;
+
 // Инициализация в Create событии
 function player_init() {
     depth = -1;  // Игрок должен быть поверх других объектов
@@ -37,6 +43,12 @@ function player_init() {
     // Устанавливаем начальную позицию, если не задана
     if (x == undefined) x = 100;
     if (y == undefined) y = 100;
+    
+    // Инициализируем переменные для плавного движения
+    current_move_x = 0;
+    current_move_y = 0;
+    move_target_x = 0;
+    move_target_y = 0;
 }
 
 // Обработка движения в Step событии
@@ -45,39 +57,90 @@ function handle_movement() {
         return;  // Не двигаемся если не в нормальном состоянии
     }
     
-    var move_x = 0;
-    var move_y = 0;
+    // Плавное управление с ускорением и замедлением
+    var target_move_x = 0;
+    var target_move_y = 0;
     
     // Проверяем нажатия клавиш
     if (keyboard_check(vk_left) || keyboard_check(ord('A'))) {
-        move_x = -1;
+        target_move_x = -1;
         facing_direction = 1;  // Влево
     }
     if (keyboard_check(vk_right) || keyboard_check(ord('D'))) {
-        move_x = 1;
+        target_move_x = 1;
         facing_direction = 2;  // Вправо
     }
     if (keyboard_check(vk_up) || keyboard_check(ord('W'))) {
-        move_y = -1;
+        target_move_y = -1;
         facing_direction = 3;  // Вверх
     }
     if (keyboard_check(vk_down) || keyboard_check(ord('S'))) {
-        move_y = 1;
+        target_move_y = 1;
         facing_direction = 0;  // Вниз
     }
     
+    // Параметры для плавного ускорения/замедления
+    var acceleration = 0.2;    // Ускорение
+    var deceleration = 0.15;   // Замедление
+    
+    // Получаем текущую цель движения
+    if (target_move_x != move_target_x || target_move_y != move_target_y) {
+        move_target_x = target_move_x;
+        move_target_y = target_move_y;
+    }
+    
+    // Плавное изменение скорости к целевому значению
+    if (current_move_x != move_target_x) {
+        if (abs(current_move_x - move_target_x) < acceleration) {
+            current_move_x = move_target_x;
+        } else if (current_move_x < move_target_x) {
+            current_move_x += acceleration;
+        } else {
+            current_move_x -= acceleration;
+        }
+    }
+    
+    if (current_move_y != move_target_y) {
+        if (abs(current_move_y - move_target_y) < acceleration) {
+            current_move_y = move_target_y;
+        } else if (current_move_y < move_target_y) {
+            current_move_y += acceleration;
+        } else {
+            current_move_y -= acceleration;
+        }
+    }
+    
+    // Применяем замедление, когда не движемся
+    if (move_target_x == 0 && abs(current_move_x) > 0) {
+        if (current_move_x > 0) {
+            current_move_x = max(0, current_move_x - deceleration);
+        } else {
+            current_move_x = min(0, current_move_x + deceleration);
+        }
+    }
+    
+    if (move_target_y == 0 && abs(current_move_y) > 0) {
+        if (current_move_y > 0) {
+            current_move_y = max(0, current_move_y - deceleration);
+        } else {
+            current_move_y = min(0, current_move_y + deceleration);
+        }
+    }
+    
     // Нормализуем диагональное движение
-    if (move_x != 0 && move_y != 0) {
-        move_x *= 0.7071;  // cos(45°)
-        move_y *= 0.7071;  // sin(45°)
-        speed = player_config.speed_diagonal;
-    } else {
-        speed = player_config.speed_normal;
+    var effective_move_x = current_move_x;
+    var effective_move_y = current_move_y;
+    var speed_factor = 1.0;  // Фактор скорости
+    
+    if (effective_move_x != 0 && effective_move_y != 0) {
+        effective_move_x *= 0.7071;  // cos(45°)
+        effective_move_y *= 0.7071;  // sin(45°)
+        speed_factor = player_config.speed_diagonal / player_config.speed_normal;
     }
     
     // Вычисляем вектор движения
-    var move_vector_x = move_x * speed * delta_time;
-    var move_vector_y = move_y * speed * delta_time;
+    var move_vector_x = effective_move_x * speed * speed_factor * delta_time;
+    var move_vector_y = effective_move_y * speed * speed_factor * delta_time;
     
     // Двигаем игрока (учитываем коллизии если solid=true)
     x += move_vector_x;
@@ -88,7 +151,7 @@ function handle_movement() {
     y = clamp(y, bbox_top, room_height - bbox_bottom);
     
     // Обновляем анимацию
-    update_animation(move_x, move_y);
+    update_animation(current_move_x, current_move_y);
 }
 
 // Обновление анимации
