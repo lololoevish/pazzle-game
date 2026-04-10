@@ -1,247 +1,182 @@
 // Скрипт головоломки "Поиск пар/Память" для GameMaker
 
-// Функция инициализации головоломки
-function init() {
-    // Размер сетки (4x4 = 8 пар)
-    var grid_size = 4;
-    var num_pairs = (grid_size * grid_size) / 2;
-    
-    // Создаем символы для пар
-    symbols = ["🍎", "🍌", "🍇", "🍊", "🍓", "🍒", "🍑", "🥝"]; // 8 разных символов
-    
-    // Создаем сетку карточек
-    card_grid = array_create(grid_size * grid_size);
-    revealed_cards = array_create(grid_size * grid_size);
-    matched_cards = array_create(grid_size * grid_size);
-    
-    // Информация о текущем выборе
-    first_selected = -1;
-    second_selected = -1;
-    waiting_second = false;
-    
-    // Генерируем сетку
-    generate_grid(grid_size);
-    
-    // Состояние завершения
-    solved = false;
-    
-    return {
-        grid: card_grid,
-        revealed: revealed_cards,
-        matched: matched_cards,
-        size: grid_size,
-        pairs: num_pairs
-    };
+function memory_match_puzzle_init() {
+    global.memory_grid_size = 4;
+    global.memory_symbols = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    global.memory_card_grid = array_create(global.memory_grid_size * global.memory_grid_size);
+    global.memory_revealed = array_create(global.memory_grid_size * global.memory_grid_size, false);
+    global.memory_matched = array_create(global.memory_grid_size * global.memory_grid_size, false);
+    global.memory_first_selected = -1;
+    global.memory_second_selected = -1;
+    global.memory_waiting_second = false;
+    global.memory_hide_timer = 0;
+    global.memory_solved = false;
+
+    memory_generate_grid();
+
+    return { size: global.memory_grid_size };
 }
 
-// Функция генерации сетки карточек
-function generate_grid(size) {
-    // Создаем список всех символов (по 2 каждого)
+function memory_generate_grid() {
     var all_symbols = [];
-    var i;
-    for (i = 0; i < array_length_1d(symbols); i++) {
-        array_push(all_symbols, symbols[i]);
-        array_push(all_symbols, symbols[i]);
+    for (var i = 0; i < array_length(global.memory_symbols); i++) {
+        array_push(all_symbols, global.memory_symbols[i]);
+        array_push(all_symbols, global.memory_symbols[i]);
     }
-    
-    // Перемешиваем символы
-    shuffle_array(all_symbols);
-    
-    // Заполняем сетку
-    for (i = 0; i < size * size; i++) {
-        card_grid[i] = all_symbols[i];
-        revealed_cards[i] = false;
-        matched_cards[i] = false;
+
+    for (var i = array_length(all_symbols) - 1; i > 0; i--) {
+        var j = irandom(i);
+        var temp = all_symbols[i];
+        all_symbols[i] = all_symbols[j];
+        all_symbols[j] = temp;
+    }
+
+    for (var i = 0; i < global.memory_grid_size * global.memory_grid_size; i++) {
+        global.memory_card_grid[i] = all_symbols[i];
+        global.memory_revealed[i] = false;
+        global.memory_matched[i] = false;
     }
 }
 
-// Функция перемешивания массива
-function shuffle_array(arr) {
-    var i;
-    for (i = array_length_1d(arr) - 1; i > 0; i--) {
-        var j = irandom_range(0, i);
-        var temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
+function memory_match_puzzle_update() {
+    if (global.memory_solved) {
+        return;
     }
-}
 
-// Функция обновления логики головоломки
-function update() {
-    if (!solved) {
-        // Обработка щелчков мыши
-        if (mouse_check_button_pressed(mb_left)) {
-            var clicked_card = get_card_at_position(mouse_x, mouse_y);
-            if (clicked_card != -1) {
-                handle_card_click(clicked_card);
-            }
+    if (global.memory_hide_timer > 0) {
+        global.memory_hide_timer--;
+        if (global.memory_hide_timer <= 0) {
+            memory_reset_selection();
+        }
+        return;
+    }
+
+    if (mouse_check_button_pressed(mb_left)) {
+        var card_index = memory_get_card_at_position(mouse_x, mouse_y);
+        if (card_index != -1) {
+            memory_handle_card_click(card_index);
         }
     }
 }
 
-// Функция получения индекса карточки по позиции мыши
-function get_card_at_position(mx, my) {
-    var grid_size = 4;
+function memory_get_card_at_position(mx, my) {
     var card_size = 80;
     var spacing = 10;
-    var total_size = grid_size * card_size + (grid_size - 1) * spacing;
+    var total_size = global.memory_grid_size * card_size + (global.memory_grid_size - 1) * spacing;
     var start_x = (room_width - total_size) / 2;
     var start_y = (room_height - total_size) / 2;
-    
+
     var col = floor((mx - start_x) / (card_size + spacing));
     var row = floor((my - start_y) / (card_size + spacing));
-    
-    if (col >= 0 && col < grid_size && row >= 0 && row < grid_size) {
-        var index = row * grid_size + col;
-        
-        // Проверяем, не открыта ли карта уже и не совпадает ли
-        if (!revealed_cards[index] && !matched_cards[index]) {
+
+    if (col >= 0 && col < global.memory_grid_size && row >= 0 && row < global.memory_grid_size) {
+        var index = row * global.memory_grid_size + col;
+        if (!global.memory_revealed[index] && !global.memory_matched[index]) {
             return index;
         }
     }
-    
+
     return -1;
 }
 
-// Функция обработки клика по карточке
-function handle_card_click(card_index) {
-    if (waiting_second) {
-        // Это второй выбор
-        second_selected = card_index;
-        revealed_cards[second_selected] = true;
-        
-        // Проверяем совпадение
-        if (card_grid[first_selected] == card_grid[second_selected]) {
-            // Совпадение найдено
-            matched_cards[first_selected] = true;
-            matched_cards[second_selected] = true;
-            
-            // Воспроизводим звук успеха
+function memory_handle_card_click(card_index) {
+    if (global.memory_waiting_second) {
+        global.memory_second_selected = card_index;
+        global.memory_revealed[card_index] = true;
+
+        if (global.memory_card_grid[global.memory_first_selected] == global.memory_card_grid[global.memory_second_selected]) {
+            global.memory_matched[global.memory_first_selected] = true;
+            global.memory_matched[global.memory_second_selected] = true;
             play_sfx("puzzle_success");
-            
-            // Проверяем, все ли пары найдены
-            check_completion();
+            global.memory_first_selected = -1;
+            global.memory_second_selected = -1;
+            global.memory_waiting_second = false;
+            memory_check_completion();
         } else {
-            // Несовпадение - воспроизводим звук ошибки
             play_sfx("cancel");
+            global.memory_hide_timer = 20;
+            global.memory_waiting_second = false;
         }
-        
-        // Убираем выбор через задержку
-        alarm[0] = 30; // 0.5 секунды
-        waiting_second = false;
     } else {
-        // Это первый выбор
-        first_selected = card_index;
-        revealed_cards[first_selected] = true;
-        
-        // Воспроизводим звук выбора
+        global.memory_first_selected = card_index;
+        global.memory_revealed[card_index] = true;
+        global.memory_waiting_second = true;
         play_sfx("interaction");
-        
-        waiting_second = true;
     }
 }
 
-// Функция проверки завершения головоломки
-function check_completion() {
-    var grid_size = 4;
-    var all_matched = true;
-    var i;
-    for (i = 0; i < grid_size * grid_size; i++) {
-        if (!matched_cards[i]) {
-            all_matched = false;
-            break;
+function memory_reset_selection() {
+    if (global.memory_first_selected != -1 && global.memory_second_selected != -1) {
+        global.memory_revealed[global.memory_first_selected] = false;
+        global.memory_revealed[global.memory_second_selected] = false;
+    }
+
+    global.memory_first_selected = -1;
+    global.memory_second_selected = -1;
+    global.memory_hide_timer = 0;
+}
+
+function memory_check_completion() {
+    for (var i = 0; i < global.memory_grid_size * global.memory_grid_size; i++) {
+        if (!global.memory_matched[i]) {
+            return;
         }
     }
-    
-    if (all_matched) {
-        solve_puzzle();
-    }
+
+    memory_match_puzzle_solve();
 }
 
-// Функция сброса выбора после ошибки
-function reset_selection() {
-    // Скрываем неподходящие карточки
-    if (card_grid[first_selected] != card_grid[second_selected]) {
-        revealed_cards[first_selected] = false;
-        revealed_cards[second_selected] = false;
+function memory_match_puzzle_draw(gui_view) {
+    if (gui_view) {
+        return;
     }
-    
-    // Сбрасываем переменные выбора
-    first_selected = -1;
-    second_selected = -1;
-}
 
-// Функция отрисовки головоломки
-function draw(gui_view = false) {
-    if (!gui_view) {
-        var grid_size = 4;
-        var card_size = 80;
-        var spacing = 10;
-        var total_size = grid_size * card_size + (grid_size - 1) * spacing;
-        var start_x = (room_width - total_size) / 2;
-        var start_y = (room_height - total_size) / 2;
-        
-        // Рисуем сетку карточек
-        var i, j;
-        for (j = 0; j < grid_size; j++) {
-            for (i = 0; i < grid_size; i++) {
-                var index = j * grid_size + i;
-                var x_pos = start_x + i * (card_size + spacing);
-                var y_pos = start_y + j * (card_size + spacing);
-                
-                if (matched_cards[index]) {
-                    // Совпавшие карточки - зеленая рамка
-                    draw_set_color(c_green);
-                    draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, false);
-                } else if (revealed_cards[index] && !matched_cards[index]) {
-                    // Открытые карточки - показываем символ
-                    draw_set_color(c_white);
-                    draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, true);
-                    draw_set_color(c_black);
-                    draw_set_halign(fa_center);
-                    draw_set_valign(fa_middle);
-                    draw_text(x_pos + card_size/2, y_pos + card_size/2, card_grid[index]);
-                    
-                    // Обводка
-                    draw_set_color(c_black);
-                    draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, false);
-                } else {
-                    // Закрытые карточки
-                    draw_set_color(c_blue);
-                    draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, true);
-                    
-                    // Обводка
-                    draw_set_color(c_white);
-                    draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, false);
-                    
-                    // Рисуем вопросительный знак
-                    draw_set_color(c_white);
-                    draw_set_halign(fa_center);
-                    draw_set_valign(fa_middle);
-                    draw_text(x_pos + card_size/2, y_pos + card_size/2, "?");
-                }
+    var card_size = 80;
+    var spacing = 10;
+    var total_size = global.memory_grid_size * card_size + (global.memory_grid_size - 1) * spacing;
+    var start_x = (room_width - total_size) / 2;
+    var start_y = (room_height - total_size) / 2;
+
+    for (var row = 0; row < global.memory_grid_size; row++) {
+        for (var col = 0; col < global.memory_grid_size; col++) {
+            var index = row * global.memory_grid_size + col;
+            var x_pos = start_x + col * (card_size + spacing);
+            var y_pos = start_y + row * (card_size + spacing);
+
+            if (global.memory_matched[index]) {
+                draw_set_color(c_green);
+                draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, true);
+            } else if (global.memory_revealed[index]) {
+                draw_set_color(c_white);
+                draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, true);
+                draw_set_color(c_black);
+                draw_set_halign(fa_center);
+                draw_set_valign(fa_middle);
+                draw_text(x_pos + card_size / 2, y_pos + card_size / 2, global.memory_card_grid[index]);
+            } else {
+                draw_set_color(c_blue);
+                draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, true);
+                draw_set_color(c_white);
+                draw_set_halign(fa_center);
+                draw_set_valign(fa_middle);
+                draw_text(x_pos + card_size / 2, y_pos + card_size / 2, "?");
             }
+
+            draw_set_color(c_black);
+            draw_rectangle(x_pos, y_pos, x_pos + card_size, y_pos + card_size, false);
         }
     }
 }
 
-// Функция проверки завершения головоломки
-function is_solved() {
-    return solved;
+function memory_match_puzzle_is_solved() {
+    return global.memory_solved;
 }
 
-// Функция завершения головоломки
-function solve_puzzle() {
-    solved = true;
-    
-    // Воспроизводим звук успеха
+function memory_match_puzzle_solve() {
+    global.memory_solved = true;
     play_sfx("puzzle_completed");
 }
 
-// Функция сброса головоломки
-function reset() {
-    var puzzle_data = init();
-    solved = false;
-    
-    return puzzle_data;
+function memory_match_puzzle_reset() {
+    return memory_match_puzzle_init();
 }

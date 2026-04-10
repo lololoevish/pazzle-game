@@ -1,72 +1,113 @@
 // Менеджер головоломок для GameMaker
 
-// Функция инициализации менеджера
 function init_puzzle_manager() {
-    // Словарь для хранения экземпляров головоломок
-    puzzles = ds_map_create();
-    
-    // Регистрируем доступные типы головоломок
-    register_puzzle_type("maze", scr_maze_puzzle);
-    register_puzzle_type("word_search", scr_word_search_puzzle);
-    register_puzzle_type("rhythm", scr_rhythm_puzzle);
-    register_puzzle_type("pairs", scr_memory_match_puzzle);
-    register_puzzle_type("platformer", scr_platformer_puzzle);
-    register_puzzle_type("final", scr_final_challenge_puzzle);
+    global.puzzle_manager_initialized = true;
 }
 
-// Функция регистрации типа головоломки
-function register_puzzle_type(type, script_name) {
-    ds_map_add(puzzles, type, script_name);
-}
-
-// Функция создания головоломки
 function create_puzzle(type) {
-    if (ds_map_exists(puzzles, type)) {
-        var script_ref = ds_map_find_value(puzzles, type);
-        return script_execute(script_ref, "init");
-    } else {
-        show_debug_message("Unknown puzzle type: " + type);
-        return undefined;
+    switch (type) {
+        case "maze":
+            return maze_puzzle_init();
+        case "word_search":
+            return word_search_puzzle_init();
+        case "rhythm":
+            return rhythm_puzzle_init();
+        case "pairs":
+            return memory_match_puzzle_init();
+        case "platformer":
+            return platformer_puzzle_init();
+        case "final":
+            return final_challenge_puzzle_init();
+        default:
+            show_debug_message("Unknown puzzle type: " + string(type));
+            return undefined;
     }
 }
 
-// Функция обновления головоломки
 function update_puzzle(type) {
-    if (ds_map_exists(puzzles, type)) {
-        var script_ref = ds_map_find_value(puzzles, type);
-        script_execute(script_ref, "update");
+    switch (type) {
+        case "maze":
+            maze_puzzle_update();
+            break;
+        case "word_search":
+            word_search_puzzle_update();
+            break;
+        case "rhythm":
+            rhythm_puzzle_update();
+            break;
+        case "pairs":
+            memory_match_puzzle_update();
+            break;
+        case "platformer":
+            platformer_puzzle_update();
+            break;
+        case "final":
+            final_challenge_puzzle_update();
+            break;
     }
 }
 
-// Функция отрисовки головоломки
-function draw_puzzle(type, gui_view = false) {
-    if (ds_map_exists(puzzles, type)) {
-        var script_ref = ds_map_find_value(puzzles, type);
-        script_execute(script_ref, "draw", gui_view);
+function draw_puzzle(type, gui_view) {
+    switch (type) {
+        case "maze":
+            maze_puzzle_draw(gui_view);
+            break;
+        case "word_search":
+            word_search_puzzle_draw(gui_view);
+            break;
+        case "rhythm":
+            rhythm_puzzle_draw(gui_view);
+            break;
+        case "pairs":
+            memory_match_puzzle_draw(gui_view);
+            break;
+        case "platformer":
+            platformer_puzzle_draw(gui_view);
+            break;
+        case "final":
+            final_challenge_puzzle_draw(gui_view);
+            break;
     }
 }
 
-// Функция проверки завершения головоломки
 function is_puzzle_solved(type) {
-    if (ds_map_exists(puzzles, type)) {
-        var script_ref = ds_map_find_value(puzzles, type);
-        return script_execute(script_ref, "is_solved");
+    switch (type) {
+        case "maze":
+            return maze_puzzle_is_solved();
+        case "word_search":
+            return word_search_puzzle_is_solved();
+        case "rhythm":
+            return rhythm_puzzle_is_solved();
+        case "pairs":
+            return memory_match_puzzle_is_solved();
+        case "platformer":
+            return platformer_puzzle_is_solved();
+        case "final":
+            return final_challenge_puzzle_is_solved();
+        default:
+            return false;
     }
-    return false;
 }
 
-// Функция сброса головоломки
 function reset_puzzle(type) {
-    if (ds_map_exists(puzzles, type)) {
-        var script_ref = ds_map_find_value(puzzles, type);
-        return script_execute(script_ref, "reset");
+    switch (type) {
+        case "maze":
+            return maze_puzzle_reset();
+        case "word_search":
+            return word_search_puzzle_reset();
+        case "rhythm":
+            return rhythm_puzzle_reset();
+        case "pairs":
+            return memory_match_puzzle_reset();
+        case "platformer":
+            return platformer_puzzle_reset();
+        case "final":
+            return final_challenge_puzzle_reset();
+        default:
+            return undefined;
     }
 }
 
-// Функция уничтожения менеджера
 function destroy_puzzle_manager() {
-    if (ds_map_exists(puzzles, "clear")) {
-        ds_map_clear(puzzles);
-    }
-    ds_map_destroy(puzzles);
+    global.puzzle_manager_initialized = false;
 }

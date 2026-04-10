@@ -1,6 +1,6 @@
 # Статус проекта
 
-## Текущий статус (07.04.2026)
+## Текущий статус (10.04.2026)
 
 ### Готово:
 - ✅ Основная архитектура проекта
@@ -43,9 +43,10 @@
 
 ## Контроль изменений
 
-### Последний проверенный коммит: d1e1fe8
+### Последний проверенный коммит: 51c5cfe
 
 ### Хронология изменений:
+- 10.04.2026: Синхронизированы `AGENTS.md` и `memory_bank/AGENTS.md` с актуальной upstream-версией; таблица deliverables в `memory_bank/projectbrief.md` перепроверена и исправлена до суммы весов `100`
 - 07.04.2026: Стабилизирован runtime GMS2-проекта вне `obj_player`: добавлены compatibility-обертки в audio/UI, обновлены `obj_game_manager`, `obj_puzzle`, `obj_lever`, `obj_interactable`, `obj_npc` и puzzle scripts
 - 07.04.2026: `scr_platformer_puzzle.gml` синхронизирован с новой моделью отзывчивого управления: jump buffer, coyote time и variable jump height
 - 07.04.2026: Переписано управление в `pazzle-game-gamemaker/objects/obj_player.gml`: добавлены `topdown`/`platformer` режимы, coyote time 0.5s, jump buffer 0.15s, регулируемая высота прыжка и более отзывчивое ускорение/торможение

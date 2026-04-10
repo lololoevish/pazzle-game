@@ -154,8 +154,8 @@ pazzle-game/
 | DELIV-11 | Замена заглушек на рабочие компоненты | completed | 6 |
 | DELIV-12 | Создание файлов спрайтов | completed | 5 |
 | DELIV-13 | План переноса логики из Rust в GameMaker 2 | completed | 6 |
-| DELIV-14 | Интеграция механик из Deltarune | in_progress | 7 |
-| DELIV-15 | Управление более плавным и отзывчивым | in_progress | 8 |
+| DELIV-14 | Интеграция механик из Deltarune | in_progress | 8 |
+| DELIV-15 | Управление более плавным и отзывчивым | in_progress | 9 |
 
 ## 🗺 План разработки
 

@@ -1,6 +1,6 @@
 # Adventure Puzzle Game - Active Context
 
-**Дата последнего обновления**: 7 апреля 2026
+**Дата последнего обновления**: 10 апреля 2026
 **Текущая версия**: 1.3.0-dev
 **Статус**: В разработке, основной исполняемый фокус смещён на GameMaker 2 версию
 
@@ -67,6 +67,8 @@
 45. Вторая волна runtime-стабилизации GMS2 затронула `obj_game_manager`, `obj_puzzle`, `obj_interactable`, `obj_lever`, `obj_npc` и puzzle scripts, чтобы убрать часть несовместимостей между старым и новым API.
 46. `scr_platformer_puzzle.gml` теперь использует тот же набор game-feel практик, что и `obj_player`: jump buffer, coyote time и variable jump height.
 47. `scr_audio_manager.gml` получил compatibility-обертку `play_sfx`, а `scr_ui_manager.gml` - ряд fallback/helper-функций для старых вызовов игрового кода.
+48. Локальные `AGENTS.md` в корне проекта и в `memory_bank/` синхронизированы с актуальной upstream-версией из `Ravva/projects-tracker`.
+49. Таблица `## Project Deliverables` в `memory_bank/projectbrief.md` повторно проверена по фактическим строкам: сумма весов доведена до ровно `100`.
 
 ## Активные решения
 

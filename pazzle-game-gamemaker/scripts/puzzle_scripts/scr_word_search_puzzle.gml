@@ -1,371 +1,254 @@
 // Скрипт головоломки "Поиск слов" для GameMaker
 
-// Функция инициализации головоломки
-function init() {
-    // Размер сетки (10x10 как в Rust-версии)
-    var width = 10;
-    var height = 10;
-    
-    // Создаем сетку букв
-    letter_grid = array_create(width * height);
-    
-    // Слова для поиска (русские слова как в Rust-версии)
-    words_to_find = [
-        "ЛАБИРИНТ",
-        "ПАЗЗЛ",
-        "ПЕЩЕРА",
-        "ГОРОД"
-    ];
-    
-    found_words = [];
-    
-    // Генерируем сетку
-    generate_grid(width, height);
-    
-    // Состояние выбора букв
-    selected_letters = [];
-    selected_positions = [];
-    
-    // Координаты начального и конечного нажатия для выбора слова
-    drag_start_x = -1;
-    drag_start_y = -1;
-    drag_end_x = -1;
-    drag_end_y = -1;
-    
-    // Состояние завершения
-    solved = false;
-    
-    return {
-        grid: letter_grid,
-        width: width,
-        height: height,
-        words: words_to_find,
-        found_words: found_words
-    };
+function word_search_puzzle_init() {
+    global.word_grid_width = 10;
+    global.word_grid_height = 10;
+    global.word_letter_grid = array_create(global.word_grid_width * global.word_grid_height, " ");
+    global.word_words_to_find = ["ЛАБИРИНТ", "ПАЗЗЛ", "ПЕЩЕРА", "ГОРОД"];
+    global.word_found_words = [];
+    global.word_drag_start_x = -1;
+    global.word_drag_start_y = -1;
+    global.word_drag_end_x = -1;
+    global.word_drag_end_y = -1;
+    global.word_selected_positions = [];
+    global.word_solved = false;
+
+    word_generate_grid();
+
+    return { width: global.word_grid_width, height: global.word_grid_height };
 }
 
-// Функция генерации сетки букв
-function generate_grid(width, height) {
-    // Заполняем сетку случайными буквами
-    var x, y;
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
-            letter_grid[y * width + x] = get_random_letter();
+function word_generate_grid() {
+    for (var y = 0; y < global.word_grid_height; y++) {
+        for (var x = 0; x < global.word_grid_width; x++) {
+            global.word_letter_grid[y * global.word_grid_width + x] = " ";
         }
     }
-    
-    // Вставляем слова в сетку
-    var word;
-    for (word in words_to_find) {
-        place_word(word, width, height);
+
+    for (var i = 0; i < array_length(global.word_words_to_find); i++) {
+        word_place_word(global.word_words_to_find[i]);
+    }
+
+    for (var y = 0; y < global.word_grid_height; y++) {
+        for (var x = 0; x < global.word_grid_width; x++) {
+            if (global.word_letter_grid[y * global.word_grid_width + x] == " ") {
+                global.word_letter_grid[y * global.word_grid_width + x] = word_get_random_letter();
+            }
+        }
     }
 }
 
-// Функция получения случайной буквы
-function get_random_letter() {
-    var letters = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+function word_get_random_letter() {
+    var letters = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЫЬЭЮЯ";
     return string_char_at(letters, irandom_range(1, string_length(letters)));
 }
 
-// Функция размещения слова в сетке
-function place_word(word, width, height) {
-    var placed = false;
+function word_place_word(word) {
     var attempts = 0;
-    var max_attempts = 50;
-    
-    while (!placed && attempts < max_attempts) {
+    while (attempts < 100) {
         attempts++;
-        
-        // Выбираем случайное направление: горизонталь, вертикаль, диагональ
-        var direction = irandom_range(0, 3); // 0-горизонталь, 1-вертикаль, 2-диагональ вправо вниз, 3-диагональ вправо вверх
-        
-        // Выбираем начальную позицию
-        var start_x, start_y;
+        var direction = irandom_range(0, 3);
+        var start_x = 0;
+        var start_y = 0;
         var word_len = string_length(word);
-        
+
         switch (direction) {
-            case 0: // Горизонталь
-                start_x = irandom_range(0, width - word_len);
-                start_y = irandom_range(0, height - 1);
+            case 0:
+                start_x = irandom_range(0, global.word_grid_width - word_len);
+                start_y = irandom_range(0, global.word_grid_height - 1);
                 break;
-            case 1: // Вертикаль
-                start_x = irandom_range(0, width - 1);
-                start_y = irandom_range(0, height - word_len);
+            case 1:
+                start_x = irandom_range(0, global.word_grid_width - 1);
+                start_y = irandom_range(0, global.word_grid_height - word_len);
                 break;
-            case 2: // Диагональ вправо вниз
-                start_x = irandom_range(0, width - word_len);
-                start_y = irandom_range(0, height - word_len);
+            case 2:
+                start_x = irandom_range(0, global.word_grid_width - word_len);
+                start_y = irandom_range(0, global.word_grid_height - word_len);
                 break;
-            case 3: // Диагональ вправо вверх
-                start_x = irandom_range(0, width - word_len);
-                start_y = irandom_range(word_len - 1, height - 1);
+            case 3:
+                start_x = irandom_range(0, global.word_grid_width - word_len);
+                start_y = irandom_range(word_len - 1, global.word_grid_height - 1);
                 break;
         }
-        
-        // Проверяем, можно ли разместить слово
-        if (can_place_word(word, start_x, start_y, direction, width, height)) {
-            // Размещаем слово
-            var i;
-            for (i = 0; i < word_len; i++) {
-                var pos_x, pos_y;
+
+        if (word_can_place_word(word, start_x, start_y, direction)) {
+            for (var i = 0; i < word_len; i++) {
+                var pos_x = start_x;
+                var pos_y = start_y;
                 switch (direction) {
-                    case 0: pos_x = start_x + i; pos_y = start_y; break;
-                    case 1: pos_x = start_x; pos_y = start_y + i; break;
-                    case 2: pos_x = start_x + i; pos_y = start_y + i; break;
-                    case 3: pos_x = start_x + i; pos_y = start_y - i; break;
+                    case 0: pos_x += i; break;
+                    case 1: pos_y += i; break;
+                    case 2: pos_x += i; pos_y += i; break;
+                    case 3: pos_x += i; pos_y -= i; break;
                 }
-                
-                letter_grid[pos_y * width + pos_x] = string_char_at(word, i + 1);
+                global.word_letter_grid[pos_y * global.word_grid_width + pos_x] = string_char_at(word, i + 1);
             }
-            
-            placed = true;
+            return;
         }
     }
 }
 
-// Функция проверки, можно ли разместить слово
-function can_place_word(word, start_x, start_y, direction, width, height) {
-    var word_len = string_length(word);
-    var i;
-    
-    for (i = 0; i < word_len; i++) {
-        var pos_x, pos_y;
+function word_can_place_word(word, start_x, start_y, direction) {
+    for (var i = 0; i < string_length(word); i++) {
+        var pos_x = start_x;
+        var pos_y = start_y;
+
         switch (direction) {
-            case 0: pos_x = start_x + i; pos_y = start_y; break;
-            case 1: pos_x = start_x; pos_y = start_y + i; break;
-            case 2: pos_x = start_x + i; pos_y = start_y + i; break;
-            case 3: pos_x = start_x + i; pos_y = start_y - i; break;
+            case 0: pos_x += i; break;
+            case 1: pos_y += i; break;
+            case 2: pos_x += i; pos_y += i; break;
+            case 3: pos_x += i; pos_y -= i; break;
         }
-        
-        // Проверяем, не выходит ли за границы
-        if (pos_x < 0 || pos_x >= width || pos_y < 0 || pos_y >= height) {
+
+        if (pos_x < 0 || pos_x >= global.word_grid_width || pos_y < 0 || pos_y >= global.word_grid_height) {
             return false;
         }
-        
-        // Проверяем, пустая ли ячейка или совпадает с буквой слова
-        var current_char = letter_grid[pos_y * width + pos_x];
+
+        var current_char = global.word_letter_grid[pos_y * global.word_grid_width + pos_x];
         var target_char = string_char_at(word, i + 1);
-        
-        if (current_char != ' ' && current_char != target_char) {
+        if (current_char != " " && current_char != target_char) {
             return false;
         }
     }
-    
+
     return true;
 }
 
-// Функция обновления логики головоломки
-function update() {
-    if (!solved) {
-        // Обработка мыши для выбора слов
-        handle_mouse_input();
+function word_search_puzzle_update() {
+    if (global.word_solved) {
+        return;
     }
+
+    word_handle_mouse_input();
 }
 
-// Функция обработки мышиного ввода
-function handle_mouse_input() {
-    var mouse_cell_size = 32;
-    var grid_width = 10;
-    var grid_height = 10;
-    var offset_x = (room_width - grid_width * mouse_cell_size) / 2;
-    var offset_y = (room_height - grid_height * mouse_cell_size) / 2;
-    
-    // Проверяем нажатие мыши
+function word_handle_mouse_input() {
+    var cell_size = 32;
+    var offset_x = (room_width - global.word_grid_width * cell_size) / 2;
+    var offset_y = (room_height - global.word_grid_height * cell_size) / 2;
+
     if (mouse_check_button_pressed(mb_left)) {
-        var mouse_grid_x = floor((mouse_x - offset_x) / mouse_cell_size);
-        var mouse_grid_y = floor((mouse_y - offset_y) / mouse_cell_size);
-        
-        if (mouse_grid_x >= 0 && mouse_grid_x < grid_width && 
-            mouse_grid_y >= 0 && mouse_grid_y < grid_height) {
-            drag_start_x = mouse_grid_x;
-            drag_start_y = mouse_grid_y;
+        var gx = floor((mouse_x - offset_x) / cell_size);
+        var gy = floor((mouse_y - offset_y) / cell_size);
+        if (gx >= 0 && gx < global.word_grid_width && gy >= 0 && gy < global.word_grid_height) {
+            global.word_drag_start_x = gx;
+            global.word_drag_start_y = gy;
         }
     }
-    
-    // Проверяем отпускание мыши
-    if (mouse_check_button_released(mb_left) && drag_start_x != -1) {
-        var mouse_grid_x = floor((mouse_x - offset_x) / mouse_cell_size);
-        var mouse_grid_y = floor((mouse_y - offset_y) / mouse_cell_size);
-        
-        if (mouse_grid_x >= 0 && mouse_grid_x < grid_width && 
-            mouse_grid_y >= 0 && mouse_grid_y < grid_height) {
-            drag_end_x = mouse_grid_x;
-            drag_end_y = mouse_grid_y;
-            
-            // Проверяем слово
-            check_word(drag_start_x, drag_start_y, drag_end_x, drag_end_y);
+
+    if (mouse_check_button_released(mb_left) && global.word_drag_start_x != -1) {
+        var gx = floor((mouse_x - offset_x) / cell_size);
+        var gy = floor((mouse_y - offset_y) / cell_size);
+        if (gx >= 0 && gx < global.word_grid_width && gy >= 0 && gy < global.word_grid_height) {
+            word_check_word(global.word_drag_start_x, global.word_drag_start_y, gx, gy);
         }
-        
-        // Сбрасываем координаты
-        drag_start_x = -1;
-        drag_end_x = -1;
+        global.word_drag_start_x = -1;
+        global.word_drag_start_y = -1;
     }
 }
 
-// Функция проверки слова
-function check_word(start_x, start_y, end_x, end_y) {
-    // Проверяем, что выбор происходит по прямой линии (горизонталь, вертикаль или диагональ)
+function word_check_word(start_x, start_y, end_x, end_y) {
     if (start_x != end_x && start_y != end_y && abs(start_x - end_x) != abs(start_y - end_y)) {
-        return; // Не по прямой
+        return;
     }
-    
-    // Получаем буквы в выбранном диапазоне
+
     var letters = "";
-    var step_x, step_y;
-    
-    if (start_x == end_x) {
-        step_x = 0;
-        step_y = (end_y > start_y) ? 1 : -1;
-    } else if (start_y == end_y) {
-        step_x = (end_x > start_x) ? 1 : -1;
-        step_y = 0;
-    } else {
-        step_x = (end_x > start_x) ? 1 : -1;
-        step_y = (end_y > start_y) ? 1 : -1;
-    }
-    
+    var positions = [];
+    var step_x = sign(end_x - start_x);
+    var step_y = sign(end_y - start_y);
     var x = start_x;
     var y = start_y;
-    var width = 10;
-    
+
     while (true) {
-        letters += letter_grid[y * width + x];
-        
-        if (x == end_x && y == end_y) break;
-        
+        letters += global.word_letter_grid[y * global.word_grid_width + x];
+        array_push(positions, [x, y]);
+        if (x == end_x && y == end_y) {
+            break;
+        }
         x += step_x;
         y += step_y;
     }
-    
-    // Проверяем, есть ли это слово в списке
-    var word_found = false;
-    var target_word;
-    for (target_word in words_to_find) {
-        if (string_upper(letters) == target_word || string_lower(letters) == string_lower(target_word)) {
-            // Проверяем, не было ли уже найдено это слово
-            if (!array_contains(found_words, target_word)) {
-                array_push(found_words, target_word);
-                word_found = true;
-                
-                // Воспроизводим звук успеха
-                play_sfx("puzzle_success");
-                
-                break;
+
+    var reversed = "";
+    for (var i = string_length(letters); i >= 1; i--) {
+        reversed += string_char_at(letters, i);
+    }
+
+    for (var i = 0; i < array_length(global.word_words_to_find); i++) {
+        var target_word = global.word_words_to_find[i];
+        if ((letters == target_word || reversed == target_word) && !word_array_contains(global.word_found_words, target_word)) {
+            array_push(global.word_found_words, target_word);
+            global.word_selected_positions = positions;
+            play_sfx("puzzle_success");
+            if (array_length(global.word_found_words) == array_length(global.word_words_to_find)) {
+                word_search_puzzle_solve();
             }
+            return;
         }
     }
-    
-    // Проверяем, найдены ли все слова
-    if (array_length_1d(found_words) == array_length_1d(words_to_find)) {
-        solve_puzzle();
-    }
+
+    play_sfx("cancel");
 }
 
-// Функция отрисовки головоломки
-function draw(gui_view = false) {
-    if (!gui_view) {
-        var width = 10;
-        var height = 10;
-        var cell_size = 32;
-        var offset_x = (room_width - width * cell_size) / 2;
-        var offset_y = (room_height - height * cell_size) / 2;
-        
-        // Рисуем сетку
-        var x, y;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                var screen_x = offset_x + x * cell_size;
-                var screen_y = offset_y + y * cell_size;
-                
-                // Фон ячейки
-                if (array_contains(selected_positions, [x, y])) {
-                    draw_set_color(c_lightblue);
-                } else {
-                    draw_set_color(c_white);
-                }
-                
-                draw_rectangle(screen_x, screen_y, screen_x + cell_size, screen_y + cell_size, true);
-                
-                // Граница ячейки
-                draw_set_color(c_black);
-                draw_rectangle(screen_x, screen_y, screen_x + cell_size, screen_y + cell_size, false);
-                
-                // Буква
-                draw_set_color(c_black);
-                var text = letter_grid[y * width + x];
-                var text_x = screen_x + cell_size / 2 - string_width(text) / 2;
-                var text_y = screen_y + cell_size / 2 - string_height(text) / 2;
-                draw_text(text_x, text_y, text);
-            }
+function word_search_puzzle_draw(gui_view) {
+    if (gui_view) {
+        return;
+    }
+
+    var cell_size = 32;
+    var offset_x = (room_width - global.word_grid_width * cell_size) / 2;
+    var offset_y = (room_height - global.word_grid_height * cell_size) / 2;
+
+    for (var y = 0; y < global.word_grid_height; y++) {
+        for (var x = 0; x < global.word_grid_width; x++) {
+            var screen_x = offset_x + x * cell_size;
+            var screen_y = offset_y + y * cell_size;
+            var is_selected = word_array_contains_position(global.word_selected_positions, x, y);
+
+            draw_set_color(is_selected ? c_lightblue : c_white);
+            draw_rectangle(screen_x, screen_y, screen_x + cell_size, screen_y + cell_size, true);
+            draw_set_color(c_black);
+            draw_rectangle(screen_x, screen_y, screen_x + cell_size, screen_y + cell_size, false);
+            draw_text(screen_x + cell_size / 2 - 6, screen_y + cell_size / 2 - 8, global.word_letter_grid[y * global.word_grid_width + x]);
         }
-        
-        // Рисуем список слов для поиска
-        draw_set_color(c_black);
-        var list_offset_x = offset_x + width * cell_size + 20;
-        var list_offset_y = offset_y;
-        var line_height = 20;
-        
-        draw_text(list_offset_x, list_offset_y, "Слова для поиска:");
-        
-        var word_idx;
-        for (word_idx = 0; word_idx < array_length_1d(words_to_find); word_idx++) {
-            if (array_contains(found_words, words_to_find[word_idx])) {
-                draw_set_color(c_green);
-            } else {
-                draw_set_color(c_black);
-            }
-            
-            draw_text(list_offset_x, list_offset_y + (word_idx + 1) * line_height, words_to_find[word_idx]);
-        }
+    }
+
+    var list_offset_x = offset_x + global.word_grid_width * cell_size + 20;
+    draw_set_color(c_black);
+    draw_text(list_offset_x, offset_y, "Слова для поиска:");
+    for (var i = 0; i < array_length(global.word_words_to_find); i++) {
+        draw_set_color(word_array_contains(global.word_found_words, global.word_words_to_find[i]) ? c_green : c_black);
+        draw_text(list_offset_x, offset_y + (i + 1) * 20, global.word_words_to_find[i]);
     }
 }
 
-// Функция проверки завершения головоломки
-function is_solved() {
-    return solved;
+function word_array_contains(arr, value) {
+    for (var i = 0; i < array_length(arr); i++) {
+        if (arr[i] == value) {
+            return true;
+        }
+    }
+    return false;
 }
 
-// Функция завершения головоломки
-function solve_puzzle() {
-    solved = true;
-    
-    // Воспроизводим звук успеха
+function word_array_contains_position(arr, x, y) {
+    for (var i = 0; i < array_length(arr); i++) {
+        if (arr[i][0] == x && arr[i][1] == y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function word_search_puzzle_is_solved() {
+    return global.word_solved;
+}
+
+function word_search_puzzle_solve() {
+    global.word_solved = true;
     play_sfx("puzzle_completed");
 }
 
-// Функция сброса головоломки
-function reset() {
-    var puzzle_data = init();
-    solved = false;
-    return puzzle_data;
-}
-
-// Вспомогательная функция для проверки, содержит ли массив элемент
-function array_contains(arr, element) {
-    if (typeof(element) == typeof("")) {
-        var i;
-        for (i = 0; i < array_length_1d(arr); i++) {
-            if (arr[i] == element) {
-                return true;
-            }
-        }
-        return false;
-    } else {
-        // Для массивов
-        var i;
-        for (i = 0; i < array_length_1d(arr); i++) {
-            if (variable_struct_names_count(arr[i]) > 0) {
-                // Это структура, проверяем поля
-                if (arr[i][0] == element[0] && arr[i][1] == element[1]) {
-                    return true;
-                }
-            } else {
-                // Это массив
-                if (arr[i][0] == element[0] && arr[i][1] == element[1]) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+function word_search_puzzle_reset() {
+    return word_search_puzzle_init();
 }
