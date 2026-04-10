@@ -18,6 +18,10 @@ function create_puzzle(type) {
             return platformer_puzzle_init();
         case "final":
             return final_challenge_puzzle_init();
+        case "riddle":
+            return riddle_puzzle_init();
+        case "sound_trap":
+            return sound_trap_puzzle_init();
         default:
             show_debug_message("Unknown puzzle type: " + string(type));
             return undefined;
@@ -44,6 +48,12 @@ function update_puzzle(type) {
         case "final":
             final_challenge_puzzle_update();
             break;
+        case "riddle":
+            riddle_puzzle_update();
+            break;
+        case "sound_trap":
+            sound_trap_puzzle_update();
+            break;
     }
 }
 
@@ -57,6 +67,12 @@ function draw_puzzle(type, gui_view) {
             break;
         case "rhythm":
             rhythm_puzzle_draw(gui_view);
+            break;
+        case "riddle":
+            riddle_puzzle_draw(gui_view);
+            break;
+        case "sound_trap":
+            sound_trap_puzzle_draw(gui_view);
             break;
         case "pairs":
             memory_match_puzzle_draw(gui_view);

@@ -40,6 +40,12 @@ if (!global_exists("initialized")) {
             {completed: false, lever_pulled: false},
             {completed: false, lever_pulled: false},
             {completed: false, lever_pulled: false},
+            {completed: false, lever_pulled: false},
+            {completed: false, lever_pulled: false},
+            {completed: false, lever_pulled: false},
+            {completed: false, lever_pulled: false},
+            {completed: false, lever_pulled: false},
+            {completed: false, lever_pulled: false},
             {completed: false, lever_pulled: false}
         ],
         gold: 100,

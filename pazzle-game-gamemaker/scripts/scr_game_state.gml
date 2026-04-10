@@ -14,7 +14,7 @@ function create_new_game_state() {
     };
 
     // Инициализация сохранения прогресса
-    for (var i = 1; i <= 6; i += 1) {
+    for (var i = 1; i <= 12; i += 1) {  // Расширяем до 12 уровней
         ds_map_add(state_data.progress, "level_" + string(i) + "_completed", false);
         ds_map_add(state_data.progress, "level_" + string(i) + "_lever_pulled", false);
     }
@@ -54,8 +54,17 @@ function set_lever_pulled(state, level_num) {
 
 // Совместимость с новой глобальной моделью прогресса
 function complete_level(level_num) {
-    if (level_num >= 1 && level_num <= 6) {
-        global.game_progress.levels[level_num - 1].completed = true;
+    if (level_num >= 1 && level_num <= 12) {  // Расширяем до 12 уровней
+        if (array_length(global.game_progress.levels) > level_num - 1) {
+            global.game_progress.levels[level_num - 1].completed = true;
+        } else {
+            // Если массив еще мал, расширяем его
+            while (array_length(global.game_progress.levels) <= level_num - 1) {
+                var new_level_data = {completed: false, lever_pulled: false};
+                array_push(global.game_progress.levels, new_level_data);
+            }
+            global.game_progress.levels[level_num - 1].completed = true;
+        }
         if (script_exists(play_event_sound)) {
             play_event_sound("level_complete");
         }
@@ -63,9 +72,18 @@ function complete_level(level_num) {
 }
 
 function set_level_lever_pulled(level_num, pulled) {
-    if (level_num >= 1 && level_num <= 6) {
-        global.game_progress.levels[level_num - 1].lever_pulled = pulled;
-        if (level_num == 6 && pulled) {
+    if (level_num >= 1 && level_num <= 12) {  // Расширяем до 12 уровней
+        if (array_length(global.game_progress.levels) > level_num - 1) {
+            global.game_progress.levels[level_num - 1].lever_pulled = pulled;
+        } else {
+            // Если массив еще мал, расширяем его
+            while (array_length(global.game_progress.levels) <= level_num - 1) {
+                var new_level_data = {completed: false, lever_pulled: false};
+                array_push(global.game_progress.levels, new_level_data);
+            }
+            global.game_progress.levels[level_num - 1].lever_pulled = pulled;
+        }
+        if (level_num == 12 && pulled) {  // Обновляем номер финального уровня
             global.expedition_complete = true;
         }
         if (pulled && script_exists(play_event_sound)) {
@@ -76,7 +94,8 @@ function set_level_lever_pulled(level_num, pulled) {
 
 function count_completed_levels() {
     var count = 0;
-    for (var i = 0; i < 6; i++) {
+    var total_levels = array_length(global.game_progress.levels);
+    for (var i = 0; i < min(total_levels, 12); i++) {  // Проверяем до 12 уровней
         if (global.game_progress.levels[i].completed) {
             count++;
         }
@@ -86,7 +105,8 @@ function count_completed_levels() {
 
 function count_opened_levels() {
     var count = 0;
-    for (var i = 0; i < 6; i++) {
+    var total_levels = array_length(global.game_progress.levels);
+    for (var i = 0; i < min(total_levels, 12); i++) {  // Проверяем до 12 уровней
         if (global.game_progress.levels[i].lever_pulled || i == 0) {
             count++;
         }
@@ -95,12 +115,13 @@ function count_opened_levels() {
 }
 
 function get_current_objective_level() {
-    for (var i = 0; i < 6; i++) {
+    var total_levels = array_length(global.game_progress.levels);
+    for (var i = 0; i < min(total_levels, 12); i++) {
         if (!global.game_progress.levels[i].lever_pulled) {
             return i + 1;
         }
     }
-    return 6;
+    return min(12, total_levels);  // Возвращаем максимальный уровень
 }
 
 // Функция проверки, открыта ли следующая пещера
