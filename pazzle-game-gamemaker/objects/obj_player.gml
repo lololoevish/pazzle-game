@@ -303,6 +303,12 @@ function handle_platformer_movement(dt) {
     var target_hspeed = input_x * player_config.platformer_move_speed;
     var accel = player_config.platformer_air_acceleration;
     var decel = player_config.platformer_air_deceleration;
+    
+    // Увеличиваем ускорение при начале движения для большей отзывчивости
+    var initial_accel_multiplier = 1.0;
+    if (sign(input_x) != sign(hspeed) && input_x != 0) {
+        initial_accel_multiplier = 1.5;  // Более резкий старт при смене направления
+    }
 
     if (on_ground) {
         accel = player_config.platformer_ground_acceleration;
@@ -310,7 +316,7 @@ function handle_platformer_movement(dt) {
     }
 
     if (input_x != 0) {
-        hspeed = approach(hspeed, target_hspeed, accel * dt);
+        hspeed = approach(hspeed, target_hspeed, accel * initial_accel_multiplier * dt);
     } else {
         hspeed = approach(hspeed, 0, decel * dt);
     }
@@ -321,6 +327,7 @@ function handle_platformer_movement(dt) {
         coyote_timer = 0;
         jump_buffer_timer = 0;
         jump_held = true;
+        create_jump_effect();
     }
 
     if (jump_released && vspeed < -player_config.jump_cut_speed) {
@@ -438,17 +445,50 @@ function check_and_interact() {
             can_use = closest_interactable.interactable;
         }
 
-        if (can_use) {
-            if (variable_instance_exists(closest_interactable, "on_interact")) {
-                closest_interactable.on_interact();
-            }
-            safe_play_event_sound("ui_confirm");
+        // Проверяем, является ли объект NPC и можно ли с ним проявить "милосердие"
+        if (closest_interactable.object_index == obj_npc) {
+            // Вместо стандартного взаимодействия можем предложить выбор: обычное взаимодействие или "дружба"
+            show_interaction_choice(closest_interactable);
         } else {
-            safe_play_event_sound("ui_cancel");
+            if (can_use) {
+                if (variable_instance_exists(closest_interactable, "on_interact")) {
+                    closest_interactable.on_interact();
+                }
+                safe_play_event_sound("ui_confirm");
+            } else {
+                safe_play_event_sound("ui_cancel");
+            }
         }
     } else {
         safe_show_message("Здесь не с чем взаимодействовать");
         safe_play_event_sound("ui_cancel");
+    }
+}
+
+// Показать выбор взаимодействия с NPC
+function show_interaction_choice(npc_obj) {
+    if (script_exists(scr_ui_manager) && script_exists(show_dialog)) {
+        var options = ["Поговорить", "Проявить дружбу"];
+        var callback = function(selected_option) {
+            switch(selected_option) {
+                case 0:  // Поговорить
+                    if (variable_instance_exists(npc_obj, "on_interact")) {
+                        npc_obj.on_interact();
+                    }
+                    safe_play_event_sound("ui_confirm");
+                    break;
+                case 1:  // Проявить дружбу
+                    attempt_mercy_interaction(npc_obj);
+                    break;
+            }
+        };
+        scr_ui_manager.show_dialog("Как вы хотите взаимодействовать?", options, callback);
+    } else {
+        // Если UI недоступен, просто выполнить стандартное взаимодействие
+        if (variable_instance_exists(npc_obj, "on_interact")) {
+            npc_obj.on_interact();
+        }
+        safe_play_event_sound("ui_confirm");
     }
 }
 
@@ -461,6 +501,20 @@ function safe_play_event_sound(event_name) {
 function safe_show_message(text) {
     if (script_exists(scr_ui_manager) && script_exists(show_message)) {
         show_message(text);
+    }
+}
+
+// Создание визуального эффекта при прыжке
+function create_jump_effect() {
+    // Временная визуальная обратная связь при прыжке
+    // В будущем можно заменить на частицы или анимацию
+    if (script_exists(scr_audio_manager) && script_exists(play_event_sound)) {
+        // Играть звук прыжка
+        if (variable_instance_exists(global, "snd_player_jump") && global.snd_player_jump != -1) {
+            play_event_sound("snd_player_jump");
+        } else {
+            audio_play_sound(global.snd_player_jump, 1, false);
+        }
     }
 }
 
@@ -600,4 +654,61 @@ function get_player_info() {
         coyote_timer: coyote_timer,
         jump_buffer_timer: jump_buffer_timer
     };
+}
+
+// Функция взаимодействия с NPC в стиле "дружбы" (механики из Deltarune)
+function attempt_mercy_interaction(npc_obj) {
+    // Проверяем, возможно ли проявить "милосердие" к NPC
+    if (npc_obj != noone && variable_instance_exists(npc_obj, "can_show_mercy")) {
+        if (npc_obj.can_show_mercy) {
+            // Игрок выбирает действие милосердия
+            var mercy_actions = ["помочь", "улыбнуться", "подарить вещь"];
+            
+            // Временно показываем выбор действия милосердия
+            safe_show_message("Вы можете проявить милосердие к " + string(npc_obj.npc_name));
+            
+            // При успешном действии милосердия
+            if (script_exists(scr_ui_manager) && script_exists(show_dialog)) {
+                // Показать диалог выбора действия
+                show_mercy_dialog(npc_obj);
+            }
+            
+            return true;
+        }
+    }
+    return false;
+}
+
+// Функция показа диалога выбора действия милосердия
+function show_mercy_dialog(npc_obj) {
+    if (script_exists(scr_ui_manager) && script_exists(show_dialog)) {
+        var options = ["Подарить улыбку", "Предложить помощь", "Проявить сочувствие"];
+        var callback = function(selected_option) {
+            handle_mercy_action(selected_option, npc_obj);
+        };
+        scr_ui_manager.show_dialog("Как вы хотите проявить доброту?", options, callback);
+    }
+}
+
+// Обработка действия милосердия
+function handle_mercy_action(action_idx, npc_obj) {
+    switch(action_idx) {
+        case 0:
+            safe_show_message("Вы подарили " + npc_obj.npc_name + " свою улыбку");
+            break;
+        case 1:
+            safe_show_message("Вы предложили помощь " + npc_obj.npc_name);
+            break;
+        case 2:
+            safe_show_message("Вы проявили сочувствие к " + npc_obj.npc_name);
+            break;
+    }
+    
+    // Обновление состояния NPC
+    if (variable_instance_exists(npc_obj, "on_player_mercy")) {
+        npc_obj.on_player_mercy(action_idx);
+    }
+    
+    // В будущем это может повлиять на отношения с NPC или разблокировать особые события
+    global.player_mercy_points = (global.player_mercy_points != undefined) ? global.player_mercy_points + 1 : 1;
 }
