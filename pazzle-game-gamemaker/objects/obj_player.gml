@@ -639,6 +639,17 @@ function set_state(new_state) {
     }
 }
 
+// Проверка наличия элемента в массиве
+function array_contains(arr, element) {
+    if (arr == undefined) return false;
+    for (var i = 0; i < array_length(arr); i++) {
+        if (arr[i] == element) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Функция получения информации о игроке
 function get_player_info() {
     return {
@@ -695,12 +706,15 @@ function handle_mercy_action(action_idx, npc_obj) {
     switch(action_idx) {
         case 0:
             safe_show_message("Вы подарили " + npc_obj.npc_name + " свою улыбку");
+            safe_play_event_sound("friendship_gained");
             break;
         case 1:
             safe_show_message("Вы предложили помощь " + npc_obj.npc_name);
+            safe_play_event_sound("mercy_action");
             break;
         case 2:
             safe_show_message("Вы проявили сочувствие к " + npc_obj.npc_name);
+            safe_play_event_sound("npc_friendly_response");
             break;
     }
     
@@ -711,4 +725,12 @@ function handle_mercy_action(action_idx, npc_obj) {
     
     // В будущем это может повлиять на отношения с NPC или разблокировать особые события
     global.player_mercy_points = (global.player_mercy_points != undefined) ? global.player_mercy_points + 1 : 1;
+    
+    // Возможно обновление прогресса дружбы
+    if (!array_contains(global.player_friends_rescued, string(npc_obj.id))) {
+        if (global.player_friends_rescued == undefined) {
+            global.player_friends_rescued = [];
+        }
+        array_push(global.player_friends_rescued, string(npc_obj.id));
+    }
 }

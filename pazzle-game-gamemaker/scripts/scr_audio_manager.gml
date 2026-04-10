@@ -44,6 +44,63 @@ function stop_music() {
     }
 }
 
+// Функция для установки музыкальной темы в зависимости от эмоционального состояния
+function set_emotional_music_state(state) {
+    var music_to_play = undefined;
+    
+    switch(state) {
+        case "neutral":
+            // В зависимости от текущей комнаты
+            var room_based_music = get_current_room_music();
+            if (room_based_music != undefined) {
+                play_music(room_based_music);
+            }
+            break;
+        case "friendly_encounter":
+            music_to_play = get_sound_resource("snd_music_friendly_encounter");
+            if (music_to_play != undefined && music_to_play != -1) {
+                play_music(music_to_play);
+            }
+            break;
+        case "mercy_theme":
+            music_to_play = get_sound_resource("snd_music_mercy_theme");
+            if (music_to_play != undefined && music_to_play != -1) {
+                play_music(music_to_play);
+            }
+            break;
+        case "peaceful_resolution":
+            music_to_play = get_sound_resource("snd_music_peaceful_resolution");
+            if (music_to_play != undefined && music_to_play != -1) {
+                play_music(music_to_play);
+            }
+            break;
+        default:
+            // Оставить текущую музыку
+            break;
+    }
+}
+
+// Получение музыки в зависимости от текущей комнаты
+function get_current_room_music() {
+    switch (room_get_name(room)) {
+        case "rm_menu":
+            return get_sound_resource("snd_menu_bg");
+        case "rm_town":
+            return get_sound_resource("snd_town_bg");
+        case "rm_level_1":
+        case "rm_level_2":
+        case "rm_level_3":
+        case "rm_level_4":
+        case "rm_level_5":
+        case "rm_level_6":
+            return get_sound_resource("snd_level_bg");
+        case "rm_victory":
+            return get_sound_resource("snd_victory_bg");
+        default:
+            return undefined;
+    }
+}
+
 // Функция проигрывания звукового эффекта
 function play_sound(sound_index) {
     // Проверяем, что ресурс не пустой/не определен
@@ -227,6 +284,15 @@ function play_event_sound(event_type) {
             break;
         case "item_collect":
             sound_to_play = get_sound_resource("snd_item_collect");
+            break;
+        case "mercy_action":
+            sound_to_play = get_sound_resource("snd_mercy_action");
+            break;
+        case "friendship_gained":
+            sound_to_play = get_sound_resource("snd_friendship_gained");
+            break;
+        case "npc_friendly_response":
+            sound_to_play = get_sound_resource("snd_npc_friendly_response");
             break;
         default:
             show_debug_message("WARNING: No sound defined for event '" + event_type + "'");
