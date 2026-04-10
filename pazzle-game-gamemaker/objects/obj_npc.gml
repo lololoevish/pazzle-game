@@ -20,12 +20,9 @@
 
 // Step Event
 {
-    // Проверка, находится ли игрок рядом
-    var player_dist = distance_to_object(obj_player);
-    if (player_dist <= interaction_distance && !in_dialogue) {
-        // Проверяем нажатие E для взаимодействия
-        if (keyboard_check_pressed(ord('E')) || keyboard_check_pressed(vk_enter)) {
-            start_interaction();
+    if (in_dialogue) {
+        if (keyboard_check_pressed(vk_escape)) {
+            end_interaction();
         }
     }
 }
@@ -55,6 +52,7 @@ function draw_interaction_indicator() {
 // Функция начала взаимодействия
 function start_interaction() {
     in_dialogue = true;
+    npc_set_player_state("dialog");
     
     // Воспроизводим звук
     play_sfx("dialogue_start");
@@ -78,7 +76,18 @@ function start_interaction() {
 // Функция завершения взаимодействия
 function end_interaction() {
     in_dialogue = false;
+    if (script_exists(scr_ui_manager) && script_exists(hide_mini_game)) {
+        hide_mini_game();
+    }
     hide_npc_dialogue();
+    npc_set_player_state("normal");
+}
+
+function npc_set_player_state(state_name) {
+    var player = instance_nearest(x, y, obj_player);
+    if (player != noone && variable_instance_exists(player, "set_state")) {
+        player.set_state(state_name);
+    }
 }
 
 // Специфичные функции для разных NPC

@@ -70,6 +70,12 @@ function memory_get_card_at_position(mx, my) {
     var row = floor((my - start_y) / (card_size + spacing));
 
     if (col >= 0 && col < global.memory_grid_size && row >= 0 && row < global.memory_grid_size) {
+        var local_x = mx - (start_x + col * (card_size + spacing));
+        var local_y = my - (start_y + row * (card_size + spacing));
+        if (local_x < 0 || local_x >= card_size || local_y < 0 || local_y >= card_size) {
+            return -1;
+        }
+
         var index = row * global.memory_grid_size + col;
         if (!global.memory_revealed[index] && !global.memory_matched[index]) {
             return index;

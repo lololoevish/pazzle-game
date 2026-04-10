@@ -51,6 +51,7 @@ function rhythm_puzzle_update() {
         global.rhythm_showing_pattern = true;
         global.rhythm_pattern_index = 0;
         global.rhythm_pattern_timer = 20;
+        global.rhythm_player_sequence = [];
         play_sfx("puzzle_success");
         return;
     }
@@ -92,8 +93,12 @@ function rhythm_handle_input() {
         } else {
             global.rhythm_round++;
             rhythm_generate_sequence(global.rhythm_round);
+            global.rhythm_showing_pattern = false;
             global.rhythm_waiting_input = false;
+            global.rhythm_pattern_index = 0;
+            global.rhythm_pattern_timer = 0;
             global.rhythm_player_sequence = [];
+            global.rhythm_input_timeout = 180;
         }
     }
 }

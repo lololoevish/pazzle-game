@@ -12,14 +12,7 @@
 
 // Step Event
 {
-    // Проверка, находится ли игрок рядом
-    var player_dist = distance_to_object(obj_player);
-    if (player_dist <= lever_interaction_distance && !lever_pulled) {
-        // Проверяем нажатие E для взаимодействия
-        if (keyboard_check_pressed(ord('E')) || keyboard_check_pressed(vk_enter)) {
-            pull_lever();
-        }
-    }
+    // Взаимодействие инициируется централизованно через `obj_player`.
 }
 
 // Draw Event

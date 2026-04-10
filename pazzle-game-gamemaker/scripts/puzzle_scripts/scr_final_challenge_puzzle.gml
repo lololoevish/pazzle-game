@@ -85,13 +85,17 @@ function final_challenge_handle_player_movement() {
 
 function final_challenge_update_player_physics() {
     global.final_player.vspeed += global.final_player.gravity * global.final_difficulty_factor;
-    global.final_player.x += global.final_player.hspeed;
-    global.final_player.y += global.final_player.vspeed;
+    final_challenge_move_axis(global.final_player.hspeed, true);
+    global.final_player.on_ground = false;
+    final_challenge_move_axis(global.final_player.vspeed, false);
 
     if (global.final_player.x < 0) global.final_player.x = 0;
     if (global.final_player.x + global.final_player.width > room_width) global.final_player.x = room_width - global.final_player.width;
-    if (global.final_player.y < 0) global.final_player.y = 0;
-    if (global.final_player.y > room_height) {
+    if (global.final_player.y < 0) {
+        global.final_player.y = 0;
+        global.final_player.vspeed = max(0, global.final_player.vspeed);
+    }
+    if (global.final_player.y > room_height + global.final_player.height) {
         final_challenge_reset_player_position();
     }
 }
@@ -106,17 +110,6 @@ function final_challenge_update_obstacles() {
 }
 
 function final_challenge_check_collisions() {
-    global.final_player.on_ground = false;
-
-    for (var i = 0; i < array_length(global.final_platforms); i++) {
-        var plat = global.final_platforms[i];
-        if (global.final_player.x + global.final_player.width > plat.x && global.final_player.x < plat.x + plat.w && global.final_player.y + global.final_player.height > plat.y && global.final_player.y + global.final_player.height < plat.y + plat.h && global.final_player.vspeed >= 0) {
-            global.final_player.y = plat.y - global.final_player.height;
-            global.final_player.vspeed = 0;
-            global.final_player.on_ground = true;
-        }
-    }
-
     for (var i = 0; i < array_length(global.final_artifacts); i++) {
         if (!global.final_artifacts[i].collected) {
             if (final_challenge_point_in_rect(global.final_player.x + global.final_player.width / 2, global.final_player.y + global.final_player.height / 2, global.final_artifacts[i].x, global.final_artifacts[i].y, global.final_artifacts[i].x + 20, global.final_artifacts[i].y + 20)) {
@@ -136,12 +129,59 @@ function final_challenge_check_collisions() {
     }
 }
 
+function final_challenge_collides_at(test_x, test_y) {
+    for (var i = 0; i < array_length(global.final_platforms); i++) {
+        var plat = global.final_platforms[i];
+        if (final_challenge_rect_overlap(
+            test_x,
+            test_y,
+            test_x + global.final_player.width,
+            test_y + global.final_player.height,
+            plat.x,
+            plat.y,
+            plat.x + plat.w,
+            plat.y + plat.h
+        )) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function final_challenge_move_axis(amount, is_horizontal) {
+    var remaining = amount;
+
+    while (abs(remaining) > 0) {
+        var step = clamp(remaining, -1, 1);
+        var next_x = global.final_player.x + (is_horizontal ? step : 0);
+        var next_y = global.final_player.y + (is_horizontal ? 0 : step);
+
+        if (!final_challenge_collides_at(next_x, next_y)) {
+            global.final_player.x = next_x;
+            global.final_player.y = next_y;
+        } else {
+            if (is_horizontal) {
+                global.final_player.hspeed = 0;
+            } else {
+                if (step > 0) {
+                    global.final_player.on_ground = true;
+                }
+                global.final_player.vspeed = 0;
+            }
+            break;
+        }
+
+        remaining -= step;
+    }
+}
+
 function final_challenge_reset_player_position() {
     global.final_player.x = 50;
     global.final_player.y = 550;
     global.final_player.hspeed = 0;
     global.final_player.vspeed = 0;
-    global.final_player.on_ground = true;
+    global.final_player.on_ground = false;
 }
 
 function final_challenge_check_completion() {

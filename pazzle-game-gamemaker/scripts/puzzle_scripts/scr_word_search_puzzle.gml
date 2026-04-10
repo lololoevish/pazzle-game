@@ -86,6 +86,8 @@ function word_place_word(word) {
             return;
         }
     }
+
+    show_debug_message("Word placement failed for: " + string(word));
 }
 
 function word_can_place_word(word, start_x, start_y, direction) {
@@ -128,23 +130,32 @@ function word_handle_mouse_input() {
     var offset_y = (room_height - global.word_grid_height * cell_size) / 2;
 
     if (mouse_check_button_pressed(mb_left)) {
-        var gx = floor((mouse_x - offset_x) / cell_size);
-        var gy = floor((mouse_y - offset_y) / cell_size);
-        if (gx >= 0 && gx < global.word_grid_width && gy >= 0 && gy < global.word_grid_height) {
-            global.word_drag_start_x = gx;
-            global.word_drag_start_y = gy;
+        var start_cell = word_get_grid_cell_from_mouse(mouse_x, mouse_y, offset_x, offset_y, cell_size);
+        if (start_cell != undefined) {
+            global.word_drag_start_x = start_cell[0];
+            global.word_drag_start_y = start_cell[1];
         }
     }
 
     if (mouse_check_button_released(mb_left) && global.word_drag_start_x != -1) {
-        var gx = floor((mouse_x - offset_x) / cell_size);
-        var gy = floor((mouse_y - offset_y) / cell_size);
-        if (gx >= 0 && gx < global.word_grid_width && gy >= 0 && gy < global.word_grid_height) {
-            word_check_word(global.word_drag_start_x, global.word_drag_start_y, gx, gy);
+        var end_cell = word_get_grid_cell_from_mouse(mouse_x, mouse_y, offset_x, offset_y, cell_size);
+        if (end_cell != undefined) {
+            word_check_word(global.word_drag_start_x, global.word_drag_start_y, end_cell[0], end_cell[1]);
         }
         global.word_drag_start_x = -1;
         global.word_drag_start_y = -1;
     }
+}
+
+function word_get_grid_cell_from_mouse(mx, my, offset_x, offset_y, cell_size) {
+    var gx = floor((mx - offset_x) / cell_size);
+    var gy = floor((my - offset_y) / cell_size);
+
+    if (gx < 0 || gx >= global.word_grid_width || gy < 0 || gy >= global.word_grid_height) {
+        return undefined;
+    }
+
+    return [gx, gy];
 }
 
 function word_check_word(start_x, start_y, end_x, end_y) {

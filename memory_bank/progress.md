@@ -43,9 +43,11 @@
 
 ## Контроль изменений
 
-### Последний проверенный коммит: 51c5cfe
+### Последний проверенный коммит: e9095f4
 
 ### Хронология изменений:
+- 10.04.2026: Дополнительно стабилизирован основной runtime игрока в `obj_player.gml`; исправлены переходы между раундами в `scr_rhythm_puzzle.gml` и усилена обработка выбора/генерации в `scr_word_search_puzzle.gml`
+- 10.04.2026: Начат точечный runtime-аудит GMS2 gameplay; исправлены повторные интеракции через `E/Enter`, ложные клики по зазорам в memory-match и пошаговое платформенное перемещение в `scr_platformer_puzzle.gml` и `scr_final_challenge_puzzle.gml`
 - 10.04.2026: Синхронизированы `AGENTS.md` и `memory_bank/AGENTS.md` с актуальной upstream-версией; таблица deliverables в `memory_bank/projectbrief.md` перепроверена и исправлена до суммы весов `100`
 - 07.04.2026: Стабилизирован runtime GMS2-проекта вне `obj_player`: добавлены compatibility-обертки в audio/UI, обновлены `obj_game_manager`, `obj_puzzle`, `obj_lever`, `obj_interactable`, `obj_npc` и puzzle scripts
 - 07.04.2026: `scr_platformer_puzzle.gml` синхронизирован с новой моделью отзывчивого управления: jump buffer, coyote time и variable jump height

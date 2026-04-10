@@ -16,16 +16,7 @@
 
 // Step Event
 {
-    if (interactable) {
-        // Проверка, находится ли игрок рядом
-        var player_dist = distance_to_object(obj_player);
-        if (player_dist <= interaction_distance) {
-            // Проверяем нажатие E для взаимодействия
-            if (keyboard_check_pressed(ord('E')) || keyboard_check_pressed(vk_enter)) {
-                interact();
-            }
-        }
-    }
+    // Взаимодействие инициируется централизованно через `obj_player`.
 }
 
 // Draw Event

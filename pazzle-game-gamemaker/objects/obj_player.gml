@@ -141,6 +141,10 @@ function get_collision_objects() {
 }
 
 function collides_at(test_x, test_y) {
+    if (!place_free(test_x, test_y)) {
+        return true;
+    }
+
     var collision_objects = get_collision_objects();
 
     for (var i = 0; i < array_length(collision_objects); i++) {
@@ -193,7 +197,7 @@ function move_axis(amount, is_horizontal) {
             if (!collides_at(x, y + step)) {
                 y += step;
             } else {
-                if (step > 0) {
+                if (movement_mode == "platformer" && step > 0) {
                     on_ground = true;
                     coyote_timer = player_config.coyote_time;
                 }
@@ -550,21 +554,33 @@ function set_movement_mode(new_mode) {
 // Функция установки состояния игрока
 function set_state(new_state) {
     current_state = new_state;
+    hspeed = 0;
+    vspeed = 0;
+    current_move_x = 0;
+    current_move_y = 0;
+    move_target_x = 0;
+    move_target_y = 0;
+    jump_buffer_timer = 0;
+    coyote_timer = 0;
+    jump_held = false;
 
     switch (new_state) {
         case player_states.NORMAL:
             interaction_enabled = true;
             visible = true;
             solid = true;
+            on_ground = false;
             break;
         case player_states.INTERACTING:
         case player_states.DIALOG:
             interaction_enabled = false;
+            on_ground = false;
             break;
         case player_states.PUZZLE:
             interaction_enabled = false;
             visible = false;
             solid = false;
+            on_ground = false;
             break;
     }
 }

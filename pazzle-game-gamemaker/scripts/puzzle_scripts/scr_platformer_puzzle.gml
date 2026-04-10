@@ -129,34 +129,23 @@ function platformer_puzzle_handle_player_movement() {
 
 function platformer_puzzle_update_player_physics() {
     var dt = clamp(delta_time / 1000000, 0, 0.05);
-    global.platformer_player.x += global.platformer_player.hspeed * dt;
-    global.platformer_player.y += global.platformer_player.vspeed * dt;
+    platformer_puzzle_move_axis(global.platformer_player.hspeed * dt, true);
+    global.platformer_player.on_ground = false;
+    platformer_puzzle_move_axis(global.platformer_player.vspeed * dt, false);
 
     if (global.platformer_player.x < 0) global.platformer_player.x = 0;
     if (global.platformer_player.x + global.platformer_player.width > room_width) global.platformer_player.x = room_width - global.platformer_player.width;
-    if (global.platformer_player.y < 0) global.platformer_player.y = 0;
+    if (global.platformer_player.y < 0) {
+        global.platformer_player.y = 0;
+        global.platformer_player.vspeed = max(0, global.platformer_player.vspeed);
+    }
+    if (global.platformer_player.y > room_height + global.platformer_player.height) {
+        platformer_puzzle_reset_level();
+    }
 }
 
 function platformer_puzzle_check_collisions() {
     var player = global.platformer_player;
-    player.on_ground = false;
-
-    for (var i = 0; i < array_length(global.platformer_platforms); i++) {
-        var plat = global.platformer_platforms[i];
-
-        if (player.x + player.width > plat.x && player.x < plat.x + plat.w && player.y + player.height > plat.y && player.y + player.height < plat.y + plat.h && player.vspeed >= 0) {
-            player.y = plat.y - player.height;
-            player.vspeed = 0;
-            player.on_ground = true;
-        } else if (platformer_puzzle_rect_overlap(player.x, player.y, player.x + player.width, player.y + player.height, plat.x, plat.y, plat.x + plat.w, plat.y + plat.h)) {
-            if (player.hspeed > 0) player.x = plat.x - player.width;
-            else if (player.hspeed < 0) player.x = plat.x + plat.w;
-            else if (player.vspeed < 0) {
-                player.y = plat.y + plat.h;
-                player.vspeed = 0;
-            }
-        }
-    }
 
     for (var i = 0; i < array_length(global.platformer_crystals); i++) {
         if (!global.platformer_crystals[i].collected) {
@@ -166,6 +155,56 @@ function platformer_puzzle_check_collisions() {
                 play_sfx("puzzle_success");
             }
         }
+    }
+
+    global.platformer_player = player;
+}
+
+function platformer_puzzle_collides_at(test_x, test_y) {
+    for (var i = 0; i < array_length(global.platformer_platforms); i++) {
+        var plat = global.platformer_platforms[i];
+        if (platformer_puzzle_rect_overlap(
+            test_x,
+            test_y,
+            test_x + global.platformer_player.width,
+            test_y + global.platformer_player.height,
+            plat.x,
+            plat.y,
+            plat.x + plat.w,
+            plat.y + plat.h
+        )) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function platformer_puzzle_move_axis(amount, is_horizontal) {
+    var remaining = amount;
+    var player = global.platformer_player;
+
+    while (abs(remaining) > 0) {
+        var step = clamp(remaining, -1, 1);
+        var next_x = player.x + (is_horizontal ? step : 0);
+        var next_y = player.y + (is_horizontal ? 0 : step);
+
+        if (!platformer_puzzle_collides_at(next_x, next_y)) {
+            player.x = next_x;
+            player.y = next_y;
+        } else {
+            if (is_horizontal) {
+                player.hspeed = 0;
+            } else {
+                if (step > 0) {
+                    player.on_ground = true;
+                }
+                player.vspeed = 0;
+            }
+            break;
+        }
+
+        remaining -= step;
     }
 
     global.platformer_player = player;
