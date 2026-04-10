@@ -12,10 +12,26 @@ function word_search_puzzle_init() {
     global.word_drag_end_y = -1;
     global.word_selected_positions = [];
     global.word_solved = false;
+    global.word_generation_attempts = 0;
 
-    word_generate_grid();
+    word_generate_grid_safe();
 
     return { width: global.word_grid_width, height: global.word_grid_height };
+}
+
+function word_generate_grid_safe() {
+    var max_grid_attempts = 10;
+    var success = false;
+
+    while (!success && global.word_generation_attempts < max_grid_attempts) {
+        global.word_generation_attempts++;
+        success = word_generate_grid();
+    }
+
+    if (!success) {
+        show_debug_message("Word grid generation failed after " + string(max_grid_attempts) + " attempts, using fallback");
+        word_generate_grid_fallback();
+    }
 }
 
 function word_generate_grid() {
@@ -25,8 +41,43 @@ function word_generate_grid() {
         }
     }
 
+    var placed_count = 0;
     for (var i = 0; i < array_length(global.word_words_to_find); i++) {
-        word_place_word(global.word_words_to_find[i]);
+        if (word_place_word(global.word_words_to_find[i])) {
+            placed_count++;
+        }
+    }
+
+    for (var y = 0; y < global.word_grid_height; y++) {
+        for (var x = 0; x < global.word_grid_width; x++) {
+            if (global.word_letter_grid[y * global.word_grid_width + x] == " ") {
+                global.word_letter_grid[y * global.word_grid_width + x] = word_get_random_letter();
+            }
+        }
+    }
+
+    return placed_count == array_length(global.word_words_to_find);
+}
+
+function word_generate_grid_fallback() {
+    for (var y = 0; y < global.word_grid_height; y++) {
+        for (var x = 0; x < global.word_grid_width; x++) {
+            global.word_letter_grid[y * global.word_grid_width + x] = " ";
+        }
+    }
+
+    var y_offset = 1;
+    for (var i = 0; i < array_length(global.word_words_to_find); i++) {
+        var word = global.word_words_to_find[i];
+        var word_len = string_length(word);
+        var start_x = max(0, floor((global.word_grid_width - word_len) / 2));
+
+        for (var j = 0; j < word_len && start_x + j < global.word_grid_width; j++) {
+            global.word_letter_grid[y_offset * global.word_grid_width + start_x + j] = string_char_at(word, j + 1);
+        }
+
+        y_offset += 2;
+        if (y_offset >= global.word_grid_height) break;
     }
 
     for (var y = 0; y < global.word_grid_height; y++) {
@@ -83,11 +134,12 @@ function word_place_word(word) {
                 }
                 global.word_letter_grid[pos_y * global.word_grid_width + pos_x] = string_char_at(word, i + 1);
             }
-            return;
+            return true;
         }
     }
 
     show_debug_message("Word placement failed for: " + string(word));
+    return false;
 }
 
 function word_can_place_word(word, start_x, start_y, direction) {

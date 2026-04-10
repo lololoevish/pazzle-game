@@ -16,6 +16,8 @@
     
     // Состояние взаимодействия
     in_dialogue = false;
+    minigame_state = "none";
+    minigame_completed = false;
 }
 
 // Step Event
@@ -23,6 +25,10 @@
     if (in_dialogue) {
         if (keyboard_check_pressed(vk_escape)) {
             end_interaction();
+        }
+        
+        if (minigame_state != "none" && minigame_state != "completed") {
+            npc_update_minigame();
         }
     }
 }
@@ -76,6 +82,7 @@ function start_interaction() {
 // Функция завершения взаимодействия
 function end_interaction() {
     in_dialogue = false;
+    minigame_state = "none";
     if (script_exists(scr_ui_manager) && script_exists(hide_mini_game)) {
         hide_mini_game();
     }
@@ -92,21 +99,39 @@ function npc_set_player_state(state_name) {
 
 // Специфичные функции для разных NPC
 function start_elder_trial() {
-    // Испытание старосты Иара на угадывание числа
+    if (global.game_progress.elder_trial_completed) {
+        show_npc_dialogue("Староста Иара", "Ты уже прошёл моё испытание!");
+        minigame_state = "completed";
+        return;
+    }
+    
     show_npc_dialogue("Староста Иара", "Хочешь испытать свою удачу? Угадай число от 1 до 10 за 3 попытки!");
     show_mini_game("elder_trial");
+    minigame_state = "elder_trial";
 }
 
 function start_mechanic_minigame() {
-    // Калибровка механика Роана
+    if (global.game_progress.mechanic_training_completed) {
+        show_npc_dialogue("Механик Роан", "Спасибо за помощь с калибровкой!");
+        minigame_state = "completed";
+        return;
+    }
+    
     show_npc_dialogue("Механик Роан", "Помоги мне откалибровать мои приборы!");
     show_mini_game("mechanic_calibration");
+    minigame_state = "mechanic_calibration";
 }
 
 function start_archivist_quiz() {
-    // Викторина архивариуса Теля
+    if (global.game_progress.archivist_quiz_completed) {
+        show_npc_dialogue("Архивариус Тель", "Ты уже прошёл мою викторину!");
+        minigame_state = "completed";
+        return;
+    }
+    
     show_npc_dialogue("Архивариус Тель", "Проверим, хорошо ли ты знаешь правила экспедиции?");
     show_mini_game("archivist_quiz");
+    minigame_state = "archivist_quiz";
 }
 
 function start_generic_dialogue() {
@@ -118,7 +143,34 @@ function start_generic_dialogue() {
     show_npc_dialogue(npc_name, first_line);
 }
 
+function npc_update_minigame() {
+    var completed = false;
+    
+    switch (minigame_state) {
+        case "elder_trial":
+            completed = global.game_progress.elder_trial_completed;
+            break;
+        case "mechanic_calibration":
+            completed = global.game_progress.mechanic_training_completed;
+            break;
+        case "archivist_quiz":
+            completed = global.game_progress.archivist_quiz_completed;
+            break;
+    }
+    
+    if (completed && !minigame_completed) {
+        minigame_completed = true;
+        minigame_state = "completed";
+        show_npc_dialogue(npc_name, "Отлично! Спасибо за помощь!");
+        if (script_exists(scr_ui_manager) && script_exists(hide_mini_game)) {
+            hide_mini_game();
+        }
+    }
+}
+
 // Функция взаимодействия (для универсального интерфейса)
 function on_interact() {
-    start_interaction();
+    if (!in_dialogue) {
+        start_interaction();
+    }
 }
