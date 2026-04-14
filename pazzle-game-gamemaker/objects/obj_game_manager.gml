@@ -8,6 +8,11 @@
     // Инициализация глобальных переменных
     scr_init_globals();
     
+    // Инициализация системы межуровневого перемещения
+    if (script_exists(scr_interlevel_platformer)) {
+        init_interlevel_system();
+    }
+    
     // Установка музыки для текущего состояния
     if (script_exists(scr_audio_manager)) {
         play_music_by_state(global.game_state);
@@ -19,6 +24,11 @@
     // Обновление UI
     if (script_exists(scr_ui_manager)) {
         update_ui(delta_time / 1000000);
+    }
+    
+    // Обновление системы межуровневого перемещения
+    if (script_exists(scr_interlevel_platformer)) {
+        update_interlevel_system();
     }
     
     // Обработка состояний игры
