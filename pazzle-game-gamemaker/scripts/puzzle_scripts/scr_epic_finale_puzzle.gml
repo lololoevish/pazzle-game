@@ -29,7 +29,7 @@ function epic_finale_puzzle_init() {
     // Используем элементы "дружбы" из Deltarune механик
     global.player_mercy_points = (global.player_mercy_points != undefined) ? global.player_mercy_points : 0;
     
-    return { challenges: global.epic_finale_total_challenges, name: "Двенадцатый Подвиг" };
+    return { challenges: global.epic_finale_total_challenges, name: "12-й Уровень (Финальный Подвиг)" };
 }
 
 function epic_finale_puzzle_update() {
@@ -143,7 +143,7 @@ function epic_finale_puzzle_draw(gui_view) {
     // Заголовок с каламбуром
     draw_set_font(global.fnt_default);
     draw_set_halign(fa_center);
-    draw_text(room_width / 2, 50, "Двенадцатый Подвиг");
+    draw_text(room_width / 2, 50, "12-й Уровень (Финальный Подвиг)");
     draw_set_halign(fa_left);
     
     // Отображение текущего вызова
@@ -157,7 +157,7 @@ function epic_finale_puzzle_draw(gui_view) {
         draw_text(50, 180, "[D/→] Правый путь");
         draw_text(50, 200, "[SPACE/ENTER] Показать милосердие");
     } else {
-        draw_text(50, 100, "Все двенадцать подвигов пройдены!");
+        draw_text(50, 100, "Все 12 подвигов пройдены! 12-й Уровень завершён!");
     }
     
     // Статистика
@@ -188,7 +188,7 @@ function epic_finale_puzzle_solve() {
         complete_level(12);
     }
     
-    show_debug_message("Поздравляем! Вы прошли Двенадцатый Подвиг и завершили Экспедицию!");
+    show_debug_message("Поздравляем! Вы прошли 12-й Уровень (Финальный Подвиг) и завершили Экспедицию!");
 }
 
 function epic_finale_puzzle_reset() {
