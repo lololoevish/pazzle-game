@@ -22,6 +22,8 @@ function create_puzzle(type) {
             return riddle_puzzle_init();
         case "sound_trap":
             return sound_trap_puzzle_init();
+        case "epic_finale":
+            return epic_finale_puzzle_init();
         default:
             show_debug_message("Unknown puzzle type: " + string(type));
             return undefined;
@@ -53,6 +55,9 @@ function update_puzzle(type) {
             break;
         case "sound_trap":
             sound_trap_puzzle_update();
+            break;
+        case "epic_finale":
+            epic_finale_puzzle_update();
             break;
     }
 }
