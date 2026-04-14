@@ -37,6 +37,12 @@
         case "playing_level_4":
         case "playing_level_5":
         case "playing_level_6":
+        case "playing_level_7":
+        case "playing_level_8":
+        case "playing_level_9":
+        case "playing_level_10":
+        case "playing_level_11":
+        case "playing_level_12":
             // Логика игры
             handle_playing_state();
             break;
@@ -104,8 +110,27 @@ function handle_input() {
 
 // Функция обработки завершения головоломки
 function on_puzzle_solved(level_num) {
-    // Отмечаем уровень как завершенный
-    complete_level(level_num);
+    // Если объект игрока существует, вызываем его метод для завершения уровня с переходом
+    with (obj_player) {
+        if (function_exists(complete_level_with_transition)) {
+            complete_level_with_transition(level_num);
+        } else {
+            // Старая логика
+            if (script_exists(complete_level)) {
+                complete_level(level_num);
+            }
+            
+            // Возвращаем в город
+            var town_room_index = room_get_name_index("rm_town");
+            if (town_room_index != -1) {
+                room_goto(town_room_index);
+                
+                // Перемещаем игрока в центр города
+                x = 400;
+                y = 400;
+            }
+        }
+    }
     
     // Сохраняем игру
     if (script_exists(scr_save_system)) {
@@ -127,5 +152,16 @@ function on_lever_pulled(level_num) {
     if (global.expedition_complete) {
         // Если экспедиция завершена, можно выполнить дополнительные действия
         global.game_state = "victory";
+    }
+    
+    // Проверяем, есть ли переход к следующему уровню
+    if (script_exists(scr_level_transition_platformer)) {
+        var current_room = room_get_name(room);
+        var transition_data = check_level_completion_for_transition(current_room);
+        
+        if (transition_data != null) {
+            // Инициируем переход к следующему уровню
+            initiate_level_transition(transition_data);
+        }
     }
 }

@@ -734,3 +734,29 @@ function handle_mercy_action(action_idx, npc_obj) {
         array_push(global.player_friends_rescued, string(npc_obj.id));
     }
 }
+
+// Функция обработки завершения головоломки с переходом
+function complete_level_with_transition(level_num) {
+    var current_room_name = room_get_name(room);
+    
+    // Вызываем обработчик завершения уровня с переходом
+    if (script_exists(scr_level_transition_platformer) && 
+        script_exists(handle_level_complete_with_transition)) {
+        handle_level_complete_with_transition(level_num, current_room_name);
+    } else {
+        // Если новой системы нет, используем старую
+        if (script_exists(complete_level)) {
+            complete_level(level_num);
+        }
+        
+        // Возвращаем в город
+        var town_room_index = room_get_name_index("rm_town");
+        if (town_room_index != -1) {
+            room_goto(town_room_index);
+            
+            // Перемещаем игрока в центр города
+            x = 400;
+            y = 400;
+        }
+    }
+}
