@@ -8,6 +8,11 @@
     // Инициализация глобальных переменных
     scr_init_globals();
     
+    // Инициализация системы межуровневого перемещения
+    if (script_exists(scr_interlevel_platformer)) {
+        init_interlevel_system();
+    }
+    
     // Установка музыки для текущего состояния
     if (script_exists(scr_audio_manager)) {
         play_music_by_state(global.game_state);
@@ -19,6 +24,11 @@
     // Обновление UI
     if (script_exists(scr_ui_manager)) {
         update_ui(delta_time / 1000000);
+    }
+    
+    // Обновление системы межуровневого перемещения
+    if (script_exists(scr_interlevel_platformer)) {
+        update_interlevel_system();
     }
     
     // Обработка состояний игры
@@ -37,6 +47,12 @@
         case "playing_level_4":
         case "playing_level_5":
         case "playing_level_6":
+        case "playing_level_7":
+        case "playing_level_8":
+        case "playing_level_9":
+        case "playing_level_10":
+        case "playing_level_11":
+        case "playing_level_12":
             // Логика игры
             handle_playing_state();
             break;

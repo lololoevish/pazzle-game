@@ -10,13 +10,15 @@ function create_new_game_state() {
         items: ds_list_create(),
         elder_trial_completed: false,
         mechanic_training_completed: false,
-        archivist_quiz_completed: false
+        archivist_quiz_completed: false,
+        interlevel_transition_enabled: true  // Новое: возможность перемещаться между уровнями через платформер
     };
 
     // Инициализация сохранения прогресса
     for (var i = 1; i <= 12; i += 1) {  // Расширяем до 12 уровней
         ds_map_add(state_data.progress, "level_" + string(i) + "_completed", false);
         ds_map_add(state_data.progress, "level_" + string(i) + "_lever_pulled", false);
+        ds_map_add(state_data.progress, "level_" + string(i) + "_unlocked", i == 1); // Только первый уровень разблокирован изначально
     }
 
     return state_data;
@@ -141,21 +143,23 @@ function is_expedition_completed(state) {
 
 // Функция получения статуса уровня (completed, lever_pulled, locked)
 function get_level_status(state, level_num) {
-    if (level_num < 1 || level_num > 6) return "invalid";
+    if (level_num < 1 || level_num > 12) return "invalid";  // Обновляем до 12 уровней
     
-    // Первый уровень всегда разблокирован
-    if (level_num == 1) {
-        if (is_level_completed(state, 1)) {
-            return "completed";
-        } else if (is_lever_pulled(state, 1)) {
-            return "lever_pulled";
+    // Проверяем, разблокирован ли уровень
+    var unlocked_key = "level_" + string(level_num) + "_unlocked";
+    var is_unlocked = false;
+    if (ds_map_exists(state.progress, unlocked_key)) {
+        is_unlocked = ds_map_find_value(state.progress, unlocked_key);
+    } else {
+        // Для совместимости - если ключ не существует, используем старую логику
+        if (level_num == 1) {
+            is_unlocked = true;
         } else {
-            return "available";
+            is_unlocked = is_next_cave_unlocked(state, level_num - 1);
         }
     }
     
-    // Другие уровни разблокируются через рычаг предыдущего уровня
-    if (is_next_cave_unlocked(state, level_num - 1)) {
+    if (is_unlocked) {
         if (is_level_completed(state, level_num)) {
             return "completed";
         } else if (is_lever_pulled(state, level_num)) {
@@ -228,15 +232,21 @@ function init_global_vars() {
         // Инициализация основных игровых состояний
         global.game_state = "menu";
 
-        // Инициализация прогресса игры
+        // Инициализация прогресса игры (расширено до 12 уровней)
         global.game_progress = {
             levels: [
-                {completed: false, lever_pulled: false},
-                {completed: false, lever_pulled: false},
-                {completed: false, lever_pulled: false},
-                {completed: false, lever_pulled: false},
-                {completed: false, lever_pulled: false},
-                {completed: false, lever_pulled: false}
+                {completed: false, lever_pulled: false}, // Уровень 1
+                {completed: false, lever_pulled: false}, // Уровень 2
+                {completed: false, lever_pulled: false}, // Уровень 3
+                {completed: false, lever_pulled: false}, // Уровень 4
+                {completed: false, lever_pulled: false}, // Уровень 5
+                {completed: false, lever_pulled: false}, // Уровень 6
+                {completed: false, lever_pulled: false}, // Уровень 7
+                {completed: false, lever_pulled: false}, // Уровень 8
+                {completed: false, lever_pulled: false}, // Уровень 9
+                {completed: false, lever_pulled: false}, // Уровень 10
+                {completed: false, lever_pulled: false}, // Уровень 11
+                {completed: false, lever_pulled: false}  // Уровень 12
             ],
             gold: 100,
             items: [], // Используем массив вместо ds_list для простоты

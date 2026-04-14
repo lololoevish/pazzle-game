@@ -445,8 +445,13 @@ function check_and_interact() {
             can_use = closest_interactable.interactable;
         }
 
+        // Проверяем, является ли объект порталом для перехода между уровнями
+        if (variable_instance_exists(closest_interactable, "destination_room")) {
+            // Это портал - осуществляем переход между уровнями
+            handle_level_transition(closest_interactable);
+        }
         // Проверяем, является ли объект NPC и можно ли с ним проявить "милосердие"
-        if (closest_interactable.object_index == obj_npc) {
+        else if (closest_interactable.object_index == obj_npc) {
             // Вместо стандартного взаимодействия можем предложить выбор: обычное взаимодействие или "дружба"
             show_interaction_choice(closest_interactable);
         } else {
@@ -463,6 +468,122 @@ function check_and_interact() {
         safe_show_message("Здесь не с чем взаимодействовать");
         safe_play_event_sound("ui_cancel");
     }
+}
+
+// Обработка перехода между уровнями через портал
+function handle_level_transition(portal_object) {
+    if (portal_object.destination_room != undefined) {
+        // Проверяем, доступен ли уровень для перехода
+        var dest_room_name = portal_object.destination_room;
+        var level_num = extract_level_number_from_room(dest_room_name);
+        
+        if (level_num > 0) {
+            // Проверяем, разблокирован ли уровень
+            if (is_level_accessible(level_num)) {
+                // Осуществляем переход
+                var room_index = room_get_name_index(dest_room_name);
+                
+                if (room_index != -1) {
+                    if (dest_room_name == "rm_town") {
+                        global.game_state = "town";
+                    } else if (string_pos("rm_cave_", dest_room_name) == 1) {
+                        global.game_state = "playing_level_" + string(level_num);
+                    }
+                    
+                    room_goto(room_index);
+                    
+                    // После перехода перемещаем игрока в начальную позицию уровня
+                    with (obj_player) {
+                        x = 50;  // Начальная позиция
+                        y = 550;
+                    }
+                    
+                    safe_play_event_sound("teleport");
+                    safe_show_message("Переход к " + (portal_object.portal_name || "уровню"));
+                } else {
+                    safe_show_message("Уровень недоступен: " + dest_room_name);
+                    safe_play_event_sound("ui_cancel");
+                }
+            } else {
+                safe_show_message("Уровень заблокирован. Пройдите предыдущие уровни.");
+                safe_play_event_sound("ui_cancel");
+            }
+        } else {
+            // Это не уровень, а другая комната
+            var room_index = room_get_name_index(dest_room_name);
+            if (room_index != -1) {
+                room_goto(room_index);
+                safe_play_event_sound("teleport");
+            }
+        }
+    }
+}
+
+// Извлечь номер уровня из названия комнаты
+function extract_level_number_from_room(room_name) {
+    var prefixes = ["rm_cave_", "rm_level_", "rm_"];
+    var suffixes = ["_config", "_scene", "_room", ""];
+    
+    for (var i = 0; i < array_length(prefixes); i++) {
+        var prefix = prefixes[i];
+        if (string_pos(prefix, room_name) == 1) {
+            var remaining = string_delete(room_name, 1, string_length(prefix));
+            
+            for (var j = 0; j < array_length(suffixes); j++) {
+                var suffix = suffixes[j];
+                if (string_pos(suffix, remaining) == string_length(remaining) - string_length(suffix) + 1) {
+                    remaining = string_delete(remaining, string_length(remaining) - string_length(suffix) + 1, string_length(suffix));
+                    break;
+                }
+            }
+            
+            // Попробовать извлечь число из оставшейся строки
+            var num_str = "";
+            for (var k = 1; k <= string_length(remaining); k++) {
+                var char = string_char_at(remaining, k);
+                if (char >= "0" && char <= "9") {
+                    num_str += char;
+                } else if (num_str != "") {
+                    // Если уже начали собирать число, но встречаем букву, останавливаемся
+                    break;
+                }
+            }
+            
+            if (num_str != "") {
+                return int(num_str);
+            }
+        }
+    }
+    
+    return 0;
+}
+
+// Проверить, доступен ли уровень
+function is_level_accessible(level_num) {
+    if (level_num <= 0 || level_num > 12) return false;
+    if (level_num == 1) return true;  // Первый уровень всегда доступен
+    
+    // Проверяем, разблокирован ли уровень в глобальных данных
+    if (global.game_progress.levels[level_num - 1] != undefined) {
+        return true; // Если данные для уровня существуют, он разблокирован
+    }
+    
+    // Проверяем через систему прогресса
+    if (script_exists(scr_game_state)) {
+        var status = get_level_status(get_current_game_state(), level_num);
+        return (status != "locked");
+    }
+    
+    return false;
+}
+
+// Получить текущее состояние игры (временная реализация)
+function get_current_game_state() {
+    return {
+        current_state: global.game_state,
+        current_level: 1,
+        progress: global.game_progress.levels  // Используем существующую структуру
+    };
 }
 
 // Показать выбор взаимодействия с NPC
