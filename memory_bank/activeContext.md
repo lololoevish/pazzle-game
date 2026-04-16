@@ -80,6 +80,8 @@
 54. `obj_npc.gml` переведён на явный state-machine для мини-игр: добавлены `minigame_state` и `minigame_completed`, проверка уже завершённых активностей и автоматическое закрытие UI при завершении.
 55. Созданы полные скрипты пазлов для уровней 7-12: `scr_riddle_puzzle.gml` (Загадки Сфинкса), `scr_sound_trap_puzzle.gml` (Звуковые Ловушки), `scr_jumping_path_puzzle.gml` (Прыгающий Путь), `scr_memory_advanced_puzzle.gml` (Запоминалка), `scr_cave_song_puzzle.gml` (Песнь Пещер), `scr_epic_finale_puzzle.gml` (Финальный Подвиг).
 56. `scr_puzzle_manager.gml` обновлён для поддержки всех новых типов пазлов: добавлены обработчики для `riddle`, `sound_trap`, `jumping_path`, `memory_advanced`, `cave_song` и `epic_finale` во всех функциях менеджера.
+57. Расширена аудио-система в `scr_audio_manager.gml`: добавлены контекстные модификаторы громкости для разных игровых ситуаций (puzzle_active, dialogue, intense_moment и др.), функция кроссфейда между музыкальными темами, плавное изменение громкости через lerp_volume().
+58. Добавлена поддержка индивидуальных музыкальных тем для всех 12 уровней: ранние пещеры (snd_cave_early_1-3), средние (snd_cave_mid_4-6), новые (snd_cave_new_7-9) и поздние (snd_cave_late_10-12), включая финальную тему snd_cave_finale_12.
 
 ## Активные решения
 

@@ -10,7 +10,20 @@ var audio_config = {
     sfx_volume: 0.9,
     current_music: undefined,
     music_playing: false,
-    sfx_channel: 0
+    sfx_channel: 0,
+    current_context: "neutral",
+    
+    // Контекстные модификаторы громкости
+    context_modifiers: {
+        neutral: { music: 1.0, sfx: 1.0 },
+        menu: { music: 0.8, sfx: 1.0 },
+        town: { music: 0.7, sfx: 0.9 },
+        puzzle_active: { music: 0.5, sfx: 1.0 },
+        puzzle_complete: { music: 0.9, sfx: 1.2 },
+        dialogue: { music: 0.4, sfx: 0.8 },
+        intense_moment: { music: 0.9, sfx: 1.1 },
+        victory: { music: 1.0, sfx: 1.2 }
+    }
 };
 
 // Функция проигрывания музыки
@@ -82,22 +95,56 @@ function set_emotional_music_state(state) {
 
 // Получение музыки в зависимости от текущей комнаты
 function get_current_room_music() {
-    switch (room_get_name(room)) {
+    var room_name = room_get_name(room);
+    
+    switch (room_name) {
         case "rm_menu":
             return get_sound_resource("snd_menu_bg");
         case "rm_town":
             return get_sound_resource("snd_town_bg");
+        
+        // Ранние пещеры (1-3)
+        case "rm_cave_maze":
         case "rm_level_1":
+            return get_sound_resource("snd_cave_early_1");
+        case "rm_cave_archive":
         case "rm_level_2":
+            return get_sound_resource("snd_cave_early_2");
+        case "rm_cave_rhythm":
         case "rm_level_3":
+            return get_sound_resource("snd_cave_early_3");
+        
+        // Средние пещеры (4-6)
+        case "rm_cave_pairs":
         case "rm_level_4":
+            return get_sound_resource("snd_cave_mid_4");
+        case "rm_cave_platformer":
         case "rm_level_5":
+            return get_sound_resource("snd_cave_mid_5");
+        case "rm_cave_final":
         case "rm_level_6":
-            return get_sound_resource("snd_level_bg");
+            return get_sound_resource("snd_cave_mid_6");
+        
+        // Новые пещеры (7-9)
+        case "rm_cave_7":
+            return get_sound_resource("snd_cave_new_7");
+        case "rm_cave_8":
+            return get_sound_resource("snd_cave_new_8");
+        case "rm_cave_9":
+            return get_sound_resource("snd_cave_new_9");
+        
+        // Поздние пещеры (10-12)
+        case "rm_cave_10":
+            return get_sound_resource("snd_cave_late_10");
+        case "rm_cave_11":
+            return get_sound_resource("snd_cave_late_11");
+        case "rm_cave_12":
+            return get_sound_resource("snd_cave_finale_12");
+        
         case "rm_victory":
             return get_sound_resource("snd_victory_bg");
         default:
-            return undefined;
+            return get_sound_resource("snd_level_bg"); // Fallback
     }
 }
 
@@ -228,14 +275,39 @@ function get_sound_resource(name) {
     // Возвращаем -1 если ресурс не найден, чтобы избежать ошибок
     // В реальном проекте эти переменные будут определены в ресурсах
     switch (name) {
+        // Основные темы
         case "snd_menu_bg": return (global.snd_menu_bg == undefined) ? -1 : global.snd_menu_bg;
         case "snd_town_bg": return (global.snd_town_bg == undefined) ? -1 : global.snd_town_bg;
         case "snd_level_bg": return (global.snd_level_bg == undefined) ? -1 : global.snd_level_bg;
         case "snd_victory_bg": return (global.snd_victory_bg == undefined) ? -1 : global.snd_victory_bg;
+        
+        // Музыка для ранних пещер (1-3)
+        case "snd_cave_early_1": return (global.snd_cave_early_1 == undefined) ? -1 : global.snd_cave_early_1;
+        case "snd_cave_early_2": return (global.snd_cave_early_2 == undefined) ? -1 : global.snd_cave_early_2;
+        case "snd_cave_early_3": return (global.snd_cave_early_3 == undefined) ? -1 : global.snd_cave_early_3;
+        
+        // Музыка для средних пещер (4-6)
+        case "snd_cave_mid_4": return (global.snd_cave_mid_4 == undefined) ? -1 : global.snd_cave_mid_4;
+        case "snd_cave_mid_5": return (global.snd_cave_mid_5 == undefined) ? -1 : global.snd_cave_mid_5;
+        case "snd_cave_mid_6": return (global.snd_cave_mid_6 == undefined) ? -1 : global.snd_cave_mid_6;
+        
+        // Музыка для новых пещер (7-9)
+        case "snd_cave_new_7": return (global.snd_cave_new_7 == undefined) ? -1 : global.snd_cave_new_7;
+        case "snd_cave_new_8": return (global.snd_cave_new_8 == undefined) ? -1 : global.snd_cave_new_8;
+        case "snd_cave_new_9": return (global.snd_cave_new_9 == undefined) ? -1 : global.snd_cave_new_9;
+        
+        // Музыка для поздних пещер (10-12)
+        case "snd_cave_late_10": return (global.snd_cave_late_10 == undefined) ? -1 : global.snd_cave_late_10;
+        case "snd_cave_late_11": return (global.snd_cave_late_11 == undefined) ? -1 : global.snd_cave_late_11;
+        case "snd_cave_finale_12": return (global.snd_cave_finale_12 == undefined) ? -1 : global.snd_cave_finale_12;
+        
+        // UI звуки
         case "snd_ui_move": return (global.snd_ui_move == undefined) ? -1 : global.snd_ui_move;
         case "snd_ui_confirm": return (global.snd_ui_confirm == undefined) ? -1 : global.snd_ui_confirm;
         case "snd_ui_cancel": return (global.snd_ui_cancel == undefined) ? -1 : global.snd_ui_cancel;
         case "snd_ui_success": return (global.snd_ui_success == undefined) ? -1 : global.snd_ui_success;
+        
+        // Игровые звуки
         case "snd_lever_pull": return (global.snd_lever_pull == undefined) ? -1 : global.snd_lever_pull;
         case "snd_level_complete": return (global.snd_level_complete == undefined) ? -1 : global.snd_level_complete;
         case "snd_reward_obtained": return (global.snd_reward_obtained == undefined) ? -1 : global.snd_reward_obtained;
@@ -243,6 +315,17 @@ function get_sound_resource(name) {
         case "snd_player_move": return (global.snd_player_move == undefined) ? -1 : global.snd_player_move;
         case "snd_player_jump": return (global.snd_player_jump == undefined) ? -1 : global.snd_player_jump;
         case "snd_item_collect": return (global.snd_item_collect == undefined) ? -1 : global.snd_item_collect;
+        
+        // Эмоциональные темы
+        case "snd_music_friendly_encounter": return (global.snd_music_friendly_encounter == undefined) ? -1 : global.snd_music_friendly_encounter;
+        case "snd_music_mercy_theme": return (global.snd_music_mercy_theme == undefined) ? -1 : global.snd_music_mercy_theme;
+        case "snd_music_peaceful_resolution": return (global.snd_music_peaceful_resolution == undefined) ? -1 : global.snd_music_peaceful_resolution;
+        
+        // Deltarune-стиль звуки
+        case "snd_mercy_action": return (global.snd_mercy_action == undefined) ? -1 : global.snd_mercy_action;
+        case "snd_friendship_gained": return (global.snd_friendship_gained == undefined) ? -1 : global.snd_friendship_gained;
+        case "snd_npc_friendly_response": return (global.snd_npc_friendly_response == undefined) ? -1 : global.snd_npc_friendly_response;
+        
         default: return -1;
     }
 }
@@ -368,4 +451,90 @@ function clamp(val, min, max) {
 // Функция инициализации
 function init_audio_manager() {
     init_audio_system();
+}
+
+// Функция применения аудио-контекста
+function apply_audio_context(context_name) {
+    if (!variable_struct_exists(audio_config.context_modifiers, context_name)) {
+        show_debug_message("WARNING: Unknown audio context '" + context_name + "'");
+        return;
+    }
+    
+    audio_config.current_context = context_name;
+    var context = audio_config.context_modifiers[$ context_name];
+    
+    // Применяем модификаторы к текущей музыке
+    if (audio_config.music_playing && audio_config.current_music != undefined) {
+        var target_volume = audio_config.music_volume * audio_config.master_volume * context.music;
+        audio_sound_set_gain(audio_config.current_music, target_volume, 0);
+    }
+}
+
+// Функция получения текущего контекста
+function get_current_audio_context() {
+    return audio_config.current_context;
+}
+
+// Функция кроссфейда между музыкальными темами
+function crossfade_music(new_music, fade_duration_seconds) {
+    if (new_music == undefined || new_music == -1 || !sound_exists(new_music)) {
+        return;
+    }
+    
+    // Если это та же музыка, ничего не делаем
+    if (audio_config.current_music == new_music) {
+        return;
+    }
+    
+    var old_music = audio_config.current_music;
+    
+    // Если старой музыки нет, просто запускаем новую
+    if (old_music == undefined || !audio_config.music_playing) {
+        play_music(new_music);
+        return;
+    }
+    
+    // Запускаем новую музыку с нулевой громкостью
+    audio_sound_set_gain(new_music, 0, 0);
+    audio_play_sound(new_music, audio_config.sfx_channel, true);
+    
+    // Плавно уменьшаем громкость старой музыки
+    var target_volume = audio_config.music_volume * audio_config.master_volume;
+    var fade_time_ms = fade_duration_seconds * 1000;
+    
+    audio_sound_set_gain(old_music, 0, fade_time_ms);
+    audio_sound_set_gain(new_music, target_volume, fade_time_ms);
+    
+    // Обновляем текущую музыку
+    audio_config.current_music = new_music;
+    audio_config.music_playing = true;
+    
+    // Останавливаем старую музыку после завершения фейда
+    // (в реальной реализации нужен таймер или alarm)
+}
+
+// Функция для плавного изменения громкости
+function lerp_volume(volume_type, target_value, duration_seconds) {
+    target_value = clamp(target_value, 0, 1);
+    var duration_ms = duration_seconds * 1000;
+    
+    switch (volume_type) {
+        case "music":
+            audio_config.music_volume = target_value;
+            if (audio_config.music_playing && audio_config.current_music != undefined) {
+                var final_volume = target_value * audio_config.master_volume;
+                audio_sound_set_gain(audio_config.current_music, final_volume, duration_ms);
+            }
+            break;
+        case "sfx":
+            audio_config.sfx_volume = target_value;
+            break;
+        case "master":
+            audio_config.master_volume = target_value;
+            if (audio_config.music_playing && audio_config.current_music != undefined) {
+                var final_volume = audio_config.music_volume * target_value;
+                audio_sound_set_gain(audio_config.current_music, final_volume, duration_ms);
+            }
+            break;
+    }
 }
