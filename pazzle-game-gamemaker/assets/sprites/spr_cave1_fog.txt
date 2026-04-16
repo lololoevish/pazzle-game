@@ -1,0 +1,29 @@
+{
+  "name": "spr_cave1_fog",
+  "type": "sprite",
+  "width": 128,
+  "height": 128,
+  "frames": 6,
+  "origin": {
+    "x": 64,
+    "y": 64
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 127,
+    "bottom": 127
+  },
+  "transparent": true,
+  "smooth": true,
+  "preload": true,
+  "animation": {
+    "type": "loop",
+    "speed": 4,
+    "description": "Плавное движение тумана"
+  },
+  "description": "Туман/дымка для атмосферы пещеры-лабиринта. Прозрачность 30-50%.",
+  "tags": ["cave", "effect", "level1", "fog", "animated"],
+  "texture_group": "Default",
+  "alpha": 0.4
+}

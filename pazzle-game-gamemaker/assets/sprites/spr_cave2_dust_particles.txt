@@ -1,0 +1,29 @@
+{
+  "name": "spr_cave2_dust_particles",
+  "type": "sprite",
+  "width": 64,
+  "height": 64,
+  "frames": 8,
+  "origin": {
+    "x": 32,
+    "y": 32
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 63,
+    "bottom": 63
+  },
+  "transparent": true,
+  "smooth": true,
+  "preload": true,
+  "animation": {
+    "type": "loop",
+    "speed": 6,
+    "description": "Плавающие частицы пыли"
+  },
+  "description": "Частицы пыли для атмосферы пещеры-архива. Медленное плавное движение.",
+  "tags": ["cave", "effect", "level2", "dust", "animated"],
+  "texture_group": "Default",
+  "alpha": 0.3
+}

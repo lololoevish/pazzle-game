@@ -1,0 +1,29 @@
+{
+  "name": "spr_cave1_background",
+  "type": "sprite",
+  "width": 800,
+  "height": 600,
+  "frames": 1,
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 799,
+    "bottom": 599
+  },
+  "transparent": false,
+  "smooth": false,
+  "preload": true,
+  "description": "Фон для пещеры-лабиринта (Уровень 1). Темная пещера с эхом, сталактиты, влажные стены.",
+  "tags": ["cave", "background", "level1", "maze"],
+  "texture_group": "Default",
+  "color_palette": {
+    "primary": "#1a2332",
+    "accent": "#4a90e2",
+    "details": "#2d3e50",
+    "light": "#6bb6ff"
+  }
+}

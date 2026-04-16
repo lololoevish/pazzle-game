@@ -53,6 +53,42 @@
   ],
   "layers": [
     {
+      "name": "Effects",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      },
+      "decorations": [
+        {"sprite": "spr_cave2_dust_particles", "x": 300, "y": 200, "alpha": 0.3},
+        {"sprite": "spr_cave2_dust_particles", "x": 600, "y": 400, "alpha": 0.3}
+      ]
+    },
+    {
+      "name": "Furniture",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      },
+      "decorations": [
+        {"sprite": "spr_cave2_bookshelf", "x": 100, "y": 500, "variant": "full"},
+        {"sprite": "spr_cave2_bookshelf", "x": 700, "y": 500, "variant": "half"},
+        {"sprite": "spr_cave2_torch", "x": 50, "y": 100},
+        {"sprite": "spr_cave2_torch", "x": 750, "y": 100},
+        {"sprite": "spr_cave2_rune_stone", "x": 200, "y": 450},
+        {"sprite": "spr_cave2_rune_stone", "x": 600, "y": 450}
+      ]
+    },
+    {
       "name": "Background",
       "type": "gmlayer",
       "properties": {
@@ -64,7 +100,7 @@
         "gridY": 32,
         "viewportX": 0,
         "viewportY": 0,
-        "imageId": "spr_background",
+        "imageId": "spr_cave2_background",
         "colour": 4278190080
       }
     },

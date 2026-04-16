@@ -65,6 +65,40 @@
   ],
   "layers": [
     {
+      "name": "Effects",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      },
+      "decorations": [
+        {"sprite": "spr_cave1_fog", "x": 200, "y": 150, "alpha": 0.4},
+        {"sprite": "spr_cave1_fog", "x": 500, "y": 350, "alpha": 0.3}
+      ]
+    },
+    {
+      "name": "Decorations",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      },
+      "decorations": [
+        {"sprite": "spr_cave1_crystal", "x": 150, "y": 200},
+        {"sprite": "spr_cave1_crystal", "x": 650, "y": 400},
+        {"sprite": "spr_cave1_stalactite", "x": 300, "y": 0, "size": "large"},
+        {"sprite": "spr_cave1_stalactite", "x": 600, "y": 0, "size": "medium"}
+      ]
+    },
+    {
       "name": "Background",
       "type": "gmlayer",
       "properties": {
@@ -76,7 +110,7 @@
         "gridY": 32,
         "viewportX": 0,
         "viewportY": 0,
-        "imageId": "spr_background",
+        "imageId": "spr_cave1_background",
         "colour": 4278190080
       }
     },
