@@ -22,6 +22,12 @@ function create_puzzle(type) {
             return riddle_puzzle_init();
         case "sound_trap":
             return sound_trap_puzzle_init();
+        case "jumping_path":
+            return jumping_path_puzzle_init();
+        case "memory_advanced":
+            return memory_advanced_puzzle_init();
+        case "cave_song":
+            return cave_song_puzzle_init();
         case "epic_finale":
             return epic_finale_puzzle_init();
         default:
@@ -56,6 +62,15 @@ function update_puzzle(type) {
         case "sound_trap":
             sound_trap_puzzle_update();
             break;
+        case "jumping_path":
+            jumping_path_puzzle_update();
+            break;
+        case "memory_advanced":
+            memory_advanced_puzzle_update();
+            break;
+        case "cave_song":
+            cave_song_puzzle_update();
+            break;
         case "epic_finale":
             epic_finale_puzzle_update();
             break;
@@ -79,6 +94,15 @@ function draw_puzzle(type, gui_view) {
         case "sound_trap":
             sound_trap_puzzle_draw(gui_view);
             break;
+        case "jumping_path":
+            jumping_path_puzzle_draw(gui_view);
+            break;
+        case "memory_advanced":
+            memory_advanced_puzzle_draw(gui_view);
+            break;
+        case "cave_song":
+            cave_song_puzzle_draw(gui_view);
+            break;
         case "pairs":
             memory_match_puzzle_draw(gui_view);
             break;
@@ -87,6 +111,9 @@ function draw_puzzle(type, gui_view) {
             break;
         case "final":
             final_challenge_puzzle_draw(gui_view);
+            break;
+        case "epic_finale":
+            epic_finale_puzzle_draw(gui_view);
             break;
     }
 }
@@ -105,6 +132,18 @@ function is_puzzle_solved(type) {
             return platformer_puzzle_is_solved();
         case "final":
             return final_challenge_puzzle_is_solved();
+        case "riddle":
+            return riddle_puzzle_is_solved();
+        case "sound_trap":
+            return sound_trap_puzzle_is_solved();
+        case "jumping_path":
+            return jumping_path_puzzle_is_solved();
+        case "memory_advanced":
+            return memory_advanced_puzzle_is_solved();
+        case "cave_song":
+            return cave_song_puzzle_is_solved();
+        case "epic_finale":
+            return epic_finale_puzzle_is_solved();
         default:
             return false;
     }
@@ -124,6 +163,18 @@ function reset_puzzle(type) {
             return platformer_puzzle_reset();
         case "final":
             return final_challenge_puzzle_reset();
+        case "riddle":
+            return riddle_puzzle_reset();
+        case "sound_trap":
+            return sound_trap_puzzle_reset();
+        case "jumping_path":
+            return jumping_path_puzzle_reset();
+        case "memory_advanced":
+            return memory_advanced_puzzle_reset();
+        case "cave_song":
+            return cave_song_puzzle_reset();
+        case "epic_finale":
+            return epic_finale_puzzle_reset();
         default:
             return undefined;
     }
