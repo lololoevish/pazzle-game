@@ -46,6 +46,7 @@
 ### Последний проверенный коммит: aadd488
 
 ### Хронология изменений:
+- 17.04.2026: Интегрирована VN-система с портретами в obj_npc: добавлены поля use_vn_system, vn_character_id, vn_dialogue_tree; обновлены события Create, Step, Draw GUI; создана функция автоматической инициализации VN-системы; созданы диалоговые деревья для трёх NPC (elder_dialogue_tree.json, mechanic_dialogue_tree.json, archivist_dialogue_tree.json); создана документация vn_system_integration.md
 - 17.04.2026: Синхронизированы тестовые сценарии test_scenarios/ с актуальным API: обновлены test_game_state.gml (добавлена поддержка 12 уровней, новые тесты статуса и прогресса), test_save_system.gml (переход на глобальные переменные, новый тест has_save), test_audio_manager.gml (обновлены под новые функции кроссфейда, контекста и эмоциональной музыки), test_ui_manager.gml (полностью переписаны тесты под актуальные функции отрисовки и уведомлений)
 - 17.04.2026: Синхронизация Memory Bank: проверена сумма весов в Project Deliverables (подтверждено 100), обновлен AGENTS.md из актуального источника, обновлен last_checked_commit
 - 16.04.2026: Реализована VN-система с портретами для диалогов NPC: созданы 5 скриптов (portrait_manager, text_engine, dialogue_system, ui_manager, master), конфигурации портретов для 3 NPC, план vn_system_plan.md

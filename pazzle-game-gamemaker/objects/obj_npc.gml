@@ -18,13 +18,30 @@
     in_dialogue = false;
     minigame_state = "none";
     minigame_completed = false;
+    
+    // VN-система
+    use_vn_system = true; // Использовать ли VN-систему с портретами
+    vn_character_id = ""; // ID персонажа для VN-системы
+    vn_dialogue_tree = ""; // ID дерева диалогов
+    vn_initialized = false;
 }
 
 // Step Event
 {
+    // Инициализация VN-системы при первом запуске
+    if (!vn_initialized && use_vn_system) {
+        vn_system_init();
+        vn_initialized = true;
+    }
+    
     if (in_dialogue) {
         if (keyboard_check_pressed(vk_escape)) {
             end_interaction();
+        }
+        
+        // Обновление VN-системы
+        if (use_vn_system && vn_is_dialogue_active()) {
+            vn_system_update();
         }
         
         if (minigame_state != "none" && minigame_state != "completed") {
@@ -41,6 +58,14 @@
     // Если игрок рядом, показываем индикатор взаимодействия
     if (distance_to_object(obj_player) <= interaction_distance && !in_dialogue) {
         draw_interaction_indicator();
+    }
+}
+
+// Draw GUI Event
+{
+    // Отрисовка VN-системы
+    if (in_dialogue && use_vn_system && vn_is_dialogue_active()) {
+        vn_system_draw();
     }
 }
 
@@ -63,19 +88,24 @@ function start_interaction() {
     // Воспроизводим звук
     play_sfx("dialogue_start");
     
-    // Открываем диалог в зависимости от типа NPC
-    switch(npc_type) {
-        case "elder":
-            start_elder_trial();
-            break;
-        case "mechanic":
-            start_mechanic_minigame();
-            break;
-        case "archivist":
-            start_archivist_quiz();
-            break;
-        default:
-            start_generic_dialogue();
+    // Если используется VN-система, запускаем её
+    if (use_vn_system && vn_character_id != "" && vn_dialogue_tree != "") {
+        vn_quick_start(vn_character_id, vn_dialogue_tree);
+    } else {
+        // Открываем диалог в зависимости от типа NPC (старая система)
+        switch(npc_type) {
+            case "elder":
+                start_elder_trial();
+                break;
+            case "mechanic":
+                start_mechanic_minigame();
+                break;
+            case "archivist":
+                start_archivist_quiz();
+                break;
+            default:
+                start_generic_dialogue();
+        }
     }
 }
 
@@ -83,6 +113,12 @@ function start_interaction() {
 function end_interaction() {
     in_dialogue = false;
     minigame_state = "none";
+    
+    // Закрываем VN-систему если она активна
+    if (use_vn_system && vn_is_dialogue_active()) {
+        vn_end_dialogue();
+    }
+    
     if (script_exists(scr_ui_manager) && script_exists(hide_mini_game)) {
         hide_mini_game();
     }

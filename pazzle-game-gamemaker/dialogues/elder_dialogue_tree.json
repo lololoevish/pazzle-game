@@ -1,0 +1,64 @@
+{
+  "tree_id": "elder_main",
+  "character": "elder",
+  "nodes": {
+    "start": {
+      "speaker": "elder",
+      "text": "Приветствую тебя, молодой искатель приключений. Я Иара, староста этой деревни.",
+      "portrait": "neutral",
+      "next": "introduce"
+    },
+    "introduce": {
+      "speaker": "elder",
+      "text": "Многие приходят сюда в поисках сокровищ в глубинах, но лишь немногие обладают истинной выдержкой.",
+      "portrait": "neutral",
+      "next": "offer_trial"
+    },
+    "offer_trial": {
+      "speaker": "elder",
+      "text": "Хочешь испытать свою удачу и интуицию? Я загадаю число от 1 до 10, а ты попробуешь угадать его за 3 попытки.",
+      "portrait": "neutral",
+      "choices": [
+        {
+          "text": "Принимаю вызов!",
+          "next": "accept_trial"
+        },
+        {
+          "text": "Пожалуй, не сейчас.",
+          "next": "decline_trial"
+        }
+      ]
+    },
+    "accept_trial": {
+      "speaker": "elder",
+      "text": "Превосходно! Покажи мне, на что ты способен. Я уже загадал число...",
+      "portrait": "neutral",
+      "next": "start_trial"
+    },
+    "decline_trial": {
+      "speaker": "elder",
+      "text": "Мудрое решение - знать, когда ты готов. Возвращайся, когда почувствуешь уверенность.",
+      "portrait": "neutral",
+      "next": "end"
+    },
+    "start_trial": {
+      "speaker": "elder",
+      "text": "Начинаем испытание!",
+      "portrait": "neutral",
+      "action": "start_elder_trial",
+      "next": "end"
+    },
+    "already_completed": {
+      "speaker": "elder",
+      "text": "Ты уже прошёл моё испытание и доказал свою интуицию. Я горжусь тобой!",
+      "portrait": "neutral",
+      "next": "end"
+    },
+    "end": {
+      "speaker": "elder",
+      "text": "Да хранят тебя духи предков в твоих странствиях.",
+      "portrait": "neutral",
+      "next": null
+    }
+  }
+}

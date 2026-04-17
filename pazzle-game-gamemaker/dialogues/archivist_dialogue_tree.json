@@ -1,0 +1,64 @@
+{
+  "tree_id": "archivist_main",
+  "character": "archivist",
+  "nodes": {
+    "start": {
+      "speaker": "archivist",
+      "text": "Добро пожаловать в архив. Я Тель, хранитель знаний об экспедициях в глубины.",
+      "portrait": "neutral",
+      "next": "introduce"
+    },
+    "introduce": {
+      "speaker": "archivist",
+      "text": "Здесь собраны записи о всех, кто отважился спуститься в пещеры. Некоторые вернулись с сокровищами, другие... не вернулись вовсе.",
+      "portrait": "neutral",
+      "next": "offer_quiz"
+    },
+    "offer_quiz": {
+      "speaker": "archivist",
+      "text": "Хочешь проверить свои знания о правилах экспедиции? Это может спасти тебе жизнь в глубинах.",
+      "portrait": "neutral",
+      "choices": [
+        {
+          "text": "Да, проверим мои знания!",
+          "next": "accept_quiz"
+        },
+        {
+          "text": "Может быть в другой раз.",
+          "next": "decline_quiz"
+        }
+      ]
+    },
+    "accept_quiz": {
+      "speaker": "archivist",
+      "text": "Отлично! Я задам тебе несколько вопросов о структуре пещер и правилах безопасности.",
+      "portrait": "neutral",
+      "next": "start_quiz"
+    },
+    "decline_quiz": {
+      "speaker": "archivist",
+      "text": "Как знаешь. Но помни - знания могут быть важнее любого оружия в глубинах.",
+      "portrait": "neutral",
+      "next": "end"
+    },
+    "start_quiz": {
+      "speaker": "archivist",
+      "text": "Начинаем викторину!",
+      "portrait": "neutral",
+      "action": "start_archivist_quiz",
+      "next": "end"
+    },
+    "already_completed": {
+      "speaker": "archivist",
+      "text": "Ты уже прошёл мою викторину и показал отличные знания. Продолжай в том же духе!",
+      "portrait": "neutral",
+      "next": "end"
+    },
+    "end": {
+      "speaker": "archivist",
+      "text": "Удачи в твоих исследованиях. И помни - знание - сила.",
+      "portrait": "neutral",
+      "next": null
+    }
+  }
+}
