@@ -1,0 +1,203 @@
+{
+  "cave_id": "cave2_archive",
+  "level": 2,
+  "theme": "ancient_knowledge",
+  "color_palette": {
+    "primary": "#3d2817",
+    "accent": "#d4af37",
+    "details": "#8b6f47",
+    "light": "#ff9933"
+  },
+  "background": {
+    "sprite": "spr_cave2_background",
+    "size": "800x600",
+    "description": "Древняя библиотека в пещере, полки с книгами, факелы"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave2_bookshelf_full",
+      "size": "64x96",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Полная книжная полка",
+      "placement": "walls",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave2_bookshelf_half",
+      "size": "64x96",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Частично заполненная полка",
+      "placement": "walls",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave2_lectern",
+      "size": "32x48",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Подставка для книг с открытой книгой",
+      "placement": "floor",
+      "frequency": "rare"
+    },
+    {
+      "sprite": "spr_cave2_table_small",
+      "size": "48x32",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Небольшой стол со свитками",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave2_torch",
+      "size": "16x32",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "description": "Настенный факел с пламенем",
+      "placement": "walls",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#ff9933",
+      "light_radius": 96
+    },
+    {
+      "sprite": "spr_cave2_scroll_rolled",
+      "size": "16x24",
+      "layer": "Decorations_Items",
+      "animated": false,
+      "description": "Свернутый свиток",
+      "placement": "floor_furniture",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave2_scroll_open",
+      "size": "24x32",
+      "layer": "Decorations_Items",
+      "animated": false,
+      "description": "Развернутый свиток",
+      "placement": "floor_furniture",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave2_rune_stone_small",
+      "size": "32x32",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 3,
+      "fps": 4,
+      "description": "Камень с рунами, слабое свечение",
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave2_rune_stone_large",
+      "size": "48x48",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 4,
+      "fps": 6,
+      "description": "Большой камень с древними рунами",
+      "placement": "floor",
+      "frequency": "rare",
+      "light_source": true,
+      "light_color": "#d4af37",
+      "light_radius": 48
+    },
+    {
+      "sprite": "spr_cave2_ancient_tablet",
+      "size": "48x64",
+      "layer": "Decorations_Walls",
+      "animated": false,
+      "description": "Древняя табличка с текстом",
+      "placement": "walls",
+      "frequency": "rare"
+    },
+    {
+      "sprite": "spr_cave2_book_pile",
+      "size": "32x24",
+      "layer": "Decorations_Floor",
+      "animated": false,
+      "description": "Стопка старых книг",
+      "placement": "floor",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave2_candle_holder",
+      "size": "16x24",
+      "layer": "Decorations_Items",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "description": "Подсвечник с горящей свечой",
+      "placement": "furniture",
+      "frequency": "medium",
+      "light_source": true,
+      "light_color": "#ffcc66",
+      "light_radius": 32
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave2_dust_particles",
+      "size": "64x64",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 8,
+      "fps": 12,
+      "alpha": 0.3,
+      "blend_mode": "additive",
+      "description": "Плавающие частицы пыли",
+      "movement": "slow_vertical"
+    },
+    {
+      "sprite": "spr_cave2_glow_rune",
+      "size": "24x24",
+      "layer": "Effects_Decorations",
+      "animated": true,
+      "frames": 4,
+      "fps": 6,
+      "alpha": 0.7,
+      "blend_mode": "additive",
+      "description": "Светящиеся руны на стенах",
+      "placement": "walls",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave2_letter_highlight",
+      "size": "32x32",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 3,
+      "fps": 10,
+      "alpha": 0.8,
+      "description": "Подсветка букв в головоломке",
+      "trigger": "puzzle_interaction"
+    },
+    {
+      "sprite": "spr_cave2_page_turn",
+      "size": "48x48",
+      "layer": "Effects_Particles",
+      "animated": true,
+      "frames": 5,
+      "fps": 15,
+      "description": "Эффект переворачивающейся страницы",
+      "trigger": "book_interaction"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave2_pages_rustle",
+    "snd_cave2_torch_crackle",
+    "snd_cave2_distant_whispers"
+  ],
+  "lighting": {
+    "ambient_light": 0.4,
+    "shadow_intensity": 0.6,
+    "warm_tint": 0.3
+  }
+}

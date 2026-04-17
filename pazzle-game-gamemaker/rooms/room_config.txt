@@ -1,0 +1,55 @@
+# Конфигурация комнат для проекта Adventure Puzzle Game
+
+## Общие параметры
+- Ширина комнаты: 800 пикселей
+- Высота комнаты: 600 пикселей
+- Скорость кадров: 60 FPS
+- Физические настройки: отключены
+- Постоянная комната: отключена
+
+## Список комнат
+
+1. rm_menu
+   - Назначение: главное меню
+   - Объекты: obj_game_manager
+   - Слои: background, instances, gui
+
+2. rm_town
+   - Назначение: город-хаб
+   - Объекты: obj_game_manager, obj_player, obj_npc
+   - Слои: background, instances, foreground
+
+3. rm_cave_maze
+   - Назначение: пещера с головоломкой "лабиринт"
+   - Объекты: obj_game_manager, obj_player, obj_puzzle, obj_lever
+   - Слои: background, walls, instances
+
+4. rm_cave_archive
+   - Назначение: пещера с головоломкой "поиск слов"
+   - Объекты: obj_game_manager, obj_puzzle, obj_lever
+   - Слои: background, letters_grid, instances, gui
+
+5. rm_cave_rhythm
+   - Назначение: пещера с головоломкой "ритм"
+   - Объекты: obj_game_manager, obj_puzzle, obj_lever
+   - Слои: background, buttons, effects, gui
+
+6. rm_cave_pairs
+   - Назначение: пещера с головоломкой "пары"
+   - Объекты: obj_game_manager, obj_puzzle, obj_lever
+   - Слои: background, cards, effects, gui
+
+7. rm_cave_platformer
+   - Назначение: пещера с головоломкой "платформер"
+   - Объекты: obj_game_manager, obj_player, obj_puzzle, obj_lever
+   - Слои: background, platforms, instances, effects
+
+8. rm_cave_final
+   - Назначение: финальная пещера
+   - Объекты: obj_game_manager, obj_player, obj_puzzle, obj_lever
+   - Слои: background, platforms, obstacles, instances, effects
+
+9. rm_victory
+   - Назначение: финальная сцена
+   - Объекты: obj_game_manager
+   - Слои: background, gui, effects

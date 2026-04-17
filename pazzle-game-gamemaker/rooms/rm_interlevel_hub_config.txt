@@ -1,0 +1,319 @@
+{
+  "name": "rm_interlevel_hub",
+  "caption": "Межуровневый Хаб",
+  "width": 1600,
+  "height": 800,
+  "vsnap": 32,
+  "hsnap": 32,
+  "is_locked": false,
+  "inherit_bg_colour": true,
+  "creation_code_file": "",
+  "inherit_layers": false,
+  "instances": [
+    {
+      "name": "inst_game_manager",
+      "x": 0,
+      "y": 0,
+      "index": "obj_game_manager",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_player",
+      "x": 800,
+      "y": 700,
+      "index": "obj_player",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_1",
+      "x": 200,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_maze"},
+        {"property": "portal_name", "value": "Лабиринт"},
+        {"property": "level_number", "value": 1}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_2",
+      "x": 400,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_archive"},
+        {"property": "portal_name", "value": "Поиск слов"},
+        {"property": "level_number", "value": 2}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_3",
+      "x": 600,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_rhythm"},
+        {"property": "portal_name", "value": "Память/Паттерны"},
+        {"property": "level_number", "value": 3}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_4",
+      "x": 800,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_pairs"},
+        {"property": "portal_name", "value": "Поиск пар"},
+        {"property": "level_number", "value": 4}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_5",
+      "x": 1000,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_platformer"},
+        {"property": "portal_name", "value": "Платформер"},
+        {"property": "level_number", "value": 5}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_6",
+      "x": 1200,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_final"},
+        {"property": "portal_name", "value": "Финал"},
+        {"property": "level_number", "value": 6}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_7",
+      "x": 100,
+      "y": 400,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_7_config"},
+        {"property": "portal_name", "value": "Загадки Сфинкса"},
+        {"property": "level_number", "value": 7}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_8",
+      "x": 300,
+      "y": 400,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_8_config"},
+        {"property": "portal_name", "value": "Звуковые Ловушки"},
+        {"property": "level_number", "value": 8}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_9",
+      "x": 500,
+      "y": 400,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_9_config"},
+        {"property": "portal_name", "value": "Прыгающий Путь"},
+        {"property": "level_number", "value": 9}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_10",
+      "x": 700,
+      "y": 400,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_10_config"},
+        {"property": "portal_name", "value": "Запоминалка"},
+        {"property": "level_number", "value": 10}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_11",
+      "x": 900,
+      "y": 400,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_11_config"},
+        {"property": "portal_name", "value": "Песнь Пещер"},
+        {"property": "level_number", "value": 11}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "interlevel_portal_12",
+      "x": 1100,
+      "y": 400,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_cave_12_config"},
+        {"property": "portal_name", "value": "Финальный Подвиг"},
+        {"property": "level_number", "value": 12}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "return_to_town",
+      "x": 1400,
+      "y": 600,
+      "index": "obj_interactable",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "destination_room", "value": "rm_town"},
+        {"property": "portal_name", "value": "Город-хаб"},
+        {"property": "return_portal", "value": true}
+      ],
+      "isDnd": false
+    }
+  ],
+  "layers": [
+    {
+      "name": "Background",
+      "type": "gmlayer",
+      "properties": {
+        "imageIndex": 0,
+        "imageSpeed": 1,
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0,
+        "imageId": "spr_background",
+        "colour": 4278190080
+      }
+    },
+    {
+      "name": "Platforms",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Decorations",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Instances",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    }
+  ],
+  "inheritCode": false,
+  "hasCreationCode": false,
+  "colour": 4278190080,
+  "views": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 1366,
+      "h": 768,
+      "xport": 0,
+      "yport": 0,
+      "wport": 1366,
+      "hport": 768,
+      "hborder": 32,
+      "vborder": 32,
+      "hspeed": -1,
+      "vspeed": -1
+    }
+  ]
+}

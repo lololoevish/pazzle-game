@@ -1,0 +1,28 @@
+{
+  "name": "spr_cave2_bookshelf",
+  "type": "sprite",
+  "width": 96,
+  "height": 128,
+  "frames": 1,
+  "origin": {
+    "x": 48,
+    "y": 128
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 95,
+    "bottom": 127
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "variants": [
+    {"type": "full", "description": "Полностью заполненная книгами"},
+    {"type": "half", "description": "Частично заполненная"},
+    {"type": "empty", "description": "Почти пустая"}
+  ],
+  "description": "Книжная полка для пещеры-архива. Старые книги, свитки, пыль. Доступны варианты заполнения.",
+  "tags": ["cave", "furniture", "level2", "bookshelf"],
+  "texture_group": "Default"
+}

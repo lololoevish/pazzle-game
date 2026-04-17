@@ -1,0 +1,29 @@
+{
+  "name": "spr_cave2_rune_stone",
+  "type": "sprite",
+  "width": 48,
+  "height": 48,
+  "frames": 3,
+  "origin": {
+    "x": 24,
+    "y": 24
+  },
+  "bbox": {
+    "left": 4,
+    "top": 4,
+    "right": 43,
+    "bottom": 43
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "animation": {
+    "type": "loop",
+    "speed": 6,
+    "description": "Слабое свечение рун"
+  },
+  "description": "Камни с древними рунами для пещеры-архива. Золотистое свечение с анимацией.",
+  "tags": ["cave", "decoration", "level2", "rune", "animated"],
+  "texture_group": "Default",
+  "glow_color": "#d4af37"
+}

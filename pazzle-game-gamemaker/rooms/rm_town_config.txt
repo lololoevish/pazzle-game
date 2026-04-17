@@ -1,0 +1,144 @@
+{
+  "name": "rm_town",
+  "caption": "Город-хаб",
+  "width": 800,
+  "height": 600,
+  "vsnap": 32,
+  "hsnap": 32,
+  "is_locked": false,
+  "inherit_bg_colour": true,
+  "creation_code_file": "",
+  "inherit_layers": false,
+  "instances": [
+    {
+      "name": "inst_game_manager",
+      "x": 0,
+      "y": 0,
+      "index": "obj_game_manager",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_player",
+      "x": 400,
+      "y": 400,
+      "index": "obj_player",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_npc_elder",
+      "x": 200,
+      "y": 300,
+      "index": "obj_npc",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "npc_type", "value": "elder"},
+        {"property": "npc_name", "value": "Староста Иара"}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "inst_npc_mechanic",
+      "x": 600,
+      "y": 300,
+      "index": "obj_npc",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "npc_type", "value": "mechanic"},
+        {"property": "npc_name", "value": "Механик Роан"}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "inst_npc_archivist",
+      "x": 400,
+      "y": 200,
+      "index": "obj_npc",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "npc_type", "value": "archivist"},
+        {"property": "npc_name", "value": "Архивариус Тель"}
+      ],
+      "isDnd": false
+    }
+  ],
+  "layers": [
+    {
+      "name": "Background",
+      "type": "gmlayer",
+      "properties": {
+        "imageIndex": 0,
+        "imageSpeed": 1,
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0,
+        "imageId": "spr_background",
+        "colour": 4278190080
+      }
+    },
+    {
+      "name": "Instances",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Foreground",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    }
+  ],
+  "inheritCode": false,
+  "hasCreationCode": false,
+  "colour": 4278190080,
+  "views": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 1366,
+      "h": 768,
+      "xport": 0,
+      "yport": 0,
+      "wport": 1366,
+      "hport": 768,
+      "hborder": 32,
+      "vborder": 32,
+      "hspeed": -1,
+      "vspeed": -1
+    }
+  ]
+}

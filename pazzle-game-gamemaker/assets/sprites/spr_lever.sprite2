@@ -1,0 +1,118 @@
+{
+  "spriteId": "spr_lever",
+  "textureGroupId": "Default",
+  "bboxMode": 0,
+  "bboxBottom": 31,
+  "bboxLeft": 0,
+  "bboxRight": 23,
+  "bboxTop": 0,
+  "bbox_horizontal_tolerance": 0,
+  "bbox_vertical_tolerance": 0,
+  "collision_mask": 0,
+  "HTile": false,
+  "VTile": false,
+  "For3D": false,
+  "frames": [
+    {
+      "id": "frame_lever_0001",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_lever_normal",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 12,
+      "yOrigin": 16,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_lever_0001",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_lever_normal",
+        "FrameId": "frame_lever_0001",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_lever_0001",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_lever_normal",
+          "FrameId": "frame_lever_0001",
+          "LayerId": "layer_lever_body"
+        }
+      ]
+    },
+    {
+      "id": "frame_lever_0002",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_lever_pulled",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 12,
+      "yOrigin": 16,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_lever_0002",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_lever_pulled",
+        "FrameId": "frame_lever_0002",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_lever_0002",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_lever_pulled",
+          "FrameId": "frame_lever_0002",
+          "LayerId": "layer_lever_body"
+        }
+      ]
+    }
+  ],
+  "sequence": {
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "seq_lever_animation",
+    "timeUnits": 1,
+    "playback": 1,
+    "playbackSpeed": 1.0,
+    "playbackSpeedType": 0,
+    "autoRecord": true,
+    "volume": 1.0,
+    "length": 2.0,
+    "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>"},
+    "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>"},
+    "tracks": [
+      {"resourceType":"SpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+            {"id":"8851f44d-cbc9-4c25-b8d6-f1bca25d52ec","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_lever_normal",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"53a189dc-69d0-457e-8d7a-7b71644e167d","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_lever_pulled",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},
+      },
+    ],
+    "visibleRange": {"x":0.0,"y":0.0,},
+    "lockOrigin": false,
+    "showBackdrop": true,
+    "showBackdropImage": false,
+    "backdropImagePath": "",
+    "backdropImageOpacity": 0.5,
+    "backdropWidth": 1920,
+    "backdropHeight": 1080,
+    "backdropXOffset": 0.0,
+    "backdropYOffset": 0.0,
+    "xorigin": 12,
+    "yorigin": 16,
+    "eventToFunction": {},
+    "eventStubScript": null
+  }
+}

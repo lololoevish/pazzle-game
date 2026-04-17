@@ -1,0 +1,58 @@
+{
+  "tree_id": "mechanic_main",
+  "character": "mechanic",
+  "nodes": {
+    "start": {
+      "speaker": "mechanic",
+      "text": "Привет, путник! Я Роан, местный механик. Мои приборы требуют калибровки.",
+      "portrait": "neutral",
+      "next": "ask_help"
+    },
+    "ask_help": {
+      "speaker": "mechanic",
+      "text": "Не мог бы ты помочь мне? Это займёт всего минуту, и я щедро награжу тебя!",
+      "portrait": "neutral",
+      "choices": [
+        {
+          "text": "Конечно, помогу!",
+          "next": "accept_help"
+        },
+        {
+          "text": "Может быть позже...",
+          "next": "decline_help"
+        }
+      ]
+    },
+    "accept_help": {
+      "speaker": "mechanic",
+      "text": "Отлично! Смотри внимательно на показания приборов и помоги мне их откалибровать.",
+      "portrait": "happy",
+      "next": "start_minigame"
+    },
+    "decline_help": {
+      "speaker": "mechanic",
+      "text": "Понимаю, у тебя свои дела. Заходи, когда будет время!",
+      "portrait": "neutral",
+      "next": "end"
+    },
+    "start_minigame": {
+      "speaker": "mechanic",
+      "text": "Начинаем калибровку!",
+      "portrait": "happy",
+      "action": "start_mechanic_calibration",
+      "next": "end"
+    },
+    "already_completed": {
+      "speaker": "mechanic",
+      "text": "Спасибо за помощь с калибровкой! Мои приборы работают отлично!",
+      "portrait": "happy",
+      "next": "end"
+    },
+    "end": {
+      "speaker": "mechanic",
+      "text": "Удачи в твоих приключениях!",
+      "portrait": "neutral",
+      "next": null
+    }
+  }
+}

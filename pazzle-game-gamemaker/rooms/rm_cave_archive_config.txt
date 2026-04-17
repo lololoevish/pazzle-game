@@ -1,0 +1,163 @@
+{
+  "name": "rm_cave_archive",
+  "caption": "Пещера: Архив",
+  "width": 800,
+  "height": 600,
+  "vsnap": 32,
+  "hsnap": 32,
+  "is_locked": false,
+  "inherit_bg_colour": true,
+  "creation_code_file": "",
+  "inherit_layers": false,
+  "instances": [
+    {
+      "name": "inst_game_manager",
+      "x": 0,
+      "y": 0,
+      "index": "obj_game_manager",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_puzzle",
+      "x": 400,
+      "y": 300,
+      "index": "obj_puzzle",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "puzzle_type", "value": "word_search"}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "inst_lever",
+      "x": 700,
+      "y": 100,
+      "index": "obj_lever",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "puzzle_level", "value": 2}
+      ],
+      "isDnd": false
+    }
+  ],
+  "layers": [
+    {
+      "name": "Effects",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      },
+      "decorations": [
+        {"sprite": "spr_cave2_dust_particles", "x": 300, "y": 200, "alpha": 0.3},
+        {"sprite": "spr_cave2_dust_particles", "x": 600, "y": 400, "alpha": 0.3}
+      ]
+    },
+    {
+      "name": "Furniture",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      },
+      "decorations": [
+        {"sprite": "spr_cave2_bookshelf", "x": 100, "y": 500, "variant": "full"},
+        {"sprite": "spr_cave2_bookshelf", "x": 700, "y": 500, "variant": "half"},
+        {"sprite": "spr_cave2_torch", "x": 50, "y": 100},
+        {"sprite": "spr_cave2_torch", "x": 750, "y": 100},
+        {"sprite": "spr_cave2_rune_stone", "x": 200, "y": 450},
+        {"sprite": "spr_cave2_rune_stone", "x": 600, "y": 450}
+      ]
+    },
+    {
+      "name": "Background",
+      "type": "gmlayer",
+      "properties": {
+        "imageIndex": 0,
+        "imageSpeed": 1,
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0,
+        "imageId": "spr_cave2_background",
+        "colour": 4278190080
+      }
+    },
+    {
+      "name": "LettersGrid",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Selection",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "GUI",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    }
+  ],
+  "inheritCode": false,
+  "hasCreationCode": false,
+  "colour": 4278190080,
+  "views": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 1366,
+      "h": 768,
+      "xport": 0,
+      "yport": 0,
+      "wport": 1366,
+      "hport": 768,
+      "hborder": 32,
+      "vborder": 32,
+      "hspeed": -1,
+      "vspeed": -1
+    }
+  ]
+}

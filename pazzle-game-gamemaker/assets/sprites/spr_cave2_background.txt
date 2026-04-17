@@ -1,0 +1,29 @@
+{
+  "name": "spr_cave2_background",
+  "type": "sprite",
+  "width": 800,
+  "height": 600,
+  "frames": 1,
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 799,
+    "bottom": 599
+  },
+  "transparent": false,
+  "smooth": false,
+  "preload": true,
+  "description": "Фон для пещеры-архива (Уровень 2). Древняя библиотека в пещере с полками, свитками, факелами.",
+  "tags": ["cave", "background", "level2", "archive", "library"],
+  "texture_group": "Default",
+  "color_palette": {
+    "primary": "#3d2817",
+    "accent": "#d4af37",
+    "details": "#8b6f47",
+    "light": "#ff9933"
+  }
+}

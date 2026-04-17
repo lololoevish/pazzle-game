@@ -1,0 +1,29 @@
+{
+  "name": "spr_cave1_crystal",
+  "type": "sprite",
+  "width": 24,
+  "height": 24,
+  "frames": 4,
+  "origin": {
+    "x": 12,
+    "y": 12
+  },
+  "bbox": {
+    "left": 2,
+    "top": 2,
+    "right": 21,
+    "bottom": 21
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "animation": {
+    "type": "loop",
+    "speed": 8,
+    "description": "Пульсация света кристалла"
+  },
+  "description": "Светящиеся кристаллы для пещеры-лабиринта. Синий/голубой свет с анимацией пульсации.",
+  "tags": ["cave", "decoration", "level1", "crystal", "animated"],
+  "texture_group": "Default",
+  "color": "#4a90e2"
+}

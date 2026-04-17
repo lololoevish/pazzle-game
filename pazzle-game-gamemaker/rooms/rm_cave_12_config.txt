@@ -1,0 +1,91 @@
+{
+  "name": "rm_cave_12",
+  "caption": "Пещера: 12-й УРОВЕНЬ (Финальный Подвиг)",
+  "width": 800,
+  "height": 600,
+  "vsnap": 32,
+  "hsnap": 32,
+  "is_locked": false,
+  "inherit_bg_colour": true,
+  "creation_code_file": "",
+  "inherit_layers": false,
+  "instances": [
+    {
+      "name": "inst_game_manager",
+      "x": 0,
+      "y": 0,
+      "index": "obj_game_manager",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_player",
+      "x": 50,
+      "y": 550,
+      "index": "obj_player",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_puzzle",
+      "x": 400,
+      "y": 300,
+      "index": "obj_puzzle",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_lever",
+      "x": 750,
+      "y": 550,
+      "index": "obj_lever",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    }
+  ],
+  "layers": [
+    {
+      "id": "900a2d82-dea9-436e-bfac-89055f83680f",
+      "name": "Instances",
+      "opacity": 1,
+      "visible": true,
+      "current": false,
+      "depth": 0,
+      "scroll_x": 1,
+      "scroll_y": 1,
+      "inherit_layer_depth": false,
+      "inherit_layer_settings": false,
+      "grid_x": 32,
+      "grid_y": 32,
+      "enable_grid": false,
+      "hierarchyFrozen": false,
+      "resourceVersion": "1.0",
+      "name": "Instances",
+      "tags": [],
+      "resourceType": "GMRInstanceLayer"
+    }
+  ],
+  "parent": {
+    "name": "Rooms",
+    "path": "folders/Rooms.yy"
+  },
+  "resourceVersion": "1.0",
+  "tags": [],
+  "resourceType": "GMRoom"
+}

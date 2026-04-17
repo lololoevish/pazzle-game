@@ -1,0 +1,80 @@
+# Конфигурация проекта GameMaker для Adventure Puzzle Game
+
+# Основные параметры
+ProjectName: Adventure Puzzle Game
+Version: 1.0.0
+WindowSize: 800x600
+FPS: 60
+FullscreenMode: Windowed
+
+# Системные настройки
+SaveFormat: JSON
+AudioEnabled: True
+SpriteScaling: NearestNeighbor
+
+# Пути к ресурсам
+SpritesPath: assets/sprites/
+SoundsPath: assets/sounds/
+MusicPath: assets/music/
+FontsPath: assets/fonts/
+
+# Объекты проекта
+ObjectDefinitions:
+- obj_game_manager
+- obj_player  
+- obj_puzzle
+- obj_lever
+- obj_npc
+- obj_interactable
+- obj_exit
+
+# Комнаты проекта
+Rooms:
+- rm_menu
+- rm_town
+- rm_cave_maze
+- rm_cave_archive
+- rm_cave_rhythm
+- rm_cave_pairs
+- rm_cave_platformer
+- rm_cave_final
+- rm_victory
+
+# Скрипты проекта
+Scripts:
+- scr_game_state
+- scr_save_system
+- scr_audio_manager
+- scr_ui_manager
+- puzzle_scripts/*
+
+# Требования
+RequiredFeatures:
+- Audio
+- SaveSystem
+- Sprites
+- Collision
+- KeyboardInput
+- MouseInput
+
+# Оптимизация
+TextureGroups: Enabled
+OptimizeSprites: True
+CompressAudio: True
+
+# Состояния игры
+GameStates:
+- MENU
+- TOWN
+- PLAYING
+- VICTORY
+- QUIT
+
+# Уровни
+PuzzleLevels:
+- 1: Maze
+- 2: WordSearch
+- 3: Rhythm
+- 4: Pairs
+- 5: Platformer
+- 6: Final

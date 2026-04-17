@@ -1,0 +1,29 @@
+{
+  "name": "spr_portrait_mechanic_neutral",
+  "type": "sprite",
+  "width": 200,
+  "height": 250,
+  "frames": 1,
+  "origin": {
+    "x": 100,
+    "y": 125
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 199,
+    "bottom": 249
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "description": "Портрет Роана (механик) - нейтральное выражение. Седые волосы, борода, рабочая одежда.",
+  "tags": ["portrait", "npc", "mechanic", "neutral"],
+  "texture_group": "Default",
+  "character": {
+    "id": "mechanic",
+    "name": "Роан",
+    "age": 40,
+    "role": "Механик"
+  }
+}

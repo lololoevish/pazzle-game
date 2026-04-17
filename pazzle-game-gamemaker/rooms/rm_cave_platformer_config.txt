@@ -1,0 +1,151 @@
+{
+  "name": "rm_cave_platformer",
+  "caption": "Пещера: Платформер",
+  "width": 800,
+  "height": 600,
+  "vsnap": 32,
+  "hsnap": 32,
+  "is_locked": false,
+  "inherit_bg_colour": true,
+  "creation_code_file": "",
+  "inherit_layers": false,
+  "instances": [
+    {
+      "name": "inst_game_manager",
+      "x": 0,
+      "y": 0,
+      "index": "obj_game_manager",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_player",
+      "x": 50,
+      "y": 550,
+      "index": "obj_player",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [],
+      "isDnd": false
+    },
+    {
+      "name": "inst_puzzle",
+      "x": 400,
+      "y": 300,
+      "index": "obj_puzzle",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "puzzle_type", "value": "platformer"}
+      ],
+      "isDnd": false
+    },
+    {
+      "name": "inst_lever",
+      "x": 700,
+      "y": 100,
+      "index": "obj_lever",
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "colour": 4294967295,
+      "properties": [
+        {"property": "puzzle_level", "value": 5}
+      ],
+      "isDnd": false
+    }
+  ],
+  "layers": [
+    {
+      "name": "Background",
+      "type": "gmlayer",
+      "properties": {
+        "imageIndex": 0,
+        "imageSpeed": 1,
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0,
+        "imageId": "spr_background",
+        "colour": 4278190080
+      }
+    },
+    {
+      "name": "Platforms",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Collectibles",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Enemies",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    },
+    {
+      "name": "Instances",
+      "type": "gmlayer",
+      "properties": {
+        "inheritLayerDepth": false,
+        "inheritLayerSettings": false,
+        "gridX": 32,
+        "gridY": 32,
+        "viewportX": 0,
+        "viewportY": 0
+      }
+    }
+  ],
+  "inheritCode": false,
+  "hasCreationCode": false,
+  "colour": 4278190080,
+  "views": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 1366,
+      "h": 768,
+      "xport": 0,
+      "yport": 0,
+      "wport": 1366,
+      "hport": 768,
+      "hborder": 32,
+      "vborder": 32,
+      "hspeed": -1,
+      "vspeed": -1
+    }
+  ]
+}

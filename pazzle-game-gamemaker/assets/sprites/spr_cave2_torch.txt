@@ -1,0 +1,30 @@
+{
+  "name": "spr_cave2_torch",
+  "type": "sprite",
+  "width": 16,
+  "height": 32,
+  "frames": 6,
+  "origin": {
+    "x": 8,
+    "y": 16
+  },
+  "bbox": {
+    "left": 2,
+    "top": 0,
+    "right": 13,
+    "bottom": 31
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "animation": {
+    "type": "loop",
+    "speed": 10,
+    "description": "Анимация пламени факела"
+  },
+  "description": "Настенный факел для пещеры-архива. Теплый оранжевый свет с анимацией пламени.",
+  "tags": ["cave", "decoration", "level2", "torch", "animated", "light"],
+  "texture_group": "Default",
+  "light_color": "#ff9933",
+  "light_radius": 64
+}

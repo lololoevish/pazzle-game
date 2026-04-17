@@ -1,0 +1,254 @@
+{
+  "spriteId": "spr_ui_sprites",
+  "textureGroupId": "Default",
+  "bboxMode": 0,
+  "bboxBottom": 63,
+  "bboxLeft": 0,
+  "bboxRight": 63,
+  "bboxTop": 0,
+  "bbox_horizontal_tolerance": 0,
+  "bbox_vertical_tolerance": 0,
+  "collision_mask": 0,
+  "HTile": false,
+  "VTile": false,
+  "For3D": false,
+  "frames": [
+    {
+      "id": "frame_ui_0001",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_ui_button",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 32,
+      "yOrigin": 32,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_ui_0001",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_ui_button",
+        "FrameId": "frame_ui_0001",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_ui_0001",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_ui_button_normal",
+          "FrameId": "frame_ui_0001",
+          "LayerId": "layer_ui_button"
+        }
+      ]
+    },
+    {
+      "id": "frame_ui_0002",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_ui_button_hover",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 32,
+      "yOrigin": 32,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_ui_0002",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_ui_button_hover",
+        "FrameId": "frame_ui_0002",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_ui_0002",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_ui_button_hover",
+          "FrameId": "frame_ui_0002",
+          "LayerId": "layer_ui_button_hover"
+        }
+      ]
+    },
+    {
+      "id": "frame_ui_0003",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_ui_button_pressed",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 32,
+      "yOrigin": 32,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_ui_0003",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_ui_button_pressed",
+        "FrameId": "frame_ui_0003",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_ui_0003",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_ui_button_pressed",
+          "FrameId": "frame_ui_0003",
+          "LayerId": "layer_ui_button_pressed"
+        }
+      ]
+    },
+    {
+      "id": "frame_ui_0004",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_ui_interaction_hint",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 16,
+      "yOrigin": 16,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_ui_0004",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_ui_interaction_hint",
+        "FrameId": "frame_ui_0004",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_ui_0004",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_ui_e_key_hint",
+          "FrameId": "frame_ui_0004",
+          "LayerId": "layer_ui_hint"
+        }
+      ]
+    },
+    {
+      "id": "frame_ui_0005",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_ui_progress_bar",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 50,
+      "yOrigin": 8,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_ui_0005",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_ui_progress_bar",
+        "FrameId": "frame_ui_0005",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_ui_0005",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_ui_progress_bar_empty",
+          "FrameId": "frame_ui_0005",
+          "LayerId": "layer_ui_progress_empty"
+        }
+      ]
+    },
+    {
+      "id": "frame_ui_0006",
+      "resourceType": "GMSpriteFrame",
+      "resourceVersion": "1.1",
+      "name": "spr_ui_progress_bar_filled",
+      "timeUnits": 1,
+      "time": 1,
+      "xOrigin": 50,
+      "yOrigin": 8,
+      "animationSpeed": 1.0,
+      "colour": { "Value": 4294967295 },
+      "overriddenAnimationSpeed": 1.0,
+      "x": 0,
+      "y": 0,
+      "compositeImage": {
+        "id": "composite_image_ui_0006",
+        "resourceType": "GMSpriteImage",
+        "resourceVersion": "1.0",
+        "name": "composite_image_ui_progress_bar_filled",
+        "FrameId": "frame_ui_0006",
+        "LayerId": "00000000-0000-0000-0000-000000000000"
+      },
+      "images": [
+        {
+          "id": "image_ui_0006",
+          "resourceType": "GMSpriteImage",
+          "resourceVersion": "1.1",
+          "name": "image_ui_progress_bar_filled",
+          "FrameId": "frame_ui_0006",
+          "LayerId": "layer_ui_progress_filled"
+        }
+      ]
+    }
+  ],
+  "sequence": {
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "seq_ui_sprites",
+    "timeUnits": 1,
+    "playback": 1,
+    "playbackSpeed": 1.0,
+    "playbackSpeedType": 0,
+    "autoRecord": true,
+    "volume": 1.0,
+    "length": 6.0,
+    "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>"},
+    "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>"},
+    "tracks": [
+      {"resourceType":"SpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+            {"id":"8851f44d-cbc9-4c25-b8d6-f1bca25d52ec","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_ui_button",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"53a189dc-69d0-457e-8d7a-7b71644e167d","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_ui_button_hover",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"12345678-1234-1234-1234-123456789abc","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_ui_button_pressed",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"def12345-6789-0abc-def1-234567890abc","Key":3.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_ui_interaction_hint",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"fedcba98-7654-3210-fedc-ba9876543210","Key":4.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_ui_progress_bar",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+            {"id":"abcdef12-3456-7890-abcdef-1234567890ab","Key":5.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"spr_ui_progress_bar_filled",},"resourceVersion":"1.0","resourceType":"AssetSpriteFrame",},},},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},
+      },
+    ],
+    "visibleRange": {"x":0.0,"y":0.0,},
+    "lockOrigin": false,
+    "showBackdrop": true,
+    "showBackdropImage": false,
+    "backdropImagePath": "",
+    "backdropImageOpacity": 0.5,
+    "backdropWidth": 1920,
+    "backdropHeight": 1080,
+    "backdropXOffset": 0.0,
+    "backdropYOffset": 0.0,
+    "xorigin": 32,
+    "yorigin": 32,
+    "eventToFunction": {},
+    "eventStubScript": null
+  }
+}

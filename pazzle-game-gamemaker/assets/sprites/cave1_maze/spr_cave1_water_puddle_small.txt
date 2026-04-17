@@ -1,0 +1,8 @@
+// Sprite: spr_cave1_water_puddle_small
+// Size: 32x16
+// Frames: 3
+// FPS: 6
+// Description: Маленькая лужа с рябью
+// Color: Темно-синий (#1a2332) с отражениями (#4a90e2)
+// Animation: Легкая рябь на поверхности
+// Usage: Декорация пола
