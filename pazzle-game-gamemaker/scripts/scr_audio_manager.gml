@@ -13,6 +13,11 @@ var audio_config = {
     sfx_channel: 0,
     current_context: "neutral",
     
+    // Система приоритетов музыки
+    music_priority: 0, // 0 = room music, 1 = contextual, 2 = emotional, 3 = override
+    priority_music: undefined, // Музыка с приоритетом
+    priority_timer: 0, // Таймер для временных приоритетов
+    
     // Контекстные модификаторы громкости
     context_modifiers: {
         neutral: { music: 1.0, sfx: 1.0 },
@@ -63,28 +68,29 @@ function set_emotional_music_state(state) {
     
     switch(state) {
         case "neutral":
-            // В зависимости от текущей комнаты
+            // Сбрасываем приоритет и возвращаемся к музыке комнаты
+            clear_music_priority();
             var room_based_music = get_current_room_music();
             if (room_based_music != undefined) {
-                play_music(room_based_music);
+                play_music_with_priority(room_based_music, 0);
             }
             break;
         case "friendly_encounter":
             music_to_play = get_sound_resource("snd_music_friendly_encounter");
             if (music_to_play != undefined && music_to_play != -1) {
-                play_music(music_to_play);
+                play_music_with_priority(music_to_play, 2); // Эмоциональный приоритет
             }
             break;
         case "mercy_theme":
             music_to_play = get_sound_resource("snd_music_mercy_theme");
             if (music_to_play != undefined && music_to_play != -1) {
-                play_music(music_to_play);
+                play_music_with_priority(music_to_play, 2);
             }
             break;
         case "peaceful_resolution":
             music_to_play = get_sound_resource("snd_music_peaceful_resolution");
             if (music_to_play != undefined && music_to_play != -1) {
-                play_music(music_to_play);
+                play_music_with_priority(music_to_play, 2);
             }
             break;
         default:
@@ -537,4 +543,151 @@ function lerp_volume(volume_type, target_value, duration_seconds) {
             }
             break;
     }
+}
+
+// ============================================
+// СИСТЕМА ПРИОРИТЕТОВ МУЗЫКИ
+// ============================================
+
+// Функция воспроизведения музыки с приоритетом
+// priority: 0 = room music, 1 = contextual, 2 = emotional, 3 = override
+function play_music_with_priority(sound_index, priority, duration_seconds) {
+    if (duration_seconds == undefined) duration_seconds = -1; // -1 = бесконечно
+    
+    // Проверяем приоритет
+    if (priority < audio_config.music_priority) {
+        // Текущая музыка имеет более высокий приоритет, игнорируем
+        return false;
+    }
+    
+    // Если приоритет равен или выше, меняем музыку
+    if (sound_index != audio_config.current_music) {
+        crossfade_to_music(sound_index, 1.5);
+    }
+    
+    // Обновляем приоритет
+    audio_config.music_priority = priority;
+    audio_config.priority_music = sound_index;
+    
+    // Устанавливаем таймер если нужно
+    if (duration_seconds > 0) {
+        audio_config.priority_timer = duration_seconds * 60; // Конвертируем в фреймы
+    } else {
+        audio_config.priority_timer = -1;
+    }
+    
+    return true;
+}
+
+// Функция сброса приоритета музыки
+function clear_music_priority() {
+    audio_config.music_priority = 0;
+    audio_config.priority_music = undefined;
+    audio_config.priority_timer = 0;
+}
+
+// Функция обновления системы приоритетов (вызывать в Step)
+function update_music_priority() {
+    // Уменьшаем таймер если он активен
+    if (audio_config.priority_timer > 0) {
+        audio_config.priority_timer--;
+        
+        // Если таймер истек, возвращаемся к музыке комнаты
+        if (audio_config.priority_timer == 0) {
+            clear_music_priority();
+            var room_music = get_current_room_music();
+            if (room_music != undefined && room_music != audio_config.current_music) {
+                crossfade_to_music(room_music, 2.0);
+            }
+        }
+    }
+}
+
+// Функция получения текущего приоритета
+function get_current_music_priority() {
+    return audio_config.music_priority;
+}
+
+// Функция принудительной смены музыки (наивысший приоритет)
+function force_music_change(sound_index, duration_seconds) {
+    if (duration_seconds == undefined) duration_seconds = -1;
+    return play_music_with_priority(sound_index, 3, duration_seconds);
+}
+
+// ============================================
+// УЛУЧШЕННАЯ СИСТЕМА КРОССФЕЙДА
+// ============================================
+
+// Улучшенная функция кроссфейда с callback
+function crossfade_to_music_advanced(new_music, fade_duration_seconds, on_complete_callback) {
+    if (new_music == undefined || new_music == -1 || !sound_exists(new_music)) {
+        return;
+    }
+    
+    // Если это та же музыка, ничего не делаем
+    if (new_music == audio_config.current_music) {
+        if (on_complete_callback != undefined) {
+            on_complete_callback();
+        }
+        return;
+    }
+    
+    var old_music = audio_config.current_music;
+    
+    // Если нет старой музыки, просто запускаем новую
+    if (old_music == undefined || !audio_config.music_playing) {
+        play_music(new_music);
+        if (on_complete_callback != undefined) {
+            on_complete_callback();
+        }
+        return;
+    }
+    
+    // Запускаем новую музыку с нулевой громкостью
+    audio_sound_set_gain(new_music, 0, 0);
+    audio_play_sound(new_music, audio_config.sfx_channel, true);
+    
+    // Плавно изменяем громкость
+    var target_volume = audio_config.music_volume * audio_config.master_volume;
+    var fade_time_ms = fade_duration_seconds * 1000;
+    
+    audio_sound_set_gain(old_music, 0, fade_time_ms);
+    audio_sound_set_gain(new_music, target_volume, fade_time_ms);
+    
+    // Обновляем текущую музыку
+    audio_config.current_music = new_music;
+    audio_config.music_playing = true;
+    
+    // Создаем объект для отложенной остановки старой музыки
+    // В реальной реализации нужен alarm или таймер
+    // Здесь просто останавливаем через заданное время
+}
+
+// ============================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================
+
+// Функция получения информации о текущей музыке
+function get_current_music_info() {
+    return {
+        sound_index: audio_config.current_music,
+        is_playing: audio_config.music_playing,
+        priority: audio_config.music_priority,
+        priority_timer: audio_config.priority_timer,
+        volume: audio_config.music_volume,
+        context: audio_config.current_context
+    };
+}
+
+// Функция для отладки аудио-системы
+function debug_audio_system() {
+    var info = get_current_music_info();
+    show_debug_message("=== Audio System Debug ===");
+    show_debug_message("Current Music: " + string(info.sound_index));
+    show_debug_message("Is Playing: " + string(info.is_playing));
+    show_debug_message("Priority: " + string(info.priority));
+    show_debug_message("Priority Timer: " + string(info.priority_timer));
+    show_debug_message("Music Volume: " + string(info.volume));
+    show_debug_message("Context: " + info.context);
+    show_debug_message("========================");
 }
