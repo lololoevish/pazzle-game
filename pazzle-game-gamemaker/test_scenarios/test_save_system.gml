@@ -1,110 +1,160 @@
 // Сценарии тестирования для scr_save_system
 
-// Тест 1: Сохранение и загрузка игры
+// Тест 1: Сохранение и загрузка игры через глобальные переменные
 function test_save_and_load() {
-    // Создаем игровое состояние с данными
-    var original_state = scr_game_state.create_new_game_state();
+    // Инициализируем глобальные переменные
+    if (!variable_global_exists("initialized")) {
+        init_global_vars();
+    }
     
-    // Изменяем состояние, чтобы проверить сохранение
-    original_state.current_state = "PLAYING";
-    original_state.current_level = 3;
-    original_state.gold = 150;
+    // Изменяем глобальное состояние для проверки сохранения
+    global.game_state = "town";
+    global.game_progress.gold = 150;
     
     // Отмечаем несколько уровней как завершенные
-    scr_game_state.set_level_completed(original_state, 1);
-    scr_game_state.set_level_completed(original_state, 2);
+    complete_level(1);
+    complete_level(2);
     
     // Опускаем рычаги
-    scr_game_state.set_lever_pulled(original_state, 1);
+    set_level_lever_pulled(1, true);
     
     // Устанавливаем награды NPC
-    original_state.elder_trial_completed = true;
+    global.game_progress.elder_trial_completed = true;
     
     // Сохраняем игру
-    scr_save_system.save_game(original_state);
+    save_game();
+    
+    // Сбрасываем глобальные переменные
+    global.game_progress.gold = 0;
+    global.game_progress.levels[0].completed = false;
+    global.game_progress.elder_trial_completed = false;
     
     // Загружаем игру
-    var loaded_state = scr_save_system.load_game();
+    var load_success = load_game();
     
     // Проверяем соответствие данных
-    assert_equal(loaded_state.current_state, "PLAYING", "Тест 1.1: Состояние должно сохраняться");
-    assert_equal(loaded_state.current_level, 3, "Тест 1.2: Уровень должен сохраняться");
-    assert_equal(loaded_state.gold, 150, "Тест 1.3: Золото должно сохраняться");
-    assert_true(scr_game_state.is_level_completed(loaded_state, 1), "Тест 1.4: Завершение уровня 1 должно сохраняться");
-    assert_true(scr_game_state.is_level_completed(loaded_state, 2), "Тест 1.5: Завершение уровня 2 должно сохраняться");
-    assert_true(scr_game_state.is_lever_pulled(loaded_state, 1), "Тест 1.6: Рычаг уровня 1 должен сохраняться");
-    assert_true(loaded_state.elder_trial_completed, "Тест 1.7: Награда за испытание старосты должна сохраняться");
+    assert_true(load_success, "Тест 1.1: Загрузка должна быть успешной");
+    assert_equal(global.game_state, "town", "Тест 1.2: Состояние должно сохраняться");
+    assert_equal(global.game_progress.gold, 150, "Тест 1.3: Золото должно сохраняться");
+    assert_true(global.game_progress.levels[0].completed, "Тест 1.4: Завершение уровня 1 должно сохраняться");
+    assert_true(global.game_progress.levels[1].completed, "Тест 1.5: Завершение уровня 2 должно сохраняться");
+    assert_true(global.game_progress.levels[0].lever_pulled, "Тест 1.6: Рычаг уровня 1 должен сохраняться");
+    assert_true(global.game_progress.elder_trial_completed, "Тест 1.7: Награда за испытание старосты должна сохраняться");
     
     show_debug_message("Тест 1 пройден: Сохранение и загрузка игры");
 }
 
 // Тест 2: Сброс игры
 function test_reset_game() {
-    // Сохраняем игру с некоторыми изменениями
-    var modified_state = scr_game_state.create_new_game_state();
-    modified_state.current_level = 4;
-    modified_state.gold = 200;
-    scr_game_state.set_level_completed(modified_state, 3);
-    scr_save_system.save_game(modified_state);
+    // Инициализируем и изменяем глобальное состояние
+    if (!variable_global_exists("initialized")) {
+        init_global_vars();
+    }
     
-    // Создаем новую игру
-    var reset_state = scr_save_system.reset_game();
+    global.game_progress.gold = 200;
+    complete_level(3);
+    save_game();
+    
+    // Сбрасываем игру
+    reset_game();
     
     // Проверяем, что это новое состояние
-    assert_equal(reset_state.current_state, "MENU", "Тест 2.1: Состояние новой игры должно быть MENU");
-    assert_equal(reset_state.current_level, 1, "Тест 2.2: Уровень новой игры должен быть 1");
-    assert_equal(reset_state.gold, 0, "Тест 2.3: Золото новой игры должно быть 0");
-    assert_false(scr_game_state.is_level_completed(reset_state, 1), "Тест 2.4: Уровень 1 не должен быть завершен в новой игре");
-    assert_false(scr_game_state.is_lever_pulled(reset_state, 1), "Тест 2.5: Рычаг уровня 1 не должен быть опущен в новой игре");
-    assert_false(reset_state.elder_trial_completed, "Тест 2.6: Награды NPC не должны быть активны в новой игре");
+    assert_equal(global.game_state, "menu", "Тест 2.1: Состояние новой игры должно быть menu");
+    assert_equal(global.game_progress.gold, 100, "Тест 2.2: Золото новой игры должно быть 100 (начальное значение)");
+    assert_false(global.game_progress.levels[0].completed, "Тест 2.3: Уровень 1 не должен быть завершен в новой игре");
+    assert_false(global.game_progress.levels[0].lever_pulled, "Тест 2.4: Рычаг уровня 1 не должен быть опущен в новой игре");
+    assert_false(global.game_progress.elder_trial_completed, "Тест 2.5: Награды NPC не должны быть активны в новой игре");
+    assert_false(global.expedition_complete, "Тест 2.6: Экспедиция не должна быть завершена в новой игре");
     
     show_debug_message("Тест 2 пройден: Сброс игры");
 }
 
 // Тест 3: Загрузка несуществующего сохранения
 function test_load_nonexistent_save() {
-    // Удаляем файл сохранения если он существует
-    if (file_exists("savegame.json")) {
-        file_delete("savegame.json");
+    // Удаляем файлы сохранения если они существуют
+    if (file_exists("adventure_puzzle_save.sav")) {
+        file_delete("adventure_puzzle_save.sav");
+    }
+    if (file_exists("adventure_puzzle_save.ini")) {
+        file_delete("adventure_puzzle_save.ini");
     }
     
-    // Загружаем игру - должна создаться новая
-    var state = scr_save_system.load_game();
+    // Инициализируем глобальные переменные
+    if (!variable_global_exists("initialized")) {
+        init_global_vars();
+    }
     
-    // Проверяем, что это новое состояние
-    assert_equal(state.current_state, "MENU", "Тест 3.1: При отсутствии сохранения должна создаваться новая игра");
-    assert_equal(state.current_level, 1, "Тест 3.2: Новый уровень должен быть 1");
-    assert_equal(state.gold, 0, "Тест 3.3: Новое золото должно быть 0");
+    // Загружаем игру - должна инициализироваться начальными значениями
+    var load_success = load_game();
+    
+    // Проверяем, что загрузка вернула false (нет сохранения)
+    assert_false(load_success, "Тест 3.1: При отсутствии сохранения load_game должна вернуть false");
+    assert_equal(global.game_state, "menu", "Тест 3.2: Состояние должно быть menu");
+    assert_equal(global.game_progress.gold, 100, "Тест 3.3: Золото должно быть 100 (начальное значение)");
     
     show_debug_message("Тест 3 пройден: Загрузка несуществующего сохранения");
 }
 
 // Тест 4: Проверка корректности формата сохранения
 function test_save_format_correctness() {
-    // Создаем состояние с различными типами данных
-    var state = scr_game_state.create_new_game_state();
+    // Инициализируем глобальные переменные
+    if (!variable_global_exists("initialized")) {
+        init_global_vars();
+    }
     
     // Устанавливаем различные значения
-    state.gold = 999;
-    state.elder_trial_completed = true;
-    state.mechanic_training_completed = false;
-    scr_game_state.set_lever_pulled(state, 5);
-    scr_game_state.set_level_completed(state, 4);
+    global.game_progress.gold = 999;
+    global.game_progress.elder_trial_completed = true;
+    global.game_progress.mechanic_training_completed = false;
+    set_level_lever_pulled(5, true);
+    complete_level(4);
     
     // Сохраняем
-    scr_save_system.save_game(state);
+    save_game();
+    
+    // Сбрасываем значения
+    global.game_progress.gold = 0;
+    global.game_progress.elder_trial_completed = false;
+    global.game_progress.levels[4].lever_pulled = false;
+    global.game_progress.levels[3].completed = false;
     
     // Загружаем
-    var loaded_state = scr_save_system.load_game();
+    var load_success = load_game();
     
     // Проверяем, что все значения сохранены правильно
-    assert_equal(loaded_state.gold, 999, "Тест 4.1: Большое значение золота должно сохраняться");
-    assert_true(loaded_state.elder_trial_completed, "Тест 4.2: true-значения должны сохраняться");
-    assert_false(loaded_state.mechanic_training_completed, "Тест 4.3: false-значения должны сохраняться");
-    assert_true(scr_game_state.is_lever_pulled(loaded_state, 5), "Тест 4.4: опускание рычага должно сохраняться");
-    assert_true(scr_game_state.is_level_completed(loaded_state, 4), "Тест 4.5: завершение уровня должно сохраняться");
+    assert_true(load_success, "Тест 4.1: Загрузка должна быть успешной");
+    assert_equal(global.game_progress.gold, 999, "Тест 4.2: Большое значение золота должно сохраняться");
+    assert_true(global.game_progress.elder_trial_completed, "Тест 4.3: true-значения должны сохраняться");
+    assert_false(global.game_progress.mechanic_training_completed, "Тест 4.4: false-значения должны сохраняться");
+    assert_true(global.game_progress.levels[4].lever_pulled, "Тест 4.5: опускание рычага должно сохраняться");
+    assert_true(global.game_progress.levels[3].completed, "Тест 4.6: завершение уровня должно сохраняться");
     
     show_debug_message("Тест 4 пройден: Проверка корректности формата сохранения");
+}
+
+// Тест 5: Проверка функции has_save
+function test_has_save() {
+    // Удаляем файлы сохранения
+    if (file_exists("adventure_puzzle_save.sav")) {
+        file_delete("adventure_puzzle_save.sav");
+    }
+    if (file_exists("adventure_puzzle_save.ini")) {
+        file_delete("adventure_puzzle_save.ini");
+    }
+    
+    // Проверяем, что сохранения нет
+    assert_false(has_save(), "Тест 5.1: has_save должна вернуть false при отсутствии файлов");
+    
+    // Инициализируем и сохраняем
+    if (!variable_global_exists("initialized")) {
+        init_global_vars();
+    }
+    save_game();
+    
+    // Проверяем, что сохранение есть
+    assert_true(has_save(), "Тест 5.2: has_save должна вернуть true после сохранения");
+    
+    show_debug_message("Тест 5 пройден: Проверка функции has_save");
 }
 
 // Вспомогательные функции для тестирования
@@ -131,10 +181,13 @@ function assert_equal(actual, expected, message) {
 
 // Функция запуска всех тестов
 function run_all_tests() {
+    show_debug_message("=== Запуск тестов scr_save_system ===");
+    
     test_save_and_load();
     test_reset_game();
     test_load_nonexistent_save();
     test_save_format_correctness();
+    test_has_save();
     
-    show_debug_message("Все тесты для scr_save_system пройдены успешно!");
+    show_debug_message("=== Все тесты для scr_save_system пройдены успешно! ===");
 }
