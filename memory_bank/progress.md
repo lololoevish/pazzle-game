@@ -43,7 +43,7 @@
 
 ## Контроль изменений
 
-### Последний проверенный коммит: aadd488
+### Последний проверенный коммит: 9a0382e
 
 ### Хронология изменений:
 - 17.04.2026: Интегрирована VN-система с портретами в obj_npc: добавлены поля use_vn_system, vn_character_id, vn_dialogue_tree; обновлены события Create, Step, Draw GUI; создана функция автоматической инициализации VN-системы; созданы диалоговые деревья для трёх NPC (elder_dialogue_tree.json, mechanic_dialogue_tree.json, archivist_dialogue_tree.json); создана документация vn_system_integration.md
