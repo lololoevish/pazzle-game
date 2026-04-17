@@ -148,6 +148,7 @@ assets/
 - `docs/asset_integration_plan.md` - План интеграции ассетов из Rust в GameMaker
 - `docs/gms2_asset_migration_technical_spec.md` - Техническая спецификация миграции ассетов
 - `docs/cave_assets_3_6_guide.md` - Руководство по тематическим ассетам пещер 3-6
+- `docs/cave_assets_7_12_guide.md` - Руководство по тематическим ассетам пещер 7-12
 - `docs/thematic_assets_guide.md` - Руководство по тематическим ассетам пещер 1-2
 - `docs/quick_asset_integration_guide.md` - Краткое руководство по интеграции ассетов
 - `docs/levels_7_12_guide.md` - Описание расширенных уровней 7-12
