@@ -1,0 +1,23 @@
+{
+  "name": "spr_portrait_mechanic_happy",
+  "type": "sprite",
+  "width": 200,
+  "height": 250,
+  "frames": 1,
+  "origin": {
+    "x": 100,
+    "y": 125
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 199,
+    "bottom": 249
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "description": "Портрет Роана (механик) - довольный, улыбается.",
+  "tags": ["portrait", "npc", "mechanic", "happy"],
+  "texture_group": "Default"
+}

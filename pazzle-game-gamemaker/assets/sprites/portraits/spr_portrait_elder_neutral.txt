@@ -1,0 +1,29 @@
+{
+  "name": "spr_portrait_elder_neutral",
+  "type": "sprite",
+  "width": 200,
+  "height": 250,
+  "frames": 1,
+  "origin": {
+    "x": 100,
+    "y": 125
+  },
+  "bbox": {
+    "left": 0,
+    "top": 0,
+    "right": 199,
+    "bottom": 249
+  },
+  "transparent": true,
+  "smooth": false,
+  "preload": true,
+  "description": "Портрет Иара (староста) - спокойное авторитетное выражение. Представительный, борода, официальная одежда.",
+  "tags": ["portrait", "npc", "elder", "neutral"],
+  "texture_group": "Default",
+  "character": {
+    "id": "elder",
+    "name": "Иар",
+    "age": 50,
+    "role": "Староста"
+  }
+}
