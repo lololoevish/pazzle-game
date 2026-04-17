@@ -1,0 +1,155 @@
+{
+  "cave_id": "cave12_epic",
+  "level": 12,
+  "theme": "ultimate_nexus",
+  "color_palette": {
+    "primary": "#0a0a1a",
+    "accent": "#ff0066",
+    "details": "#3a1a2a",
+    "light": "#ff3399"
+  },
+  "background": {
+    "sprite": "spr_cave12_background",
+    "size": "800x600",
+    "description": "Эпический финальный зал с пульсирующей энергией"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave12_nexus_core",
+      "size": "192x256",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 12,
+      "fps": 15,
+      "description": "Центральное ядро нексуса",
+      "placement": "center",
+      "frequency": "unique",
+      "light_source": true,
+      "light_color": "#ff0066",
+      "light_radius": 320
+    },
+    {
+      "sprite": "spr_cave12_power_conduit",
+      "size": "64x128",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 8,
+      "fps": 12,
+      "description": "Энергетический проводник",
+      "placement": "walls",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave12_challenge_altar",
+      "size": "128x96",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "description": "Алтарь испытания",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave12_energy_vein",
+      "size": "64x128",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 10,
+      "fps": 15,
+      "description": "Энергетическая жила",
+      "placement": "walls",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#ff3399",
+      "light_radius": 64
+    },
+    {
+      "sprite": "spr_cave12_floating_shard",
+      "size": "48x48",
+      "layer": "Decorations_Air",
+      "animated": true,
+      "frames": 8,
+      "fps": 12,
+      "description": "Парящий осколок силы",
+      "placement": "air",
+      "frequency": "common",
+      "movement": "orbit_core"
+    },
+    {
+      "sprite": "spr_cave12_rune_ultimate",
+      "size": "64x64",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 12,
+      "fps": 18,
+      "description": "Руна высшей силы",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave12_energy_storm",
+      "size": "256x256",
+      "layer": "Effects_Background",
+      "animated": true,
+      "frames": 16,
+      "fps": 20,
+      "alpha": 0.6,
+      "blend_mode": "additive",
+      "description": "Энергетический шторм",
+      "movement": "chaotic_swirl"
+    },
+    {
+      "sprite": "spr_cave12_lightning_arc",
+      "size": "128x256",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 8,
+      "fps": 24,
+      "alpha": 0.9,
+      "description": "Дуга молнии",
+      "trigger": "random_frequent"
+    },
+    {
+      "sprite": "spr_cave12_victory_burst",
+      "size": "192x192",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 15,
+      "fps": 20,
+      "alpha": 1.0,
+      "description": "Вспышка победы",
+      "trigger": "puzzle_complete"
+    },
+    {
+      "sprite": "spr_cave12_power_wave",
+      "size": "320x320",
+      "layer": "Effects_Background",
+      "animated": true,
+      "frames": 12,
+      "fps": 15,
+      "alpha": 0.5,
+      "blend_mode": "additive",
+      "description": "Волна силы от ядра",
+      "movement": "radial_pulse"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave12_nexus_roar",
+    "snd_cave12_energy_crackle",
+    "snd_cave12_power_surge",
+    "snd_cave12_epic_ambience"
+  ],
+  "lighting": {
+    "ambient_light": 0.2,
+    "shadow_intensity": 0.85,
+    "red_tint": 0.6,
+    "pulsing": true,
+    "pulse_speed": 0.6,
+    "dynamic_intensity": true
+  }
+}

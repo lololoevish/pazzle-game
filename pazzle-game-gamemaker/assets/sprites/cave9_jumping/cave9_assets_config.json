@@ -1,0 +1,110 @@
+{
+  "cave_id": "cave9_jumping",
+  "level": 9,
+  "theme": "aerial_challenge",
+  "color_palette": {
+    "primary": "#0a1428",
+    "accent": "#ff6b35",
+    "details": "#3a4a5a",
+    "light": "#ff9966"
+  },
+  "background": {
+    "sprite": "spr_cave9_background",
+    "size": "800x600",
+    "description": "Высокая пещера с парящими платформами"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave9_platform_floating",
+      "size": "96x24",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 4,
+      "fps": 6,
+      "description": "Парящая платформа",
+      "placement": "air",
+      "frequency": "common",
+      "movement": "slow_vertical"
+    },
+    {
+      "sprite": "spr_cave9_platform_crumbling",
+      "size": "96x24",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "description": "Разрушающаяся платформа",
+      "placement": "air",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave9_spring_pad",
+      "size": "48x32",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 4,
+      "fps": 12,
+      "description": "Пружинная площадка",
+      "placement": "platforms",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave9_wind_current",
+      "size": "64x128",
+      "layer": "Decorations_Air",
+      "animated": true,
+      "frames": 6,
+      "fps": 12,
+      "description": "Поток ветра",
+      "placement": "air",
+      "frequency": "medium",
+      "alpha": 0.5
+    },
+    {
+      "sprite": "spr_cave9_checkpoint_flag",
+      "size": "32x48",
+      "layer": "Decorations_Items",
+      "animated": true,
+      "frames": 3,
+      "fps": 8,
+      "description": "Флаг чекпоинта",
+      "placement": "platforms",
+      "frequency": "rare"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave9_jump_trail",
+      "size": "32x32",
+      "layer": "Effects_Player",
+      "animated": true,
+      "frames": 5,
+      "fps": 15,
+      "alpha": 0.6,
+      "description": "След прыжка",
+      "trigger": "player_jump"
+    },
+    {
+      "sprite": "spr_cave9_platform_break",
+      "size": "96x48",
+      "layer": "Effects_Particles",
+      "animated": true,
+      "frames": 8,
+      "fps": 18,
+      "description": "Разрушение платформы",
+      "trigger": "platform_collapse"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave9_wind_howl",
+    "snd_cave9_platform_creak",
+    "snd_cave9_distant_fall"
+  ],
+  "lighting": {
+    "ambient_light": 0.25,
+    "shadow_intensity": 0.75,
+    "orange_tint": 0.3
+  }
+}

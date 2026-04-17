@@ -1,0 +1,114 @@
+{
+  "cave_id": "cave7_riddle",
+  "level": 7,
+  "theme": "sphinx_wisdom",
+  "color_palette": {
+    "primary": "#2a1810",
+    "accent": "#d4a574",
+    "details": "#8b7355",
+    "light": "#f4d03f"
+  },
+  "background": {
+    "sprite": "spr_cave7_background",
+    "size": "800x600",
+    "description": "Древняя пещера со сфинксом, иероглифы, песчаник"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave7_sphinx_statue",
+      "size": "128x192",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Статуя сфинкса",
+      "placement": "center",
+      "frequency": "unique"
+    },
+    {
+      "sprite": "spr_cave7_pedestal_stone",
+      "size": "64x48",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Каменный пьедестал",
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave7_column",
+      "size": "48x128",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Древняя колонна",
+      "placement": "floor",
+      "frequency": "common"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave7_hieroglyph",
+      "size": "32x32",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 3,
+      "fps": 4,
+      "description": "Светящиеся иероглифы",
+      "placement": "walls",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#d4a574",
+      "light_radius": 48
+    },
+    {
+      "sprite": "spr_cave7_scroll_ancient",
+      "size": "24x32",
+      "layer": "Decorations_Items",
+      "animated": false,
+      "description": "Древний свиток с загадкой",
+      "placement": "floor_furniture",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave7_sand_pile",
+      "size": "48x24",
+      "layer": "Decorations_Floor",
+      "animated": false,
+      "description": "Кучка песка",
+      "placement": "floor",
+      "frequency": "common"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave7_dust_golden",
+      "size": "64x64",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 6,
+      "fps": 8,
+      "alpha": 0.4,
+      "blend_mode": "additive",
+      "description": "Золотистая пыль",
+      "movement": "slow_float"
+    },
+    {
+      "sprite": "spr_cave7_wisdom_glow",
+      "size": "48x48",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 4,
+      "fps": 10,
+      "alpha": 0.8,
+      "description": "Свечение мудрости при правильном ответе",
+      "trigger": "correct_answer"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave7_wind_desert",
+    "snd_cave7_sphinx_whisper",
+    "snd_cave7_sand_shift"
+  ],
+  "lighting": {
+    "ambient_light": 0.35,
+    "shadow_intensity": 0.65,
+    "warm_tint": 0.4
+  }
+}

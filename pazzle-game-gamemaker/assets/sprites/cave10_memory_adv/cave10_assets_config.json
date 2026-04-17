@@ -1,0 +1,105 @@
+{
+  "cave_id": "cave10_memory_adv",
+  "level": 10,
+  "theme": "mind_palace",
+  "color_palette": {
+    "primary": "#1a0f2e",
+    "accent": "#9b4dca",
+    "details": "#4a2a5a",
+    "light": "#c77dff"
+  },
+  "background": {
+    "sprite": "spr_cave10_background",
+    "size": "800x600",
+    "description": "Ментальная пещера с абстрактными формами"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave10_memory_node",
+      "size": "64x64",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 8,
+      "fps": 10,
+      "description": "Узел памяти",
+      "placement": "grid",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#9b4dca",
+      "light_radius": 80
+    },
+    {
+      "sprite": "spr_cave10_pattern_pillar",
+      "size": "48x128",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 6,
+      "fps": 8,
+      "description": "Столб с паттерном",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave10_thought_fragment",
+      "size": "32x32",
+      "layer": "Decorations_Air",
+      "animated": true,
+      "frames": 4,
+      "fps": 6,
+      "description": "Фрагмент мысли",
+      "placement": "air",
+      "frequency": "common",
+      "movement": "slow_orbit"
+    },
+    {
+      "sprite": "spr_cave10_synapse",
+      "size": "64x16",
+      "layer": "Decorations_Connections",
+      "animated": true,
+      "frames": 3,
+      "fps": 12,
+      "description": "Синапс-связь",
+      "placement": "between_nodes",
+      "frequency": "common"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave10_mind_wave",
+      "size": "128x128",
+      "layer": "Effects_Background",
+      "animated": true,
+      "frames": 10,
+      "fps": 12,
+      "alpha": 0.4,
+      "blend_mode": "additive",
+      "description": "Волна сознания",
+      "movement": "pulse"
+    },
+    {
+      "sprite": "spr_cave10_memory_flash",
+      "size": "64x64",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 6,
+      "fps": 15,
+      "alpha": 0.9,
+      "description": "Вспышка воспоминания",
+      "trigger": "pattern_match"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave10_mind_hum",
+    "snd_cave10_thought_echo",
+    "snd_cave10_synapse_fire"
+  ],
+  "lighting": {
+    "ambient_light": 0.3,
+    "shadow_intensity": 0.7,
+    "purple_tint": 0.5,
+    "pulsing": true,
+    "pulse_speed": 0.3
+  }
+}

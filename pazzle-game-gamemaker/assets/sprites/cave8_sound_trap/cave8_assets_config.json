@@ -1,0 +1,102 @@
+{
+  "cave_id": "cave8_sound_trap",
+  "level": 8,
+  "theme": "acoustic_danger",
+  "color_palette": {
+    "primary": "#1a1a2e",
+    "accent": "#00d4ff",
+    "details": "#2d4a5a",
+    "light": "#66e0ff"
+  },
+  "background": {
+    "sprite": "spr_cave8_background",
+    "size": "800x600",
+    "description": "Пещера с акустическими ловушками, звуковые волны"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave8_sound_emitter",
+      "size": "64x64",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 6,
+      "fps": 12,
+      "description": "Излучатель звука",
+      "placement": "walls_ceiling",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave8_resonator",
+      "size": "48x96",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "description": "Резонатор",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave8_sound_crystal",
+      "size": "32x32",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 8,
+      "fps": 15,
+      "description": "Звуковой кристалл",
+      "placement": "walls",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#00d4ff",
+      "light_radius": 64
+    },
+    {
+      "sprite": "spr_cave8_wave_marker",
+      "size": "24x24",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 3,
+      "fps": 10,
+      "description": "Маркер звуковой волны",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave8_sound_wave",
+      "size": "128x128",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 8,
+      "fps": 20,
+      "alpha": 0.6,
+      "blend_mode": "additive",
+      "description": "Визуализация звуковой волны",
+      "movement": "radial_expand"
+    },
+    {
+      "sprite": "spr_cave8_trap_trigger",
+      "size": "96x96",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 6,
+      "fps": 15,
+      "alpha": 0.7,
+      "description": "Срабатывание ловушки",
+      "trigger": "sound_detected"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave8_echo_pulse",
+    "snd_cave8_resonance",
+    "snd_cave8_trap_hum"
+  ],
+  "lighting": {
+    "ambient_light": 0.3,
+    "shadow_intensity": 0.7,
+    "cyan_tint": 0.3
+  }
+}

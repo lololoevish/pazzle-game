@@ -1,0 +1,129 @@
+{
+  "cave_id": "cave11_song",
+  "level": 11,
+  "theme": "harmonic_cavern",
+  "color_palette": {
+    "primary": "#1a1a3e",
+    "accent": "#7b68ee",
+    "details": "#4a3a6a",
+    "light": "#9d8fff"
+  },
+  "background": {
+    "sprite": "spr_cave11_background",
+    "size": "800x600",
+    "description": "Музыкальная пещера с резонирующими сталактитами"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave11_crystal_chime",
+      "size": "32x96",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 8,
+      "fps": 12,
+      "description": "Кристаллический колокольчик",
+      "placement": "ceiling",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#7b68ee",
+      "light_radius": 72
+    },
+    {
+      "sprite": "spr_cave11_note_pedestal",
+      "size": "48x64",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Пьедестал с нотой",
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave11_harp_stone",
+      "size": "96x128",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 4,
+      "fps": 6,
+      "description": "Каменная арфа",
+      "placement": "floor",
+      "frequency": "rare"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave11_music_rune",
+      "size": "32x32",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 6,
+      "fps": 8,
+      "description": "Музыкальная руна",
+      "placement": "walls",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#9d8fff",
+      "light_radius": 48
+    },
+    {
+      "sprite": "spr_cave11_sound_wave_visual",
+      "size": "64x32",
+      "layer": "Decorations_Air",
+      "animated": true,
+      "frames": 8,
+      "fps": 15,
+      "description": "Визуализация звуковой волны",
+      "placement": "air",
+      "frequency": "medium",
+      "alpha": 0.6
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave11_note_particle",
+      "size": "16x16",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 4,
+      "fps": 10,
+      "alpha": 0.7,
+      "blend_mode": "additive",
+      "description": "Плавающие ноты",
+      "movement": "slow_float"
+    },
+    {
+      "sprite": "spr_cave11_harmony_burst",
+      "size": "96x96",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 10,
+      "fps": 20,
+      "alpha": 0.9,
+      "description": "Вспышка гармонии",
+      "trigger": "correct_melody"
+    },
+    {
+      "sprite": "spr_cave11_resonance_ring",
+      "size": "128x128",
+      "layer": "Effects_Background",
+      "animated": true,
+      "frames": 6,
+      "fps": 12,
+      "alpha": 0.5,
+      "blend_mode": "additive",
+      "description": "Кольцо резонанса",
+      "movement": "expand_fade"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave11_crystal_hum",
+    "snd_cave11_distant_melody",
+    "snd_cave11_echo_harmony"
+  ],
+  "lighting": {
+    "ambient_light": 0.35,
+    "shadow_intensity": 0.65,
+    "purple_tint": 0.4,
+    "pulsing": true,
+    "pulse_speed": 0.4
+  }
+}
