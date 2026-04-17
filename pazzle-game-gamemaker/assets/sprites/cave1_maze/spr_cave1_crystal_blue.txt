@@ -1,0 +1,9 @@
+// Sprite: spr_cave1_crystal_blue
+// Size: 24x24
+// Frames: 4
+// FPS: 8
+// Description: Пульсирующий синий кристалл
+// Color: Яркий синий (#4a90e2) с белыми бликами (#6bb6ff)
+// Animation: Плавная пульсация света
+// Light: Радиус 64px, цвет #4a90e2
+// Usage: Источник света в лабиринте

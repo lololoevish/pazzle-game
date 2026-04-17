@@ -1,0 +1,10 @@
+// Sprite: spr_cave2_dust_particles
+// Size: 64x64
+// Frames: 8
+// FPS: 12
+// Alpha: 0.3
+// Blend: Additive
+// Description: Плавающие частицы пыли
+// Color: Золотистый (#d4af37) с прозрачностью
+// Animation: Медленное вертикальное движение
+// Usage: Атмосферный эффект в архиве

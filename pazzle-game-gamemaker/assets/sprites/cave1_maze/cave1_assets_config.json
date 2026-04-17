@@ -1,0 +1,143 @@
+{
+  "cave_id": "cave1_maze",
+  "level": 1,
+  "theme": "exploration_echo",
+  "color_palette": {
+    "primary": "#1a2332",
+    "accent": "#4a90e2",
+    "details": "#2d3e50",
+    "light": "#6bb6ff"
+  },
+  "background": {
+    "sprite": "spr_cave1_background",
+    "size": "800x600",
+    "description": "Темная пещера с эхом, влажные стены, сталактиты"
+  },
+  "decorations": [
+    {
+      "sprite": "spr_cave1_stalactite_small",
+      "size": "16x32",
+      "layer": "Decorations_Top",
+      "animated": false,
+      "placement": "ceiling",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave1_stalactite_medium",
+      "size": "24x48",
+      "layer": "Decorations_Top",
+      "animated": false,
+      "placement": "ceiling",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave1_stalactite_large",
+      "size": "32x64",
+      "layer": "Decorations_Top",
+      "animated": true,
+      "frames": 2,
+      "fps": 4,
+      "description": "С каплями воды",
+      "placement": "ceiling",
+      "frequency": "rare"
+    },
+    {
+      "sprite": "spr_cave1_stalagmite_small",
+      "size": "16x24",
+      "layer": "Decorations_Bottom",
+      "animated": false,
+      "placement": "floor",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave1_stalagmite_medium",
+      "size": "24x32",
+      "layer": "Decorations_Bottom",
+      "animated": false,
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave1_crystal_blue",
+      "size": "24x24",
+      "layer": "Decorations_Bottom",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "description": "Пульсирующий синий кристалл",
+      "placement": "floor_walls",
+      "frequency": "medium",
+      "light_source": true,
+      "light_color": "#4a90e2",
+      "light_radius": 64
+    },
+    {
+      "sprite": "spr_cave1_water_puddle_small",
+      "size": "32x16",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "description": "Маленькая лужа с рябью",
+      "placement": "floor",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave1_water_puddle_large",
+      "size": "64x32",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 4,
+      "fps": 6,
+      "description": "Большая лужа с отражениями",
+      "placement": "floor",
+      "frequency": "rare"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave1_fog",
+      "size": "128x128",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "alpha": 0.4,
+      "blend_mode": "additive",
+      "description": "Плавающий туман",
+      "movement": "slow_horizontal"
+    },
+    {
+      "sprite": "spr_cave1_echo_effect",
+      "size": "64x64",
+      "layer": "Effects_Player",
+      "animated": true,
+      "frames": 4,
+      "fps": 12,
+      "alpha": 0.6,
+      "description": "Визуальный эффект эха при движении",
+      "trigger": "player_move"
+    },
+    {
+      "sprite": "spr_cave1_water_drip",
+      "size": "8x16",
+      "layer": "Effects_Particles",
+      "animated": true,
+      "frames": 3,
+      "fps": 8,
+      "description": "Капли воды со сталактитов",
+      "trigger": "random_interval",
+      "frequency": "occasional"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave1_water_drip",
+    "snd_cave1_echo",
+    "snd_cave1_wind"
+  ],
+  "lighting": {
+    "ambient_light": 0.3,
+    "shadow_intensity": 0.7,
+    "fog_density": 0.4
+  }
+}

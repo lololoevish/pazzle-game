@@ -1,0 +1,10 @@
+// Sprite: spr_cave1_fog
+// Size: 128x128
+// Frames: 6
+// FPS: 10
+// Alpha: 0.4
+// Blend: Additive
+// Description: Плавающий туман
+// Color: Серо-синий (#2d3e50) с прозрачностью
+// Animation: Медленное горизонтальное движение
+// Usage: Атмосферный эффект переднего плана

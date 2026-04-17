@@ -1,0 +1,5 @@
+// Sprite: spr_cave1_stalactite_medium
+// Size: 24x48
+// Description: Средний сталактит
+// Color: Темно-синий (#1a2332) с голубыми бликами (#4a90e2)
+// Usage: Декорация потолка в лабиринте
