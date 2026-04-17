@@ -1,0 +1,11 @@
+// Sprite: spr_cave3_gear_large
+// Size: 96x96, Frames: 8, FPS: 6
+// Description: Большая вращающаяся шестерня для механической пещеры
+// Layer: Furniture
+// Theme: Clockwork Mechanism
+
+// Placeholder sprite configuration
+// В GameMaker Studio 2 создать спрайт с параметрами:
+// - Origin: Center
+// - Collision: Precise
+// - Animation: Loop

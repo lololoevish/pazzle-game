@@ -1,0 +1,8 @@
+// Sprite: spr_cave6_core_spire
+// Size: 128x256, Frames: 8, FPS: 10
+// Description: Центральный энергетический шпиль
+// Layer: Furniture
+// Light: #ff3366, Radius: 256
+// Unique: true
+
+// Placeholder sprite configuration

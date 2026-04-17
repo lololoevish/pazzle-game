@@ -1,0 +1,7 @@
+// Sprite: spr_cave5_crystal_cluster
+// Size: 48x48, Frames: 5, FPS: 8
+// Description: Скопление кристаллов с пульсацией, источник света
+// Layer: Decorations_Walls
+// Light: #00ffcc, Radius: 96
+
+// Placeholder sprite configuration

@@ -1,0 +1,7 @@
+// Sprite: spr_cave5_platform_crystal
+// Size: 96x24, Frames: 3, FPS: 6
+// Description: Кристаллическая платформа со свечением
+// Layer: Furniture
+// Light: #00ffcc, Radius: 80
+
+// Placeholder sprite configuration

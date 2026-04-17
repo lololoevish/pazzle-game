@@ -1,0 +1,8 @@
+// Sprite: spr_cave6_energy_orb
+// Size: 32x32, Frames: 8, FPS: 15
+// Description: Энергетическая сфера для сбора
+// Layer: Decorations_Items
+// Light: #ff6699, Radius: 64
+// Collectible: true
+
+// Placeholder sprite configuration

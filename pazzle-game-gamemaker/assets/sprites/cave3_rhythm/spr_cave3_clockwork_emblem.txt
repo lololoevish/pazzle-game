@@ -1,0 +1,7 @@
+// Sprite: spr_cave3_clockwork_emblem
+// Size: 48x48, Frames: 4, FPS: 4
+// Description: Часовой эмблем с пульсацией, источник света
+// Layer: Decorations_Walls
+// Light: #c9a961, Radius: 64
+
+// Placeholder sprite configuration

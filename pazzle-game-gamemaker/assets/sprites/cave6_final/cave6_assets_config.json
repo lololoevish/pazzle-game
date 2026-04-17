@@ -1,0 +1,165 @@
+{
+  "cave_id": "cave6_final",
+  "level": 6,
+  "theme": "core_nexus",
+  "color_palette": {
+    "primary": "#1a0a0a",
+    "accent": "#ff3366",
+    "details": "#4a1a2a",
+    "light": "#ff6699"
+  },
+  "background": {
+    "sprite": "spr_cave6_background",
+    "size": "800x600",
+    "description": "Центральное ядро пещер, пульсирующая энергия"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave6_core_spire",
+      "size": "128x256",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 8,
+      "fps": 10,
+      "description": "Центральный энергетический шпиль",
+      "placement": "center",
+      "frequency": "unique",
+      "light_source": true,
+      "light_color": "#ff3366",
+      "light_radius": 256
+    },
+    {
+      "sprite": "spr_cave6_energy_conduit",
+      "size": "64x96",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 6,
+      "fps": 12,
+      "description": "Энергетический проводник",
+      "placement": "walls",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave6_altar",
+      "size": "96x64",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Древний алтарь",
+      "placement": "floor",
+      "frequency": "rare"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave6_energy_orb",
+      "size": "32x32",
+      "layer": "Decorations_Items",
+      "animated": true,
+      "frames": 8,
+      "fps": 15,
+      "description": "Энергетическая сфера",
+      "placement": "air",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#ff6699",
+      "light_radius": 64,
+      "collectible": true
+    },
+    {
+      "sprite": "spr_cave6_rune_circle",
+      "size": "64x64",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 6,
+      "fps": 8,
+      "description": "Круг рун с энергией",
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave6_energy_vein",
+      "size": "48x96",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 4,
+      "fps": 10,
+      "description": "Энергетическая жила",
+      "placement": "walls",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#ff3366",
+      "light_radius": 48
+    },
+    {
+      "sprite": "spr_cave6_floating_rock",
+      "size": "32x32",
+      "layer": "Decorations_Air",
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "description": "Парящий камень",
+      "placement": "air",
+      "frequency": "medium",
+      "movement": "slow_float"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave6_energy_wave",
+      "size": "128x128",
+      "layer": "Effects_Background",
+      "animated": true,
+      "frames": 10,
+      "fps": 12,
+      "alpha": 0.5,
+      "blend_mode": "additive",
+      "description": "Волны энергии от ядра",
+      "movement": "radial_pulse"
+    },
+    {
+      "sprite": "spr_cave6_lightning",
+      "size": "64x128",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 5,
+      "fps": 20,
+      "alpha": 0.8,
+      "description": "Молнии между проводниками",
+      "trigger": "random_interval",
+      "frequency": "frequent"
+    },
+    {
+      "sprite": "spr_cave6_explosion",
+      "size": "96x96",
+      "layer": "Effects_Particles",
+      "animated": true,
+      "frames": 8,
+      "fps": 18,
+      "description": "Энергетический взрыв",
+      "trigger": "puzzle_fail"
+    },
+    {
+      "sprite": "spr_cave6_success_burst",
+      "size": "128x128",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 10,
+      "fps": 15,
+      "alpha": 0.9,
+      "description": "Вспышка при успехе",
+      "trigger": "puzzle_complete"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave6_core_pulse",
+    "snd_cave6_energy_crackle",
+    "snd_cave6_deep_hum"
+  ],
+  "lighting": {
+    "ambient_light": 0.25,
+    "shadow_intensity": 0.8,
+    "red_tint": 0.5,
+    "pulsing": true,
+    "pulse_speed": 0.5
+  }
+}

@@ -1,0 +1,7 @@
+// Sprite: spr_cave4_mirror_shard
+// Size: 32x32, Frames: 3, FPS: 6
+// Description: Осколок зеркала с мерцанием, источник света
+// Layer: Decorations_Walls
+// Light: #9b59b6, Radius: 48
+
+// Placeholder sprite configuration

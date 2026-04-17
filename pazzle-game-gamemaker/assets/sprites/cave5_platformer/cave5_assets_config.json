@@ -1,0 +1,145 @@
+{
+  "cave_id": "cave5_platformer",
+  "level": 5,
+  "theme": "crystal_cavern",
+  "color_palette": {
+    "primary": "#0f1419",
+    "accent": "#00ffcc",
+    "details": "#1a3a3a",
+    "light": "#66ffee"
+  },
+  "background": {
+    "sprite": "spr_cave5_background",
+    "size": "800x600",
+    "description": "Кристаллическая пещера с платформами и разломами"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave5_platform_stone",
+      "size": "96x24",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Каменная платформа",
+      "placement": "air",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave5_platform_crystal",
+      "size": "96x24",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "description": "Кристаллическая платформа со свечением",
+      "placement": "air",
+      "frequency": "medium",
+      "light_source": true,
+      "light_color": "#00ffcc",
+      "light_radius": 80
+    },
+    {
+      "sprite": "spr_cave5_pillar",
+      "size": "32x128",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Кристаллический столб",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave5_crystal_cluster",
+      "size": "48x48",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 5,
+      "fps": 8,
+      "description": "Скопление кристаллов с пульсацией",
+      "placement": "walls_floor",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#00ffcc",
+      "light_radius": 96
+    },
+    {
+      "sprite": "spr_cave5_crystal_shard",
+      "size": "24x32",
+      "layer": "Decorations_Items",
+      "animated": true,
+      "frames": 4,
+      "fps": 10,
+      "description": "Одиночный кристалл для сбора",
+      "placement": "air_platforms",
+      "frequency": "common",
+      "collectible": true
+    },
+    {
+      "sprite": "spr_cave5_crack",
+      "size": "64x32",
+      "layer": "Decorations_Floor",
+      "animated": false,
+      "description": "Трещина в полу",
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave5_glow_vein",
+      "size": "32x64",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "description": "Светящаяся жила в стене",
+      "placement": "walls",
+      "frequency": "common"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave5_particle_float",
+      "size": "8x8",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 4,
+      "fps": 12,
+      "alpha": 0.6,
+      "blend_mode": "additive",
+      "description": "Плавающие светящиеся частицы",
+      "movement": "slow_float"
+    },
+    {
+      "sprite": "spr_cave5_crystal_shine",
+      "size": "32x32",
+      "layer": "Effects_Decorations",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "alpha": 0.7,
+      "blend_mode": "additive",
+      "description": "Блеск кристаллов",
+      "trigger": "proximity"
+    },
+    {
+      "sprite": "spr_cave5_jump_trail",
+      "size": "24x24",
+      "layer": "Effects_Player",
+      "animated": true,
+      "frames": 4,
+      "fps": 15,
+      "alpha": 0.5,
+      "description": "След при прыжке игрока",
+      "trigger": "player_jump"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave5_crystal_hum",
+    "snd_cave5_wind_whistle",
+    "snd_cave5_distant_rumble"
+  ],
+  "lighting": {
+    "ambient_light": 0.3,
+    "shadow_intensity": 0.7,
+    "cyan_tint": 0.4
+  }
+}

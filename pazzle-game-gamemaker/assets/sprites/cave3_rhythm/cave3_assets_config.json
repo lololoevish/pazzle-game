@@ -1,0 +1,144 @@
+{
+  "cave_id": "cave3_rhythm",
+  "level": 3,
+  "theme": "clockwork_mechanism",
+  "color_palette": {
+    "primary": "#2c1810",
+    "accent": "#c9a961",
+    "details": "#8b6f47",
+    "light": "#ffcc66"
+  },
+  "background": {
+    "sprite": "spr_cave3_background",
+    "size": "800x600",
+    "description": "Механическая пещера с часовыми механизмами, шестернями"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave3_gear_large",
+      "size": "96x96",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 8,
+      "fps": 6,
+      "description": "Большая вращающаяся шестерня",
+      "placement": "walls",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave3_gear_medium",
+      "size": "64x64",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 6,
+      "fps": 8,
+      "description": "Средняя шестерня",
+      "placement": "walls_floor",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave3_pendulum",
+      "size": "32x96",
+      "layer": "Furniture",
+      "animated": true,
+      "frames": 10,
+      "fps": 12,
+      "description": "Качающийся маятник",
+      "placement": "ceiling",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave3_clockwork_emblem",
+      "size": "48x48",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 4,
+      "fps": 4,
+      "description": "Часовой эмблем с пульсацией",
+      "placement": "walls",
+      "frequency": "medium",
+      "light_source": true,
+      "light_color": "#c9a961",
+      "light_radius": 64
+    },
+    {
+      "sprite": "spr_cave3_chain",
+      "size": "16x64",
+      "layer": "Decorations_Walls",
+      "animated": false,
+      "description": "Металлическая цепь",
+      "placement": "walls_ceiling",
+      "frequency": "common"
+    },
+    {
+      "sprite": "spr_cave3_spring",
+      "size": "24x32",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 3,
+      "fps": 10,
+      "description": "Пружина с пульсацией",
+      "placement": "floor",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave3_cog_small",
+      "size": "16x16",
+      "layer": "Decorations_Items",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "description": "Маленькая вращающаяся шестеренка",
+      "placement": "floor_furniture",
+      "frequency": "common"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave3_steam",
+      "size": "64x64",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "alpha": 0.5,
+      "blend_mode": "additive",
+      "description": "Пар из механизмов",
+      "movement": "slow_vertical"
+    },
+    {
+      "sprite": "spr_cave3_spark",
+      "size": "16x16",
+      "layer": "Effects_Particles",
+      "animated": true,
+      "frames": 4,
+      "fps": 15,
+      "description": "Искры от механизмов",
+      "trigger": "gear_interaction",
+      "frequency": "occasional"
+    },
+    {
+      "sprite": "spr_cave3_rhythm_pulse",
+      "size": "32x32",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 4,
+      "fps": 12,
+      "alpha": 0.8,
+      "description": "Пульсация ритма в головоломке",
+      "trigger": "puzzle_beat"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave3_gears_turning",
+    "snd_cave3_ticking",
+    "snd_cave3_steam_hiss"
+  ],
+  "lighting": {
+    "ambient_light": 0.35,
+    "shadow_intensity": 0.65,
+    "warm_tint": 0.4
+  }
+}

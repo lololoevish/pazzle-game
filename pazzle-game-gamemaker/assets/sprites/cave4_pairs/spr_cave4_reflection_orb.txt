@@ -1,0 +1,7 @@
+// Sprite: spr_cave4_reflection_orb
+// Size: 24x24, Frames: 6, FPS: 10
+// Description: Светящаяся сфера отражения
+// Layer: Decorations_Items
+// Light: #c39bd3, Radius: 64
+
+// Placeholder sprite configuration

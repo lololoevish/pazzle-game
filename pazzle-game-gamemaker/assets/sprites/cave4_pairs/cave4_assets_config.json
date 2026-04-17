@@ -1,0 +1,140 @@
+{
+  "cave_id": "cave4_pairs",
+  "level": 4,
+  "theme": "mirror_reflection",
+  "color_palette": {
+    "primary": "#1a1a2e",
+    "accent": "#9b59b6",
+    "details": "#4a4a6a",
+    "light": "#c39bd3"
+  },
+  "background": {
+    "sprite": "spr_cave4_background",
+    "size": "800x600",
+    "description": "Зеркальная пещера с отражениями и симметрией"
+  },
+  "furniture": [
+    {
+      "sprite": "spr_cave4_mirror_frame_large",
+      "size": "96x128",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Большая зеркальная рама",
+      "placement": "walls",
+      "frequency": "medium"
+    },
+    {
+      "sprite": "spr_cave4_mirror_stand",
+      "size": "48x64",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Зеркало на подставке",
+      "placement": "floor",
+      "frequency": "rare"
+    },
+    {
+      "sprite": "spr_cave4_pedestal",
+      "size": "32x48",
+      "layer": "Furniture",
+      "animated": false,
+      "description": "Каменный пьедестал",
+      "placement": "floor",
+      "frequency": "medium"
+    }
+  ],
+  "decorations": [
+    {
+      "sprite": "spr_cave4_mirror_shard",
+      "size": "32x32",
+      "layer": "Decorations_Walls",
+      "animated": true,
+      "frames": 3,
+      "fps": 6,
+      "description": "Осколок зеркала с мерцанием",
+      "placement": "walls_floor",
+      "frequency": "common",
+      "light_source": true,
+      "light_color": "#9b59b6",
+      "light_radius": 48
+    },
+    {
+      "sprite": "spr_cave4_reflection_orb",
+      "size": "24x24",
+      "layer": "Decorations_Items",
+      "animated": true,
+      "frames": 6,
+      "fps": 10,
+      "description": "Светящаяся сфера отражения",
+      "placement": "floor_furniture",
+      "frequency": "medium",
+      "light_source": true,
+      "light_color": "#c39bd3",
+      "light_radius": 64
+    },
+    {
+      "sprite": "spr_cave4_symmetry_rune",
+      "size": "32x32",
+      "layer": "Decorations_Floor",
+      "animated": true,
+      "frames": 4,
+      "fps": 8,
+      "description": "Руна симметрии",
+      "placement": "floor",
+      "frequency": "rare"
+    },
+    {
+      "sprite": "spr_cave4_glass_fragment",
+      "size": "16x16",
+      "layer": "Decorations_Floor",
+      "animated": false,
+      "description": "Осколок стекла",
+      "placement": "floor",
+      "frequency": "common"
+    }
+  ],
+  "effects": [
+    {
+      "sprite": "spr_cave4_shimmer",
+      "size": "64x64",
+      "layer": "Effects_Foreground",
+      "animated": true,
+      "frames": 8,
+      "fps": 12,
+      "alpha": 0.4,
+      "blend_mode": "additive",
+      "description": "Мерцающий эффект отражений",
+      "movement": "slow_wave"
+    },
+    {
+      "sprite": "spr_cave4_mirror_flash",
+      "size": "48x48",
+      "layer": "Effects_Particles",
+      "animated": true,
+      "frames": 5,
+      "fps": 15,
+      "description": "Вспышка от зеркала",
+      "trigger": "mirror_interaction"
+    },
+    {
+      "sprite": "spr_cave4_pair_match",
+      "size": "64x64",
+      "layer": "Effects_Puzzle",
+      "animated": true,
+      "frames": 6,
+      "fps": 12,
+      "alpha": 0.9,
+      "description": "Эффект совпадения пары",
+      "trigger": "pair_found"
+    }
+  ],
+  "ambient_sounds": [
+    "snd_cave4_glass_chime",
+    "snd_cave4_echo_whisper",
+    "snd_cave4_mirror_hum"
+  ],
+  "lighting": {
+    "ambient_light": 0.4,
+    "shadow_intensity": 0.6,
+    "purple_tint": 0.3
+  }
+}
