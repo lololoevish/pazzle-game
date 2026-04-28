@@ -3,7 +3,10 @@
  * Управляет системой достижений
  */
 
+#macro ACHIEVEMENT_DEFAULT_LEVEL_COUNT 12
+
 // Глобальная структура достижений
+
 global.achievements = {
     list: [],
     unlocked_count: 0,
@@ -20,9 +23,9 @@ function init_achievements() {
         // Прогресс
         create_achievement("ACH_FIRST_STEPS", "Первые шаги", "Завершите первую пещеру", 
             "progress", 10, [], "spr_ach_first_steps", false),
-        create_achievement("ACH_HALFWAY_THERE", "На полпути", "Завершите первые 6 пещер", 
+        create_achievement("ACH_HALFWAY_THERE", "На полпути", "Завершите половину маршрута",
             "progress", 50, [], "spr_ach_halfway", false),
-        create_achievement("ACH_EXPEDITION_COMPLETE", "Экспедиция завершена", "Завершите все 12 пещер", 
+        create_achievement("ACH_EXPEDITION_COMPLETE", "Экспедиция завершена", "Завершите все пещеры",
             "progress", 100, ["special_compass"], "spr_ach_expedition_complete", false),
         create_achievement("ACH_PERFECT_RUN", "Безупречное прохождение", "Завершите все пещеры без единой смерти", 
             "progress", 200, [], "spr_ach_perfect_run", false),
@@ -87,6 +90,33 @@ function create_achievement(id, name, description, category, reward_gold, reward
     };
 }
 
+function get_progress_level_count() {
+    if (!variable_global_exists("game_progress") || !variable_struct_exists(global.game_progress, "levels")) {
+        return ACHIEVEMENT_DEFAULT_LEVEL_COUNT;
+    }
+
+    return max(1, array_length(global.game_progress.levels));
+}
+
+function count_pulled_level_levers(max_levels) {
+    if (!variable_global_exists("game_progress") || !variable_struct_exists(global.game_progress, "levels")) {
+        return 0;
+    }
+
+    var count = 0;
+    var total_levels = min(max_levels, array_length(global.game_progress.levels));
+    for (var i = 0; i < total_levels; i++) {
+        if (global.game_progress.levels[i].lever_pulled) count++;
+    }
+
+    return count;
+}
+
+function is_full_expedition_complete_for_achievements() {
+    var total_levels = get_progress_level_count();
+    return count_pulled_level_levers(total_levels) >= total_levels;
+}
+
 // Проверка условий достижений
 function check_achievement_condition(achievement_id) {
     switch (achievement_id) {
@@ -94,29 +124,15 @@ function check_achievement_condition(achievement_id) {
             return global.game_progress.levels[0].lever_pulled;
         
         case "ACH_HALFWAY_THERE":
-            var count = 0;
-            for (var i = 0; i < 6; i++) {
-                if (global.game_progress.levels[i].lever_pulled) count++;
-            }
-            return count >= 6;
+            var halfway_count = ceil(get_progress_level_count() / 2);
+            return count_pulled_level_levers(halfway_count) >= halfway_count;
         
         case "ACH_EXPEDITION_COMPLETE":
-            var count = 0;
-            for (var i = 0; i < 12; i++) {
-                if (global.game_progress.levels[i].lever_pulled) count++;
-            }
-            return count >= 12;
+            return is_full_expedition_complete_for_achievements();
         
         case "ACH_PERFECT_RUN":
             if (!variable_global_exists("death_count")) global.death_count = 0;
-            var all_completed = true;
-            for (var i = 0; i < 12; i++) {
-                if (!global.game_progress.levels[i].lever_pulled) {
-                    all_completed = false;
-                    break;
-                }
-            }
-            return all_completed && global.death_count == 0;
+            return is_full_expedition_complete_for_achievements() && global.death_count == 0;
         
         case "ACH_SPEED_DEMON":
             if (!variable_global_exists("fastest_level_time")) return false;
@@ -165,14 +181,7 @@ function check_achievement_condition(achievement_id) {
         
         case "ACH_SPEEDRUN_LEGEND":
             if (!variable_global_exists("total_game_time")) return false;
-            var all_completed = true;
-            for (var i = 0; i < 12; i++) {
-                if (!global.game_progress.levels[i].lever_pulled) {
-                    all_completed = false;
-                    break;
-                }
-            }
-            return all_completed && global.total_game_time < 1800; // 30 минут
+            return is_full_expedition_complete_for_achievements() && global.total_game_time < 1800; // 30 минут
     }
     
     return false;

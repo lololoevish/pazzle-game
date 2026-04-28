@@ -1,6 +1,8 @@
 // scr_level_transition_platformer.gml
 // Скрипт для реализации коротких платформенных переходов между уровнями
 
+#macro TRANSITION_DEFAULT_LEVEL_COUNT 12
+
 // Инициализация системы переходов
 function init_level_transitions() {
     if (global.level_transition_data == undefined) {
@@ -141,13 +143,22 @@ function init_level_transitions() {
 }
 
 // Функция проверки завершения уровня и начала перехода
+function get_transition_level_count() {
+    if (variable_global_exists("game_progress") && variable_struct_exists(global.game_progress, "levels")) {
+        return max(1, array_length(global.game_progress.levels));
+    }
+
+    return TRANSITION_DEFAULT_LEVEL_COUNT;
+}
+
 function check_level_completion_for_transition(current_room) {
     init_level_transitions();
     
     // Получаем номер текущего уровня
     var current_level_num = extract_level_number_from_room(current_room);
     
-    if (current_level_num > 0 && current_level_num < 12) { // Не для 12-го уровня
+    var total_levels = get_transition_level_count();
+    if (current_level_num > 0 && current_level_num < total_levels) {
         var next_level_num = current_level_num + 1;
         var next_room = get_room_name_for_level(next_level_num);
         var transition_key = current_room + "_to_" + next_room;
