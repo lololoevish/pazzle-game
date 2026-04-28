@@ -1,80 +1,56 @@
-# 🛠️ Утилиты
+# Утилиты
 
 ## Обзор
 
-Утилиты предоставляют вспомогательные функции для игры.
+Актуальные утилиты находятся в `pazzle-game-gamemaker/scripts/`. Исторические Python utilities не являются основным runtime-кодом.
 
-## Список утилит
+## Основные GMS2-утилиты
 
-### SaveSystem
+### `scr_game_state.gml`
 
-**Файл**: `src/utils/save_system.py`
+Назначение: глобальное состояние игры, прогресс уровней, текущая цель и статус экспедиции.
 
-**Функции**:
-- `save_game(progress, inventory)` - сохранение игры
-- `load_game()` - загрузка игры
-- `has_save()` - проверка наличия сохранения
+Ключевые функции:
 
-**Формат**: JSON  
-**Расположение**: Рядом с exe или в корне проекта
+- `complete_level(level_num)`;
+- `set_level_lever_pulled(level_num, pulled)`;
+- `count_completed_levels()`;
+- `count_opened_levels()`;
+- `get_current_objective_level()`.
 
-### Helpers
+### `scr_save_system.gml`
 
-**Файл**: `src/utils/helpers.py`
+Назначение: сохранение, загрузка, reset и расширение legacy-сохранений до 12 уровней.
 
-**Функции**:
-- `clamp(value, min, max)` - ограничение значения
-- `distance(x1, y1, x2, y2)` - расстояние между точками
-- `random_color()` - случайный цвет
+Ключевые функции:
 
-### VisualEffects
+- `save_game()`;
+- `load_game()`;
+- `reset_game()`;
+- `has_save()`;
+- `get_save_info()`.
 
-**Файл**: `src/utils/visual_effects.py`
+### `scr_audio_manager.gml`
 
-**Функции**:
-- `create_particles(x, y, color)` - создание частиц
-- `create_text_effect(text, x, y)` - создание текстового эффекта
-- `create_screen_shake()` - тряска экрана
+Назначение: музыка, SFX, приоритеты и контекстные модификаторы громкости.
 
-### DialogueSystem
+Особенность: отсутствующие ресурсы должны безопасно возвращать `-1`, а не падать в runtime.
 
-**Файл**: `src/utils/dialogue_system.py`
+### `scr_ui_manager.gml`
 
-**Функции**:
-- `show_dialogue(text, portrait)` - показ диалога
-- `animate_text(text)` - анимация текста
-- `show_portrait(portrait)` - показ портрета
+Назначение: HUD, уведомления, диалоги, сообщения и сервисные UI-оверлеи.
 
-### UIElements
+### `scr_vn_*.gml`
 
-**Файл**: `src/utils/ui_elements.py`
+Назначение: VN-портреты, печатающийся текст, диалоговые деревья и VN UI.
 
-**Функции**:
-- `create_button(text, x, y, width, height)` - создание кнопки
-- `draw_button(button)` - отрисовка кнопки
-- `check_button_click(button, mouse_pos)` - проверка клика по кнопке
+### `scr_resource_manager.gml`, `scr_sprite_loader.gml`, `scr_asset_manager_master.gml`
+
+Назначение: загрузка и кеширование ресурсов для GMS2-ветки.
 
 ## Паттерны использования
 
-### Логирование
-
-```python
-import logging
-logging.basicConfig(filename='game.log', level=logging.DEBUG)
-logger = logging.getLogger()
-logger.info("Сообщение")
-```
-
-### Работа с файлами
-
-```python
-import json
-
-# Сохранение
-with open('savegame.json', 'w') as f:
-    json.dump(data, f)
-
-# Загрузка
-with open('savegame.json', 'r') as f:
-    data = json.load(f)
-```
+1. Перед чтением optional global использовать `variable_global_exists()`.
+2. Для поиска комнаты по имени использовать `asset_get_index()` и проверку `asset_room`.
+3. Для динамического доступа к struct-полям использовать `struct[$ key]`.
+4. Не добавлять новые `.gml` зависимости без обновления Memory Bank и релевантной документации.

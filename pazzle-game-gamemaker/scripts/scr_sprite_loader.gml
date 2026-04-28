@@ -3,7 +3,7 @@
 /// @param path Path to the sprite file
 
 // Global map for storing loaded sprites
-if (!global_exists("g_asset_sprites")) {
+if (!variable_global_exists("g_asset_sprites")) {
     global.g_asset_sprites = ds_map_create();
 }
 
@@ -34,15 +34,15 @@ const CORE_SPIRE_PATH = "assets/sprites/core_spire.png";
 
 /// Load a sprite by path and store in cache
 function sprite_load_from_path(path) {
-    var sprite_id = ds_map_find_value(g_asset_sprites, path);
+    var sprite_id = ds_map_find_value(global.g_asset_sprites, path);
     
     if (sprite_id == undefined) {
         // In actual implementation, this would load the sprite file
         // For now, we'll simulate by creating placeholder sprites
-        sprite_id = sprite_add(path, 1); // 1 frame initially
+        sprite_id = sprite_add(path, 1, false, false, 0, 0); // 1 frame initially
         
         if (sprite_id != -1) {
-            ds_map_set(g_asset_sprites, path, sprite_id);
+            ds_map_set(global.g_asset_sprites, path, sprite_id);
         }
     }
     
@@ -57,7 +57,7 @@ function load_player_sprites() {
     sprites[2] = sprite_load_from_path(PLAYER_SPRITE_LEFT_PATH);
     sprites[3] = sprite_load_from_path(PLAYER_SPRITE_RIGHT_PATH);
     
-    if (!global_exists("g_player_sprites")) {
+    if (!variable_global_exists("g_player_sprites")) {
         global.g_player_sprites = sprites;
     }
     
@@ -68,7 +68,7 @@ function load_player_sprites() {
 function load_item_sprite() {
     var sprite_id = sprite_load_from_path(ITEM_SPRITE_PATH);
     
-    if (!global_exists("g_item_sprite")) {
+    if (!variable_global_exists("g_item_sprite")) {
         global.g_item_sprite = sprite_id;
     }
     
@@ -79,7 +79,7 @@ function load_item_sprite() {
 function load_enemy_sprite() {
     var sprite_id = sprite_load_from_path(ENEMY_SPRITE_PATH);
     
-    if (!global_exists("g_enemy_sprite")) {
+    if (!variable_global_exists("g_enemy_sprite")) {
         global.g_enemy_sprite = sprite_id;
     }
     
@@ -93,7 +93,7 @@ function load_npc_sprites() {
     npc_sprites[1] = sprite_load_from_path(NPC_ROAN_PATH);
     npc_sprites[2] = sprite_load_from_path(NPC_TELLAH_PATH);
     
-    if (!global_exists("g_npc_sprites")) {
+    if (!variable_global_exists("g_npc_sprites")) {
         global.g_npc_sprites = npc_sprites;
     }
     
@@ -133,7 +133,7 @@ function get_npc_sprite_by_index(index) {
 
 /// Get item sprite
 function get_item_sprite() {
-    if (!global_exists("g_item_sprite")) {
+    if (!variable_global_exists("g_item_sprite")) {
         load_item_sprite();
     }
     return global.g_item_sprite;
@@ -151,7 +151,7 @@ function get_platform_sprite() {
 
 /// Get enemy sprite
 function get_enemy_sprite() {
-    if (!global_exists("g_enemy_sprite")) {
+    if (!variable_global_exists("g_enemy_sprite")) {
         load_enemy_sprite();
     }
     return global.g_enemy_sprite;
@@ -179,14 +179,16 @@ function get_core_spire_sprite() {
 
 /// Clean up all loaded sprites
 function asset_cleanup() {
-    var keys = ds_map_keys(g_asset_sprites);
+    if (!variable_global_exists("g_asset_sprites")) return;
+
+    var keys = ds_map_keys(global.g_asset_sprites);
     for (var i = 0; i < ds_list_size(keys); i++) {
         var key = ds_list_find_value(keys, i);
-        var sprite_id = ds_map_find_value(g_asset_sprites, key);
-        if (sprite_get_name(sprite_id) != "") {
+        var sprite_id = ds_map_find_value(global.g_asset_sprites, key);
+        if (sprite_id != -1 && sprite_exists(sprite_id)) {
             sprite_delete(sprite_id);
         }
     }
-    ds_map_clear(g_asset_sprites);
+    ds_map_clear(global.g_asset_sprites);
     ds_list_destroy(keys);
 }

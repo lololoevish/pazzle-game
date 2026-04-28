@@ -70,7 +70,7 @@ function riddle_submit_answer() {
         }
         
         // Очистка ввода
-        if (global.current_player_input != undefined) {
+        if (variable_global_exists("current_player_input")) {
             global.current_player_input = "";
         }
     }
@@ -102,7 +102,7 @@ function riddle_puzzle_draw(gui_view) {
     draw_text(50, 140, "Решено загадок: " + string(global.riddle_correct_count) + "/" + string(array_length(global.riddles)));
     
     // Показ ввода игрока
-    if (global.current_player_input != undefined) {
+    if (variable_global_exists("current_player_input")) {
         draw_text(50, 160, "Ваш ответ: " + global.current_player_input);
     }
     

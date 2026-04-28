@@ -27,7 +27,7 @@ function epic_finale_puzzle_init() {
     global.epic_finale_max_time = 3600; // 1 минута на прохождение
     
     // Используем элементы "дружбы" из Deltarune механик
-    global.player_mercy_points = (global.player_mercy_points != undefined) ? global.player_mercy_points : 0;
+    global.player_mercy_points = variable_global_exists("player_mercy_points") ? global.player_mercy_points : 0;
     
     return { challenges: global.epic_finale_total_challenges, name: "12-й Уровень (Финальный Подвиг)" };
 }

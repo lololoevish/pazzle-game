@@ -283,60 +283,68 @@ function play_music_by_state(game_state) {
 }
 
 // Вспомогательная функция для получения ресурса по имени
+function get_global_audio_resource(variable_name) {
+    if (variable_global_exists(variable_name)) {
+        return variable_global_get(variable_name);
+    }
+
+    return -1;
+}
+
 function get_sound_resource(name) {
     // Возвращаем -1 если ресурс не найден, чтобы избежать ошибок
     // В реальном проекте эти переменные будут определены в ресурсах
     switch (name) {
         // Основные темы
-        case "snd_menu_bg": return (global.snd_menu_bg == undefined) ? -1 : global.snd_menu_bg;
-        case "snd_town_bg": return (global.snd_town_bg == undefined) ? -1 : global.snd_town_bg;
-        case "snd_level_bg": return (global.snd_level_bg == undefined) ? -1 : global.snd_level_bg;
-        case "snd_victory_bg": return (global.snd_victory_bg == undefined) ? -1 : global.snd_victory_bg;
+        case "snd_menu_bg": return get_global_audio_resource("snd_menu_bg");
+        case "snd_town_bg": return get_global_audio_resource("snd_town_bg");
+        case "snd_level_bg": return get_global_audio_resource("snd_level_bg");
+        case "snd_victory_bg": return get_global_audio_resource("snd_victory_bg");
         
         // Музыка для ранних пещер (1-3)
-        case "snd_cave_early_1": return (global.snd_cave_early_1 == undefined) ? -1 : global.snd_cave_early_1;
-        case "snd_cave_early_2": return (global.snd_cave_early_2 == undefined) ? -1 : global.snd_cave_early_2;
-        case "snd_cave_early_3": return (global.snd_cave_early_3 == undefined) ? -1 : global.snd_cave_early_3;
+        case "snd_cave_early_1": return get_global_audio_resource("snd_cave_early_1");
+        case "snd_cave_early_2": return get_global_audio_resource("snd_cave_early_2");
+        case "snd_cave_early_3": return get_global_audio_resource("snd_cave_early_3");
         
         // Музыка для средних пещер (4-6)
-        case "snd_cave_mid_4": return (global.snd_cave_mid_4 == undefined) ? -1 : global.snd_cave_mid_4;
-        case "snd_cave_mid_5": return (global.snd_cave_mid_5 == undefined) ? -1 : global.snd_cave_mid_5;
-        case "snd_cave_mid_6": return (global.snd_cave_mid_6 == undefined) ? -1 : global.snd_cave_mid_6;
+        case "snd_cave_mid_4": return get_global_audio_resource("snd_cave_mid_4");
+        case "snd_cave_mid_5": return get_global_audio_resource("snd_cave_mid_5");
+        case "snd_cave_mid_6": return get_global_audio_resource("snd_cave_mid_6");
         
         // Музыка для новых пещер (7-9)
-        case "snd_cave_new_7": return (global.snd_cave_new_7 == undefined) ? -1 : global.snd_cave_new_7;
-        case "snd_cave_new_8": return (global.snd_cave_new_8 == undefined) ? -1 : global.snd_cave_new_8;
-        case "snd_cave_new_9": return (global.snd_cave_new_9 == undefined) ? -1 : global.snd_cave_new_9;
+        case "snd_cave_new_7": return get_global_audio_resource("snd_cave_new_7");
+        case "snd_cave_new_8": return get_global_audio_resource("snd_cave_new_8");
+        case "snd_cave_new_9": return get_global_audio_resource("snd_cave_new_9");
         
         // Музыка для поздних пещер (10-12)
-        case "snd_cave_late_10": return (global.snd_cave_late_10 == undefined) ? -1 : global.snd_cave_late_10;
-        case "snd_cave_late_11": return (global.snd_cave_late_11 == undefined) ? -1 : global.snd_cave_late_11;
-        case "snd_cave_finale_12": return (global.snd_cave_finale_12 == undefined) ? -1 : global.snd_cave_finale_12;
+        case "snd_cave_late_10": return get_global_audio_resource("snd_cave_late_10");
+        case "snd_cave_late_11": return get_global_audio_resource("snd_cave_late_11");
+        case "snd_cave_finale_12": return get_global_audio_resource("snd_cave_finale_12");
         
         // UI звуки
-        case "snd_ui_move": return (global.snd_ui_move == undefined) ? -1 : global.snd_ui_move;
-        case "snd_ui_confirm": return (global.snd_ui_confirm == undefined) ? -1 : global.snd_ui_confirm;
-        case "snd_ui_cancel": return (global.snd_ui_cancel == undefined) ? -1 : global.snd_ui_cancel;
-        case "snd_ui_success": return (global.snd_ui_success == undefined) ? -1 : global.snd_ui_success;
+        case "snd_ui_move": return get_global_audio_resource("snd_ui_move");
+        case "snd_ui_confirm": return get_global_audio_resource("snd_ui_confirm");
+        case "snd_ui_cancel": return get_global_audio_resource("snd_ui_cancel");
+        case "snd_ui_success": return get_global_audio_resource("snd_ui_success");
         
         // Игровые звуки
-        case "snd_lever_pull": return (global.snd_lever_pull == undefined) ? -1 : global.snd_lever_pull;
-        case "snd_level_complete": return (global.snd_level_complete == undefined) ? -1 : global.snd_level_complete;
-        case "snd_reward_obtained": return (global.snd_reward_obtained == undefined) ? -1 : global.snd_reward_obtained;
-        case "snd_puzzle_solve": return (global.snd_puzzle_solve == undefined) ? -1 : global.snd_puzzle_solve;
-        case "snd_player_move": return (global.snd_player_move == undefined) ? -1 : global.snd_player_move;
-        case "snd_player_jump": return (global.snd_player_jump == undefined) ? -1 : global.snd_player_jump;
-        case "snd_item_collect": return (global.snd_item_collect == undefined) ? -1 : global.snd_item_collect;
+        case "snd_lever_pull": return get_global_audio_resource("snd_lever_pull");
+        case "snd_level_complete": return get_global_audio_resource("snd_level_complete");
+        case "snd_reward_obtained": return get_global_audio_resource("snd_reward_obtained");
+        case "snd_puzzle_solve": return get_global_audio_resource("snd_puzzle_solve");
+        case "snd_player_move": return get_global_audio_resource("snd_player_move");
+        case "snd_player_jump": return get_global_audio_resource("snd_player_jump");
+        case "snd_item_collect": return get_global_audio_resource("snd_item_collect");
         
         // Эмоциональные темы
-        case "snd_music_friendly_encounter": return (global.snd_music_friendly_encounter == undefined) ? -1 : global.snd_music_friendly_encounter;
-        case "snd_music_mercy_theme": return (global.snd_music_mercy_theme == undefined) ? -1 : global.snd_music_mercy_theme;
-        case "snd_music_peaceful_resolution": return (global.snd_music_peaceful_resolution == undefined) ? -1 : global.snd_music_peaceful_resolution;
+        case "snd_music_friendly_encounter": return get_global_audio_resource("snd_music_friendly_encounter");
+        case "snd_music_mercy_theme": return get_global_audio_resource("snd_music_mercy_theme");
+        case "snd_music_peaceful_resolution": return get_global_audio_resource("snd_music_peaceful_resolution");
         
         // Deltarune-стиль звуки
-        case "snd_mercy_action": return (global.snd_mercy_action == undefined) ? -1 : global.snd_mercy_action;
-        case "snd_friendship_gained": return (global.snd_friendship_gained == undefined) ? -1 : global.snd_friendship_gained;
-        case "snd_npc_friendly_response": return (global.snd_npc_friendly_response == undefined) ? -1 : global.snd_npc_friendly_response;
+        case "snd_mercy_action": return get_global_audio_resource("snd_mercy_action");
+        case "snd_friendship_gained": return get_global_audio_resource("snd_friendship_gained");
+        case "snd_npc_friendly_response": return get_global_audio_resource("snd_npc_friendly_response");
         
         default: return -1;
     }

@@ -69,37 +69,45 @@ function vn_change_emotion(position, new_emotion) {
 }
 
 // Получить спрайт портрета
+function vn_get_global_sprite_resource(variable_name) {
+    if (variable_global_exists(variable_name)) {
+        return variable_global_get(variable_name);
+    }
+
+    return -1;
+}
+
 function vn_get_portrait_sprite(character_id, emotion) {
     var sprite_name = "spr_portrait_" + character_id + "_" + emotion;
     
     // Проверяем существование через глобальные переменные
     switch (sprite_name) {
         case "spr_portrait_mechanic_neutral":
-            return (global.spr_portrait_mechanic_neutral == undefined) ? -1 : global.spr_portrait_mechanic_neutral;
+            return vn_get_global_sprite_resource("spr_portrait_mechanic_neutral");
         case "spr_portrait_mechanic_happy":
-            return (global.spr_portrait_mechanic_happy == undefined) ? -1 : global.spr_portrait_mechanic_happy;
+            return vn_get_global_sprite_resource("spr_portrait_mechanic_happy");
         case "spr_portrait_mechanic_thinking":
-            return (global.spr_portrait_mechanic_thinking == undefined) ? -1 : global.spr_portrait_mechanic_thinking;
+            return vn_get_global_sprite_resource("spr_portrait_mechanic_thinking");
         case "spr_portrait_mechanic_worried":
-            return (global.spr_portrait_mechanic_worried == undefined) ? -1 : global.spr_portrait_mechanic_worried;
+            return vn_get_global_sprite_resource("spr_portrait_mechanic_worried");
         
         case "spr_portrait_archivist_neutral":
-            return (global.spr_portrait_archivist_neutral == undefined) ? -1 : global.spr_portrait_archivist_neutral;
+            return vn_get_global_sprite_resource("spr_portrait_archivist_neutral");
         case "spr_portrait_archivist_happy":
-            return (global.spr_portrait_archivist_happy == undefined) ? -1 : global.spr_portrait_archivist_happy;
+            return vn_get_global_sprite_resource("spr_portrait_archivist_happy");
         case "spr_portrait_archivist_thinking":
-            return (global.spr_portrait_archivist_thinking == undefined) ? -1 : global.spr_portrait_archivist_thinking;
+            return vn_get_global_sprite_resource("spr_portrait_archivist_thinking");
         case "spr_portrait_archivist_serious":
-            return (global.spr_portrait_archivist_serious == undefined) ? -1 : global.spr_portrait_archivist_serious;
+            return vn_get_global_sprite_resource("spr_portrait_archivist_serious");
         
         case "spr_portrait_elder_neutral":
-            return (global.spr_portrait_elder_neutral == undefined) ? -1 : global.spr_portrait_elder_neutral;
+            return vn_get_global_sprite_resource("spr_portrait_elder_neutral");
         case "spr_portrait_elder_happy":
-            return (global.spr_portrait_elder_happy == undefined) ? -1 : global.spr_portrait_elder_happy;
+            return vn_get_global_sprite_resource("spr_portrait_elder_happy");
         case "spr_portrait_elder_stern":
-            return (global.spr_portrait_elder_stern == undefined) ? -1 : global.spr_portrait_elder_stern;
+            return vn_get_global_sprite_resource("spr_portrait_elder_stern");
         case "spr_portrait_elder_proud":
-            return (global.spr_portrait_elder_proud == undefined) ? -1 : global.spr_portrait_elder_proud;
+            return vn_get_global_sprite_resource("spr_portrait_elder_proud");
         
         default:
             return -1;
@@ -157,7 +165,7 @@ function vn_draw_portraits() {
             var alpha = portrait.alpha;
             
             // Если это не говорящий персонаж, затемняем
-            if (global.vn_dialogue != undefined && 
+            if (variable_global_exists("vn_dialogue") && global.vn_dialogue != undefined &&
                 global.vn_dialogue.active && 
                 global.vn_dialogue.current_speaker_position != pos) {
                 alpha *= 0.5;
@@ -171,7 +179,7 @@ function vn_draw_portraits() {
 
 // Установить активного говорящего (подсветка)
 function vn_set_active_speaker(position) {
-    if (global.vn_dialogue != undefined) {
+    if (variable_global_exists("vn_dialogue") && global.vn_dialogue != undefined) {
         global.vn_dialogue.current_speaker_position = position;
     }
 }

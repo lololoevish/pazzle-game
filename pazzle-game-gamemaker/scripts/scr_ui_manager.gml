@@ -7,7 +7,7 @@
 var ui_config = {
     ui_scale: 1.0,
     ui_alpha: 1.0,
-    font_default: (global.fnt_default != undefined) ? global.fnt_default : font_get_default(),
+    font_default: variable_global_exists("fnt_default") ? global.fnt_default : font_get_default(),
     font_size_normal: 16,
     font_size_large: 24,
     font_size_small: 12,
@@ -353,7 +353,7 @@ function ui_element_collision(x, y, element) {
 // Функция инициализации UI
 function init_ui() {
     // Проверяем, определен ли глобальный шрифт
-    if (global.fnt_default != undefined) {
+    if (variable_global_exists("fnt_default")) {
         ui_config.font_default = global.fnt_default;
     } else {
         ui_config.font_default = font_get_default();

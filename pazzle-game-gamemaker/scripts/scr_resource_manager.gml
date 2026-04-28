@@ -28,13 +28,13 @@ function ResourceManager() {
 }
 
 // Global resource manager instance
-if (!global_exists("g_resource_manager")) {
+if (!variable_global_exists("g_resource_manager")) {
     global.g_resource_manager = ResourceManager();
 }
 
 /// Initialize the resource manager
 function resource_manager_init() {
-    if (!global_exists("g_resource_manager")) {
+    if (!variable_global_exists("g_resource_manager")) {
         global.g_resource_manager = ResourceManager();
     }
     return global.g_resource_manager;
@@ -89,7 +89,7 @@ function resource_load_sprite(path) {
     
     // In practice, this would load the actual resource
     // For now, we'll simulate by creating a placeholder
-    var sprite_id = sprite_add(path, 1);
+    var sprite_id = sprite_add(path, 1, false, false, 0, 0);
     
     if (sprite_id != -1) {
         ds_map_set(rm.sprite_cache, path, sprite_id);

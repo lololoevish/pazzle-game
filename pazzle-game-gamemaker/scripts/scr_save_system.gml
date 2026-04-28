@@ -160,7 +160,7 @@ function reset_game() {
         init_global_vars();
     } else {
         // Если скрипт недоступен, инициализируем вручную
-        if (!global_exists("initialized")) {
+        if (!variable_global_exists("initialized")) {
             // Инициализация аудио-ресурсов
             global.snd_menu_bg = -1;
             global.snd_town_bg = -1;

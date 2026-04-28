@@ -128,7 +128,7 @@ function handle_input() {
 function on_puzzle_solved(level_num) {
     // Если объект игрока существует, вызываем его метод для завершения уровня с переходом
     with (obj_player) {
-        if (function_exists(complete_level_with_transition)) {
+        if (script_exists(complete_level_with_transition)) {
             complete_level_with_transition(level_num);
         } else {
             // Старая логика
@@ -137,8 +137,8 @@ function on_puzzle_solved(level_num) {
             }
             
             // Возвращаем в город
-            var town_room_index = room_get_name_index("rm_town");
-            if (town_room_index != -1) {
+            var town_room_index = asset_get_index("rm_town");
+            if (town_room_index != -1 && asset_get_type(town_room_index) == asset_room) {
                 room_goto(town_room_index);
                 
                 // Перемещаем игрока в центр города

@@ -3,7 +3,7 @@
 
 // Инициализация системы межуровневого перемещения
 function init_interlevel_system() {
-    if (global.interlevel_data == undefined) {
+    if (!variable_global_exists("interlevel_data") || global.interlevel_data == undefined) {
         global.interlevel_data = {
             // Конфигурация точек перехода между уровнями
             transition_points: [
@@ -146,14 +146,26 @@ function extract_level_number(room_name) {
 }
 
 // Функция запуска перехода между комнатами
-function initiate_level_transition(transition_data) {
+function find_interlevel_room_by_name(room_name) {
+    var room_asset = asset_get_index(room_name);
+    if (room_asset != -1 && asset_get_type(room_asset) == asset_room) {
+        return room_asset;
+    }
+
+    return -1;
+}
+
+function initiate_interlevel_transition(transition_data) {
     if (transition_data == undefined) return;
+    if (!instance_exists(obj_player)) return;
+
+    var player_inst = instance_find(obj_player, 0);
     
     // Сохраняем текущую позицию игрока
-    global.last_player_position = {x: object_player.x, y: object_player.y};
+    global.last_player_position = {x: player_inst.x, y: player_inst.y};
     
     // Переходим в новую комнату
-    var room_index = room_get_name_index(transition_data.destination);
+    var room_index = find_interlevel_room_by_name(transition_data.destination);
     if (room_index != -1) {
         room_goto(room_index);
         
@@ -175,15 +187,17 @@ function initiate_level_transition(transition_data) {
 // Функция обновления межуровневого перемещения (вызывается каждый кадр)
 function update_interlevel_system() {
     init_interlevel_system();
+    if (!instance_exists(obj_player)) return;
     
     // Проверяем, находится ли игрок на точке перехода
     var current_room = room_get_name(room);
-    var transition_point = check_transition_point(object_player.x, object_player.y, current_room);
+    var player_inst = instance_find(obj_player, 0);
+    var transition_point = check_transition_point(player_inst.x, player_inst.y, current_room);
     
     if (transition_point != undefined) {
         // Проверяем нажатие клавиши взаимодействия для перехода
         if (keyboard_check_pressed(ord("E")) || keyboard_check_pressed(vk_enter)) {
-            initiate_level_transition(transition_point);
+            initiate_interlevel_transition(transition_point);
         }
     }
 }

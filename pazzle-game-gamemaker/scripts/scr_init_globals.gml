@@ -4,7 +4,7 @@
  */
 
 // Проверяем, была ли уже выполнена инициализация
-if (!global_exists("initialized")) {
+if (!variable_global_exists("initialized")) {
     // Инициализация аудио-ресурсов
     global.snd_menu_bg = -1;
     global.snd_town_bg = -1;

@@ -387,11 +387,11 @@ function update_animation() {
     }
 
     if (is_moving) {
-        if (global.spr_player_walk != undefined && global.spr_player_walk != -1) {
+        if (variable_global_exists("spr_player_walk") && global.spr_player_walk != -1) {
             sprite_index = global.spr_player_walk;
         }
     } else {
-        if (global.spr_player_idle != undefined && global.spr_player_idle != -1) {
+        if (variable_global_exists("spr_player_idle") && global.spr_player_idle != -1) {
             sprite_index = global.spr_player_idle;
         }
     }
@@ -481,9 +481,9 @@ function handle_level_transition(portal_object) {
             // Проверяем, разблокирован ли уровень
             if (is_level_accessible(level_num)) {
                 // Осуществляем переход
-                var room_index = room_get_name_index(dest_room_name);
+                var room_index = asset_get_index(dest_room_name);
                 
-                if (room_index != -1) {
+                if (room_index != -1 && asset_get_type(room_index) == asset_room) {
                     if (dest_room_name == "rm_town") {
                         global.game_state = "town";
                     } else if (string_pos("rm_cave_", dest_room_name) == 1) {
@@ -499,7 +499,8 @@ function handle_level_transition(portal_object) {
                     }
                     
                     safe_play_event_sound("teleport");
-                    safe_show_message("Переход к " + (portal_object.portal_name || "уровню"));
+                    var portal_label = variable_instance_exists(portal_object, "portal_name") ? portal_object.portal_name : "уровню";
+                    safe_show_message("Переход к " + portal_label);
                 } else {
                     safe_show_message("Уровень недоступен: " + dest_room_name);
                     safe_play_event_sound("ui_cancel");
@@ -510,8 +511,8 @@ function handle_level_transition(portal_object) {
             }
         } else {
             // Это не уровень, а другая комната
-            var room_index = room_get_name_index(dest_room_name);
-            if (room_index != -1) {
+            var room_index = asset_get_index(dest_room_name);
+            if (room_index != -1 && asset_get_type(room_index) == asset_room) {
                 room_goto(room_index);
                 safe_play_event_sound("teleport");
             }
@@ -845,13 +846,14 @@ function handle_mercy_action(action_idx, npc_obj) {
     }
     
     // В будущем это может повлиять на отношения с NPC или разблокировать особые события
-    global.player_mercy_points = (global.player_mercy_points != undefined) ? global.player_mercy_points + 1 : 1;
+    global.player_mercy_points = variable_global_exists("player_mercy_points") ? global.player_mercy_points + 1 : 1;
     
     // Возможно обновление прогресса дружбы
+    if (!variable_global_exists("player_friends_rescued")) {
+        global.player_friends_rescued = [];
+    }
+
     if (!array_contains(global.player_friends_rescued, string(npc_obj.id))) {
-        if (global.player_friends_rescued == undefined) {
-            global.player_friends_rescued = [];
-        }
         array_push(global.player_friends_rescued, string(npc_obj.id));
     }
 }
@@ -871,8 +873,8 @@ function complete_level_with_transition(level_num) {
         }
         
         // Возвращаем в город
-        var town_room_index = room_get_name_index("rm_town");
-        if (town_room_index != -1) {
+        var town_room_index = asset_get_index("rm_town");
+        if (town_room_index != -1 && asset_get_type(town_room_index) == asset_room) {
             room_goto(town_room_index);
             
             // Перемещаем игрока в центр города

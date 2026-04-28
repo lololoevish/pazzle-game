@@ -5,7 +5,7 @@
 
 // Инициализация системы переходов
 function init_level_transitions() {
-    if (global.level_transition_data == undefined) {
+    if (!variable_global_exists("level_transition_data") || global.level_transition_data == undefined) {
         global.level_transition_data = {
             // Конфигурация переходов между уровнями
             transitions: {
@@ -143,6 +143,15 @@ function init_level_transitions() {
 }
 
 // Функция проверки завершения уровня и начала перехода
+function find_room_by_name(room_name) {
+    var room_asset = asset_get_index(room_name);
+    if (room_asset != -1 && asset_get_type(room_asset) == asset_room) {
+        return room_asset;
+    }
+
+    return -1;
+}
+
 function get_transition_level_count() {
     if (variable_global_exists("game_progress") && variable_struct_exists(global.game_progress, "levels")) {
         return max(1, array_length(global.game_progress.levels));
@@ -163,8 +172,8 @@ function check_level_completion_for_transition(current_room) {
         var next_room = get_room_name_for_level(next_level_num);
         var transition_key = current_room + "_to_" + next_room;
         
-        if (map_exists(global.level_transition_data.transitions, transition_key)) {
-            return global.level_transition_data.transitions[transition_key];
+        if (variable_struct_exists(global.level_transition_data.transitions, transition_key)) {
+            return global.level_transition_data.transitions[$ transition_key];
         }
     }
     
@@ -238,7 +247,7 @@ function initiate_level_transition(transition_data) {
     
     // Временно переходим к комнате перехода (в будущем будет специальная комната)
     // Пока что сразу переходим к следующему уровню
-    var dest_room_index = room_get_name_index(transition_data.destination_room);
+    var dest_room_index = find_room_by_name(transition_data.destination_room);
     if (dest_room_index != -1) {
         room_goto(dest_room_index);
         
@@ -266,7 +275,7 @@ function create_transition_room(transition_data) {
 
 // Проверить, идет ли сейчас переход
 function is_transition_in_progress() {
-    if (global.level_transition_data == undefined) {
+    if (!variable_global_exists("level_transition_data") || global.level_transition_data == undefined) {
         init_level_transitions();
     }
     return global.level_transition_data.transition_in_progress;
@@ -274,7 +283,7 @@ function is_transition_in_progress() {
 
 // Получить текущий переход
 function get_current_transition() {
-    if (global.level_transition_data == undefined) {
+    if (!variable_global_exists("level_transition_data") || global.level_transition_data == undefined) {
         init_level_transitions();
     }
     return global.level_transition_data.current_transition;
@@ -302,7 +311,7 @@ function handle_level_complete_with_transition(level_num, current_room_name) {
         initiate_level_transition(transition_data);
     } else {
         // Если нет перехода, возвращаем в город
-        var town_room_index = room_get_name_index("rm_town");
+        var town_room_index = find_room_by_name("rm_town");
         if (town_room_index != -1) {
             room_goto(town_room_index);
             

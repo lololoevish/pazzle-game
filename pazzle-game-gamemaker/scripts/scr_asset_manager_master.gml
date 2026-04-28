@@ -9,7 +9,7 @@ function asset_manager_initialize() {
     resource_manager_init();
     
     // Initialize global variables for sprites if they don't exist yet
-    if (!global_exists("g_asset_sprites")) {
+    if (!variable_global_exists("g_asset_sprites")) {
         global.g_asset_sprites = ds_map_create();
     }
     
@@ -38,7 +38,7 @@ function asset_manager_cleanup() {
     resource_cleanup();
     
     // Clean up sprite cache
-    if (global_exists("g_asset_sprites")) {
+    if (variable_global_exists("g_asset_sprites")) {
         var keys = ds_map_keys(global.g_asset_sprites);
         for (var i = 0; i < ds_list_size(keys); i++) {
             var key = ds_list_find_value(keys, i);
