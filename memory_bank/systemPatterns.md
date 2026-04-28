@@ -4,20 +4,34 @@
 
 ### Общая архитектура
 
-Проект использует модульную архитектуру с двумя историческими ветками реализации, где основной исполняемой веткой сейчас является Rust:
+Проект использует модульную архитектуру с двумя историческими ветками реализации, где основной продуктовой и исполняемой веткой сейчас является GameMaker Studio 2, а Rust сохранён как референс маршрута и прошлых решений:
 
-```
-Игровой цикл (main.py / main.rs)
+```text
+obj_game_manager / room lifecycle
     ↓
-Сцены (scenes/)
-    ├── Меню (menu.py / menu.rs)
-    ├── Город (town.py / town.rs)
-    ├── Геймплей (gameplay.py / gameplay.rs)
-    └── Головоломки / мини-игры
+objects/
+    ├── obj_player
+    ├── obj_puzzle
+    ├── obj_lever
+    ├── obj_npc
+    └── obj_interactable
     ↓
-Данные прогресса и сохранения
-    └── GameProgress / save_system.py
+scripts/
+    ├── scr_game_state
+    ├── scr_save_system
+    ├── scr_audio_manager
+    ├── scr_ui_manager
+    ├── scr_vn_*
+    └── puzzle_scripts + scr_puzzle_manager
+    ↓
+rooms/
+    ├── Menu
+    ├── Town
+    ├── Cave 1..12
+    └── Victory
 ```
+
+Rust-ветка остаётся полезной для сравнений и исторических проверок, но не определяет текущую архитектурную правду проекта.
 
 ### Паттерны проектирования
 

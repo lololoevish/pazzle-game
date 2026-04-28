@@ -36,10 +36,11 @@
 
 ## Контроль изменений
 
-### Последний проверенный коммит: 2a96a08
+### Последний проверенный коммит: df55c55fb51b1137d4a23880dc3146c768447bda
 
 ### Хронология изменений
 
+- 28.04.2026: Повторно сверены актуальные правила `AGENTS.md` из удалённого источника, подтверждено наличие `## Project Deliverables` в `memory_bank/projectbrief.md`, подтверждена валидность таблицы `ID | Deliverable | Status | Weight`, арифметически подтверждена сумма весов `10 + 12 + 10 + 10 + 8 + 8 + 8 + 8 + 8 + 10 + 8 + 8 = 100`; дополнительно синхронизированы `memory_bank/productContext.md`, `memory_bank/techContext.md` и вводная архитектурная часть `memory_bank/systemPatterns.md` под текущий GMS2 scope
 - 28.04.2026: Актуализированы `docs/gms2_testing_strategy.md`, `docs/gms2_unit_test_scenarios.md` и GML-сценарии `test_game_state.gml`, `test_save_system.gml`, `test_ui_manager.gml`, `test_audio_manager.gml` под фактический GMS2 API, 12-уровневую прогрессию и текущий набор runtime helper-функций
 - 28.04.2026: Дополнительно очищены runtime-модули от старых 6-уровневых допущений: `scr_ui_manager.gml` теперь рисует прогресс из 12 уровней, `obj_game_manager.gml` учитывает `playing_level_7..12` в общем игровом состоянии и обработке `ESC`, `scr_audio_manager.gml` поддерживает музыкальный роутинг для `playing_level_7..12`, `obj_player.gml` больше не хардкодит максимальный уровень как 12 вне длины глобального массива прогресса
 - 28.04.2026: `pazzle-game-gamemaker/scripts/scr_game_state.gml` и `pazzle-game-gamemaker/scripts/scr_save_system.gml` частично унифицированы под 12-уровневую модель: введены общие константы числа уровней, исправлены расчёт общего прогресса и финала экспедиции, reset/load/default progress и конвертация сохранений больше не ограничены 6 уровнями
