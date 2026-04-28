@@ -62,7 +62,7 @@ function test_get_current_room_music() {
 // Тест 6: Проверка кроссфейда музыки
 function test_crossfade_music() {
     // Проверяем кроссфейд с безопасными значениями
-    crossfade_to_music(-1, 1.0);
+    crossfade_music(-1, 1.0);
     
     show_debug_message("Тест 6 пройден: Проверка кроссфейда музыки");
 }
@@ -70,12 +70,12 @@ function test_crossfade_music() {
 // Тест 7: Проверка установки контекста аудио
 function test_set_audio_context() {
     // Проверяем различные контексты
-    set_audio_context("neutral");
-    set_audio_context("menu");
-    set_audio_context("town");
-    set_audio_context("puzzle_active");
-    set_audio_context("dialogue");
-    set_audio_context("victory");
+    apply_audio_context("neutral");
+    apply_audio_context("menu");
+    apply_audio_context("town");
+    apply_audio_context("puzzle_active");
+    apply_audio_context("dialogue");
+    apply_audio_context("victory");
     
     show_debug_message("Тест 7 пройден: Проверка установки контекста аудио");
 }

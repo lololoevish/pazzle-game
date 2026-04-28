@@ -5,6 +5,24 @@
 
 // Имя файла сохранения
 var SAVE_FILE_NAME = "adventure_puzzle_save";
+var SAVE_LEVEL_COUNT = 12;
+
+function create_default_level_progress() {
+    return {
+        completed: false,
+        lever_pulled: false
+    };
+}
+
+function ensure_global_progress_level_capacity() {
+    if (!variable_global_exists("game_progress") || !variable_struct_exists(global.game_progress, "levels")) {
+        return;
+    }
+
+    while (array_length(global.game_progress.levels) < SAVE_LEVEL_COUNT) {
+        array_push(global.game_progress.levels, create_default_level_progress());
+    }
+}
 
 // Функция сохранения игры
 function save_game() {
@@ -78,12 +96,14 @@ function load_game() {
         // Восстанавливаем состояние игры
         global.game_state = loaded_data.game_state;
         global.expedition_complete = loaded_data.expedition_complete;
+        ensure_global_progress_level_capacity();
         
         // Восстанавливаем прогресс уровней
         var levels_data = loaded_data.game_progress.levels;
-        for (var i = 0; i < array_length(levels_data); i++) {
-            global.game_progress.levels[i].completed = levels_data[i].completed;
-            global.game_progress.levels[i].lever_pulled = levels_data[i].lever_pulled;
+        for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
+            var loaded_level = (i < array_length(levels_data)) ? levels_data[i] : undefined;
+            global.game_progress.levels[i].completed = (loaded_level != undefined) && loaded_level.completed;
+            global.game_progress.levels[i].lever_pulled = (loaded_level != undefined) && loaded_level.lever_pulled;
         }
         
         global.game_progress.gold = loaded_data.game_progress.gold;
@@ -108,7 +128,9 @@ function load_game() {
 
 // Функция инициализации начального прогресса
 function initialize_default_progress() {
-    for (var i = 0; i < 6; i++) {
+    ensure_global_progress_level_capacity();
+
+    for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
         global.game_progress.levels[i].completed = false;
         global.game_progress.levels[i].lever_pulled = false;
     }
@@ -174,6 +196,12 @@ function reset_game() {
                     {completed: false, lever_pulled: false},
                     {completed: false, lever_pulled: false},
                     {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
+                    {completed: false, lever_pulled: false},
                     {completed: false, lever_pulled: false}
                 ],
                 gold: 100,
@@ -189,6 +217,8 @@ function reset_game() {
             // Флаг инициализации
             global.initialized = true;
         }
+
+        ensure_global_progress_level_capacity();
         
         // Загрузка сохранения, если есть (всегда выполняем, даже если уже инициализировано)
         load_game();
@@ -259,11 +289,8 @@ function convert_rust_save(rust_data) {
     };
     
     // Преобразуем уровни
-    for (var i = 0; i < 6; i++) {
-        var level_info = {
-            completed: false,
-            lever_pulled: false
-        };
+    for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
+        var level_info = create_default_level_progress();
         
         if (i < array_length(rust_data.levels)) {
             level_info.completed = rust_data.levels[i].completed;

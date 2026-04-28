@@ -1,6 +1,8 @@
 // Управление состоянием игры
 // Соответствует GameState из Rust-версии
 
+var GAME_LEVEL_COUNT = 12;
+
 function create_new_game_state() {
     var state_data = {
         current_state: "MENU",
@@ -15,7 +17,7 @@ function create_new_game_state() {
     };
 
     // Инициализация сохранения прогресса
-    for (var i = 1; i <= 12; i += 1) {  // Расширяем до 12 уровней
+    for (var i = 1; i <= GAME_LEVEL_COUNT; i += 1) {
         ds_map_add(state_data.progress, "level_" + string(i) + "_completed", false);
         ds_map_add(state_data.progress, "level_" + string(i) + "_lever_pulled", false);
         ds_map_add(state_data.progress, "level_" + string(i) + "_unlocked", i == 1); // Только первый уровень разблокирован изначально
@@ -56,7 +58,7 @@ function set_lever_pulled(state, level_num) {
 
 // Совместимость с новой глобальной моделью прогресса
 function complete_level(level_num) {
-    if (level_num >= 1 && level_num <= 12) {  // Расширяем до 12 уровней
+    if (level_num >= 1 && level_num <= GAME_LEVEL_COUNT) {
         if (array_length(global.game_progress.levels) > level_num - 1) {
             global.game_progress.levels[level_num - 1].completed = true;
         } else {
@@ -74,7 +76,7 @@ function complete_level(level_num) {
 }
 
 function set_level_lever_pulled(level_num, pulled) {
-    if (level_num >= 1 && level_num <= 12) {  // Расширяем до 12 уровней
+    if (level_num >= 1 && level_num <= GAME_LEVEL_COUNT) {
         if (array_length(global.game_progress.levels) > level_num - 1) {
             global.game_progress.levels[level_num - 1].lever_pulled = pulled;
         } else {
@@ -85,7 +87,7 @@ function set_level_lever_pulled(level_num, pulled) {
             }
             global.game_progress.levels[level_num - 1].lever_pulled = pulled;
         }
-        if (level_num == 12 && pulled) {  // Обновляем номер финального уровня
+        if (level_num == GAME_LEVEL_COUNT && pulled) {
             global.expedition_complete = true;
         }
         if (pulled && script_exists(play_event_sound)) {
@@ -97,7 +99,7 @@ function set_level_lever_pulled(level_num, pulled) {
 function count_completed_levels() {
     var count = 0;
     var total_levels = array_length(global.game_progress.levels);
-    for (var i = 0; i < min(total_levels, 12); i++) {  // Проверяем до 12 уровней
+    for (var i = 0; i < min(total_levels, GAME_LEVEL_COUNT); i++) {
         if (global.game_progress.levels[i].completed) {
             count++;
         }
@@ -108,7 +110,7 @@ function count_completed_levels() {
 function count_opened_levels() {
     var count = 0;
     var total_levels = array_length(global.game_progress.levels);
-    for (var i = 0; i < min(total_levels, 12); i++) {  // Проверяем до 12 уровней
+    for (var i = 0; i < min(total_levels, GAME_LEVEL_COUNT); i++) {
         if (global.game_progress.levels[i].lever_pulled || i == 0) {
             count++;
         }
@@ -118,17 +120,17 @@ function count_opened_levels() {
 
 function get_current_objective_level() {
     var total_levels = array_length(global.game_progress.levels);
-    for (var i = 0; i < min(total_levels, 12); i++) {
+    for (var i = 0; i < min(total_levels, GAME_LEVEL_COUNT); i++) {
         if (!global.game_progress.levels[i].lever_pulled) {
             return i + 1;
         }
     }
-    return min(12, total_levels);  // Возвращаем максимальный уровень
+    return max(1, min(GAME_LEVEL_COUNT, total_levels));
 }
 
 // Функция проверки, открыта ли следующая пещера
 function is_next_cave_unlocked(state, level_num) {
-    if (level_num < 6) {
+    if (level_num >= 1 && level_num < GAME_LEVEL_COUNT) {
         // Следующая пещера открывается, когда рычаг в текущей опущен
         return is_lever_pulled(state, level_num);
     }
@@ -137,13 +139,12 @@ function is_next_cave_unlocked(state, level_num) {
 
 // Функция проверки завершения всей экспедиции
 function is_expedition_completed(state) {
-    // Экспедиция завершена, когда рычаг в 6-й пещере опущен
-    return is_lever_pulled(state, 6);
+    return is_lever_pulled(state, GAME_LEVEL_COUNT);
 }
 
 // Функция получения статуса уровня (completed, lever_pulled, locked)
 function get_level_status(state, level_num) {
-    if (level_num < 1 || level_num > 12) return "invalid";  // Обновляем до 12 уровней
+    if (level_num < 1 || level_num > GAME_LEVEL_COUNT) return "invalid";
     
     // Проверяем, разблокирован ли уровень
     var unlocked_key = "level_" + string(level_num) + "_unlocked";
@@ -177,7 +178,7 @@ function get_overall_progress(state) {
     var opened_levels = 0;
     var completed_levels = 0;
     
-    for (var i = 1; i <= 6; i++) {
+    for (var i = 1; i <= GAME_LEVEL_COUNT; i++) {
         if (get_level_status(state, i) != "locked") {
             opened_levels++;
         }

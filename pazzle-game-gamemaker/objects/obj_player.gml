@@ -560,7 +560,7 @@ function extract_level_number_from_room(room_name) {
 
 // Проверить, доступен ли уровень
 function is_level_accessible(level_num) {
-    if (level_num <= 0 || level_num > 12) return false;
+    if (level_num <= 0 || level_num > array_length(global.game_progress.levels)) return false;
     if (level_num == 1) return true;  // Первый уровень всегда доступен
     
     // Проверяем, разблокирован ли уровень в глобальных данных

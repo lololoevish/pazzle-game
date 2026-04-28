@@ -261,6 +261,12 @@ function play_music_by_state(game_state) {
         case "playing_level_4":
         case "playing_level_5":
         case "playing_level_6":
+        case "playing_level_7":
+        case "playing_level_8":
+        case "playing_level_9":
+        case "playing_level_10":
+        case "playing_level_11":
+        case "playing_level_12":
             sound_to_play = get_sound_resource("snd_level_bg");
             break;
         case "victory":

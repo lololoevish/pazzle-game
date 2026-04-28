@@ -257,6 +257,7 @@ function update_message(dt) {
 
 // Функция отображения прогресса экспедиции
 function draw_expedition_progress(x, y, width, height) {
+    var total_levels = 12;
     var progress = get_current_objective_level();
     var opened = count_opened_levels();
     var completed = count_completed_levels();
@@ -265,14 +266,14 @@ function draw_expedition_progress(x, y, width, height) {
     draw_rectangle(x, y, x + width, y + height);
     
     draw_set_color(c_blue);
-    draw_rectangle(x, y, x + (opened / 6) * width, y + height);
+    draw_rectangle(x, y, x + (opened / total_levels) * width, y + height);
     
     draw_set_color(c_white);
     draw_set_font(ui_config.font_default);
     draw_set_halign(fa_center);
     draw_set_valign(fa_middle);
     
-    var text = string(completed) + "/6 уровней пройдено, цель: уровень " + string(progress);
+    var text = string(completed) + "/" + string(total_levels) + " уровней пройдено, цель: уровень " + string(progress);
     draw_text(x + width/2, y + height/2, text);
 }
 

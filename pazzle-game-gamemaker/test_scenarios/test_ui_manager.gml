@@ -37,10 +37,10 @@ function test_draw_notifications() {
 // Тест 4: Проверка показа диалога
 function test_show_dialog() {
     // Проверяем показ простого диалога
-    show_dialog("Тестовый диалог");
+    show_dialog("Тестовый диалог", ["Ок"], undefined);
     
-    // Проверяем показ диалога с выбором
-    show_dialog_with_choices("Выберите действие", ["Вариант 1", "Вариант 2", "Отмена"]);
+    // Проверяем показ диалога с несколькими опциями через актуальный API
+    show_dialog("Выберите действие", ["Вариант 1", "Вариант 2", "Отмена"], undefined);
     
     show_debug_message("Тест 4 пройден: Проверка показа диалога");
 }
@@ -48,10 +48,10 @@ function test_show_dialog() {
 // Тест 5: Проверка закрытия диалога
 function test_close_dialog() {
     // Показываем диалог
-    show_dialog("Тест закрытия");
+    show_dialog("Тест закрытия", ["Закрыть"], undefined);
     
     // Закрываем диалог
-    close_dialog();
+    hide_dialog();
     
     show_debug_message("Тест 5 пройден: Проверка закрытия диалога");
 }
@@ -59,7 +59,7 @@ function test_close_dialog() {
 // Тест 6: Проверка отрисовки диалога
 function test_draw_dialog() {
     // Показываем диалог
-    show_dialog("Тест отрисовки диалога");
+    show_dialog("Тест отрисовки диалога", ["Продолжить"], undefined);
     
     // Проверяем, что функция отрисовки не падает
     draw_dialog();
@@ -67,66 +67,37 @@ function test_draw_dialog() {
     show_debug_message("Тест 6 пройден: Проверка отрисовки диалога");
 }
 
-// Тест 7: Проверка отрисовки HUD
-function test_draw_hud() {
+// Тест 7: Проверка отрисовки основного UI
+function test_draw_ui() {
     // Инициализируем глобальные переменные если нужно
     if (!variable_global_exists("game_progress")) {
         init_global_vars();
     }
     
-    // Проверяем, что функция отрисовки HUD не падает
-    draw_hud();
+    show_message("Тест UI", 1);
+    draw_ui();
     
-    show_debug_message("Тест 7 пройден: Проверка отрисовки HUD");
+    show_debug_message("Тест 7 пройден: Проверка отрисовки основного UI");
 }
 
-// Тест 8: Проверка отрисовки прогресса уровня
-function test_draw_level_progress() {
-    // Проверяем отрисовку с различными параметрами
-    draw_level_progress(100, 100, 1, 6);
-    draw_level_progress(200, 200, 3, 6);
-    draw_level_progress(300, 300, 6, 6);
+// Тест 8: Проверка отрисовки прогресса экспедиции
+function test_draw_expedition_progress() {
+    if (!variable_global_exists("game_progress")) {
+        init_global_vars();
+    }
+
+    draw_expedition_progress(100, 100, 240, 24);
     
-    show_debug_message("Тест 8 пройден: Проверка отрисовки прогресса уровня");
+    show_debug_message("Тест 8 пройден: Проверка отрисовки прогресса экспедиции");
 }
 
-// Тест 9: Проверка отрисовки меню
-function test_draw_menu() {
-    var menu_items = ["Играть", "Настройки", "Выход"];
+// Тест 9: Проверка диалога и сообщений NPC
+function test_npc_ui_helpers() {
+    show_npc_dialogue("Роан", "Проверка NPC-диалога");
+    draw_ui();
+    hide_npc_dialogue();
     
-    // Проверяем отрисовку меню с различными параметрами
-    draw_menu(400, 300, menu_items, 0);
-    draw_menu(400, 300, menu_items, 1);
-    draw_menu(400, 300, menu_items, 2);
-    
-    show_debug_message("Тест 9 пройден: Проверка отрисовки меню");
-}
-
-// Тест 10: Проверка отрисовки кнопки
-function test_draw_button() {
-    // Проверяем отрисовку кнопок в различных состояниях
-    draw_button(100, 100, 200, 50, "Нажми меня", false);
-    draw_button(100, 200, 200, 50, "Наведено", true);
-    
-    show_debug_message("Тест 10 пройден: Проверка отрисовки кнопки");
-}
-
-// Тест 11: Проверка отрисовки панели
-function test_draw_panel() {
-    // Проверяем отрисовку панелей с различными параметрами
-    draw_panel(50, 50, 300, 200, c_dkgray, 0.8);
-    draw_panel(400, 50, 300, 200, c_navy, 0.9);
-    
-    show_debug_message("Тест 11 пройден: Проверка отрисовки панели");
-}
-
-// Тест 12: Проверка отрисовки текста с тенью
-function test_draw_text_shadow() {
-    // Проверяем отрисовку текста с тенью
-    draw_text_shadow(400, 300, "Текст с тенью", c_white, c_black);
-    draw_text_shadow(400, 350, "Другой текст", c_yellow, c_dkgray);
-    
-    show_debug_message("Тест 12 пройден: Проверка отрисовки текста с тенью");
+    show_debug_message("Тест 9 пройден: Проверка NPC UI helper-функций");
 }
 
 // Функция запуска всех тестов
@@ -139,12 +110,9 @@ function run_all_tests() {
     test_show_dialog();
     test_close_dialog();
     test_draw_dialog();
-    test_draw_hud();
-    test_draw_level_progress();
-    test_draw_menu();
-    test_draw_button();
-    test_draw_panel();
-    test_draw_text_shadow();
+    test_draw_ui();
+    test_draw_expedition_progress();
+    test_npc_ui_helpers();
     
     show_debug_message("=== Все тесты для scr_ui_manager пройдены успешно! ===");
 }

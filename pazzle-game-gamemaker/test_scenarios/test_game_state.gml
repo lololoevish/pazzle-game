@@ -1,5 +1,7 @@
 // Сценарии тестирования для scr_game_state
 
+var TEST_LEVEL_COUNT = 12;
+
 // Тест 1: Создание нового состояния игры
 function test_create_new_game_state() {
     var state = create_new_game_state();
@@ -10,7 +12,7 @@ function test_create_new_game_state() {
     
     // Проверяем прогресс уровней (расширено до 12)
     var i;
-    for (i = 1; i <= 12; i++) {
+    for (i = 1; i <= TEST_LEVEL_COUNT; i++) {
         var completed_key = "level_" + string(i) + "_completed";
         var lever_key = "level_" + string(i) + "_lever_pulled";
         var unlocked_key = "level_" + string(i) + "_unlocked";
@@ -125,22 +127,22 @@ function test_expedition_completion() {
     assert_false(is_expedition_completed(state), 
                  "Тест 5.1: Экспедиция не должна быть завершена при старте");
     
-    // Опускаем рычаги в первых 5 уровнях
+    // Опускаем рычаги в первых 11 уровнях
     var i;
-    for (i = 1; i <= 5; i++) {
+    for (i = 1; i < TEST_LEVEL_COUNT; i++) {
         set_lever_pulled(state, i);
     }
     
-    // Проверяем, что экспедиция все еще не завершена (старая логика для 6 уровней)
+    // Проверяем, что экспедиция все еще не завершена до финального уровня
     assert_false(is_expedition_completed(state), 
-                 "Тест 5.2: Экспедиция не должна быть завершена после 5 уровней");
+                 "Тест 5.2: Экспедиция не должна быть завершена до финального уровня");
     
-    // Опускаем рычаг шестого уровня
-    set_lever_pulled(state, 6);
+    // Опускаем рычаг финального уровня
+    set_lever_pulled(state, TEST_LEVEL_COUNT);
     
-    // Проверяем, что теперь экспедиция завершена (по старой логике)
+    // Проверяем, что теперь экспедиция завершена
     assert_true(is_expedition_completed(state), 
-                "Тест 5.3: Экспедиция должна быть завершена после опускания рычага шестого уровня");
+                "Тест 5.3: Экспедиция должна быть завершена после опускания рычага финального уровня");
     
     show_debug_message("Тест 5 пройден: Проверка завершения экспедиции");
 }
@@ -227,6 +229,6 @@ function run_all_tests() {
     test_expedition_completion();
     test_level_status();
     test_overall_progress();
-    
+
     show_debug_message("=== Все тесты для scr_game_state пройдены успешно! ===");
 }

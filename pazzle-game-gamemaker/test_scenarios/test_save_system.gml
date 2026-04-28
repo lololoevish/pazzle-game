@@ -1,5 +1,7 @@
 // Сценарии тестирования для scr_save_system
 
+var TEST_SAVE_LEVEL_COUNT = 12;
+
 // Тест 1: Сохранение и загрузка игры через глобальные переменные
 function test_save_and_load() {
     // Инициализируем глобальные переменные
@@ -65,6 +67,12 @@ function test_reset_game() {
     assert_false(global.game_progress.levels[0].lever_pulled, "Тест 2.4: Рычаг уровня 1 не должен быть опущен в новой игре");
     assert_false(global.game_progress.elder_trial_completed, "Тест 2.5: Награды NPC не должны быть активны в новой игре");
     assert_false(global.expedition_complete, "Тест 2.6: Экспедиция не должна быть завершена в новой игре");
+
+    var i;
+    for (i = 0; i < TEST_SAVE_LEVEL_COUNT; i++) {
+        assert_false(global.game_progress.levels[i].completed, "Тест 2.7: Уровень " + string(i + 1) + " не должен быть завершен после reset");
+        assert_false(global.game_progress.levels[i].lever_pulled, "Тест 2.8: Рычаг уровня " + string(i + 1) + " не должен быть опущен после reset");
+    }
     
     show_debug_message("Тест 2 пройден: Сброс игры");
 }
@@ -157,6 +165,43 @@ function test_has_save() {
     show_debug_message("Тест 5 пройден: Проверка функции has_save");
 }
 
+// Тест 6: Расширение старого сохранения до 12 уровней
+function test_legacy_save_expansion() {
+    if (!variable_global_exists("initialized")) {
+        init_global_vars();
+    }
+
+    var legacy_save = {
+        game_state: "town",
+        game_progress: {
+            levels: [
+                {completed: true, lever_pulled: true},
+                {completed: false, lever_pulled: false}
+            ],
+            gold: 77,
+            items: ["legacy_item"],
+            mechanic_training_completed: false,
+            archivist_quiz_completed: true,
+            elder_trial_completed: false
+        },
+        expedition_complete: false
+    };
+
+    var file = file_text_open_write("adventure_puzzle_save.sav");
+    file_text_write_string(file, json_stringify(legacy_save));
+    file_text_close(file);
+
+    var load_success = load_game();
+
+    assert_true(load_success, "Тест 6.1: legacy-сохранение должно загружаться");
+    assert_equal(array_length(global.game_progress.levels), TEST_SAVE_LEVEL_COUNT, "Тест 6.2: массив уровней должен быть расширен до 12");
+    assert_true(global.game_progress.levels[0].completed, "Тест 6.3: данные ранних уровней должны сохраниться");
+    assert_false(global.game_progress.levels[11].completed, "Тест 6.4: отсутствующие поздние уровни должны инициализироваться как false");
+    assert_equal(global.game_progress.gold, 77, "Тест 6.5: остальной прогресс должен восстанавливаться");
+
+    show_debug_message("Тест 6 пройден: Проверка расширения legacy-сохранения");
+}
+
 // Вспомогательные функции для тестирования
 function assert_true(value, message) {
     if (!value) {
@@ -188,6 +233,7 @@ function run_all_tests() {
     test_load_nonexistent_save();
     test_save_format_correctness();
     test_has_save();
+    test_legacy_save_expansion();
     
     show_debug_message("=== Все тесты для scr_save_system пройдены успешно! ===");
 }

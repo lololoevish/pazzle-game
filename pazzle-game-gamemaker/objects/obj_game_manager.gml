@@ -109,6 +109,12 @@ function handle_input() {
             case "playing_level_4":
             case "playing_level_5":
             case "playing_level_6":
+            case "playing_level_7":
+            case "playing_level_8":
+            case "playing_level_9":
+            case "playing_level_10":
+            case "playing_level_11":
+            case "playing_level_12":
                 // Можно добавить меню паузы
                 break;
             default:
