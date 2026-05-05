@@ -5,7 +5,7 @@
 
 // Имя файла сохранения
 var SAVE_FILE_NAME = "adventure_puzzle_save";
-var SAVE_LEVEL_COUNT = 12;
+var SAVE_LEVEL_COUNT = 24;
 
 function create_default_level_progress() {
     return {
@@ -14,18 +14,107 @@ function create_default_level_progress() {
     };
 }
 
+function create_default_game_progress() {
+    var progress = {
+        levels: [],
+        gold: 100,
+        items: [],
+        mechanic_training_completed: false,
+        archivist_quiz_completed: false,
+        elder_trial_completed: false
+    };
+
+    for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
+        array_push(progress.levels, create_default_level_progress());
+    }
+
+    return progress;
+}
+
+function save_struct_value(data, key, default_value) {
+    if (is_struct(data) && variable_struct_exists(data, key)) {
+        return variable_struct_get(data, key);
+    }
+
+    return default_value;
+}
+
+function parse_save_json(content, source_name) {
+    if (content == "") {
+        return undefined;
+    }
+
+    try {
+        var parsed_data = json_parse(content);
+        if (is_struct(parsed_data) && variable_struct_exists(parsed_data, "game_progress")) {
+            return parsed_data;
+        }
+
+        show_debug_message("Save load skipped invalid structure from " + source_name);
+    } catch (exception) {
+        show_debug_message("Save load skipped unreadable JSON from " + source_name + ": " + string(exception));
+    }
+
+    return undefined;
+}
+
+function normalize_loaded_game_progress(progress_data) {
+    var normalized = create_default_game_progress();
+
+    if (!is_struct(progress_data)) {
+        return normalized;
+    }
+
+    var levels_data = save_struct_value(progress_data, "levels", []);
+    if (is_array(levels_data)) {
+        for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
+            var loaded_level = (i < array_length(levels_data)) ? levels_data[i] : undefined;
+            normalized.levels[i].completed = is_struct(loaded_level) && save_struct_value(loaded_level, "completed", false);
+            normalized.levels[i].lever_pulled = is_struct(loaded_level) && save_struct_value(loaded_level, "lever_pulled", false);
+        }
+    }
+
+    normalized.gold = save_struct_value(progress_data, "gold", normalized.gold);
+    normalized.mechanic_training_completed = save_struct_value(progress_data, "mechanic_training_completed", false);
+    normalized.archivist_quiz_completed = save_struct_value(progress_data, "archivist_quiz_completed", false);
+    normalized.elder_trial_completed = save_struct_value(progress_data, "elder_trial_completed", false);
+
+    var items_data = save_struct_value(progress_data, "items", []);
+    normalized.items = [];
+    if (is_array(items_data)) {
+        for (var item_index = 0; item_index < array_length(items_data); item_index++) {
+            array_push(normalized.items, items_data[item_index]);
+        }
+    }
+
+    return normalized;
+}
+
 function ensure_global_progress_level_capacity() {
-    if (!variable_global_exists("game_progress") || !variable_struct_exists(global.game_progress, "levels")) {
+    if (!variable_global_exists("game_progress") || !is_struct(global.game_progress)) {
+        global.game_progress = create_default_game_progress();
         return;
+    }
+
+    if (!variable_struct_exists(global.game_progress, "levels") || !is_array(global.game_progress.levels)) {
+        global.game_progress.levels = [];
     }
 
     while (array_length(global.game_progress.levels) < SAVE_LEVEL_COUNT) {
         array_push(global.game_progress.levels, create_default_level_progress());
     }
+
+    if (!variable_struct_exists(global.game_progress, "gold")) global.game_progress.gold = 100;
+    if (!variable_struct_exists(global.game_progress, "items") || !is_array(global.game_progress.items)) global.game_progress.items = [];
+    if (!variable_struct_exists(global.game_progress, "mechanic_training_completed")) global.game_progress.mechanic_training_completed = false;
+    if (!variable_struct_exists(global.game_progress, "archivist_quiz_completed")) global.game_progress.archivist_quiz_completed = false;
+    if (!variable_struct_exists(global.game_progress, "elder_trial_completed")) global.game_progress.elder_trial_completed = false;
 }
 
 // Функция сохранения игры
 function save_game() {
+    ensure_global_progress_level_capacity();
+
     var save_struct = {
         game_state: global.game_state,
         game_progress: {},
@@ -75,9 +164,7 @@ function load_game() {
         var content = file_text_read_all(file);
         file_text_close(file);
         
-        if (content != "") {
-            loaded_data = json_parse(content);
-        }
+        loaded_data = parse_save_json(content, SAVE_FILE_NAME + ".sav");
     }
     
     // Если не удалось загрузить из .sav, пробуем из .ini
@@ -85,38 +172,17 @@ function load_game() {
         var ini_file = ini_open(SAVE_FILE_NAME + ".ini");
         if (ini_section_exists(ini_file, "save")) {
             var content = ini_read_string("save", "data", "");
-            if (content != "") {
-                loaded_data = json_parse(content);
-            }
+            loaded_data = parse_save_json(content, SAVE_FILE_NAME + ".ini");
         }
         ini_close();
     }
     
     if (loaded_data != undefined) {
         // Восстанавливаем состояние игры
-        global.game_state = loaded_data.game_state;
-        global.expedition_complete = loaded_data.expedition_complete;
+        global.game_state = save_struct_value(loaded_data, "game_state", "menu");
+        global.expedition_complete = save_struct_value(loaded_data, "expedition_complete", false);
+        global.game_progress = normalize_loaded_game_progress(save_struct_value(loaded_data, "game_progress", {}));
         ensure_global_progress_level_capacity();
-        
-        // Восстанавливаем прогресс уровней
-        var levels_data = loaded_data.game_progress.levels;
-        for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
-            var loaded_level = (i < array_length(levels_data)) ? levels_data[i] : undefined;
-            global.game_progress.levels[i].completed = (loaded_level != undefined) && loaded_level.completed;
-            global.game_progress.levels[i].lever_pulled = (loaded_level != undefined) && loaded_level.lever_pulled;
-        }
-        
-        global.game_progress.gold = loaded_data.game_progress.gold;
-        global.game_progress.mechanic_training_completed = loaded_data.game_progress.mechanic_training_completed;
-        global.game_progress.archivist_quiz_completed = loaded_data.game_progress.archivist_quiz_completed;
-        global.game_progress.elder_trial_completed = loaded_data.game_progress.elder_trial_completed;
-        
-        // Восстанавливаем список предметов
-        global.game_progress.items = [];
-        var items_data = loaded_data.game_progress.items;
-        for (var i = 0; i < array_length(items_data); i++) {
-            array_push(global.game_progress.items, items_data[i]);
-        }
         
         return true;
     } else {
@@ -128,20 +194,7 @@ function load_game() {
 
 // Функция инициализации начального прогресса
 function initialize_default_progress() {
-    ensure_global_progress_level_capacity();
-
-    for (var i = 0; i < SAVE_LEVEL_COUNT; i++) {
-        global.game_progress.levels[i].completed = false;
-        global.game_progress.levels[i].lever_pulled = false;
-    }
-    
-    global.game_progress.gold = 100;
-    global.game_progress.mechanic_training_completed = false;
-    global.game_progress.archivist_quiz_completed = false;
-    global.game_progress.elder_trial_completed = false;
-    
-    // Очищаем список предметов
-    global.game_progress.items = [];
+    global.game_progress = create_default_game_progress();
 }
 
 // Функция сброса игры
@@ -189,27 +242,7 @@ function reset_game() {
             global.game_state = "menu";
 
             // Инициализация прогресса игры
-            global.game_progress = {
-                levels: [
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false},
-                    {completed: false, lever_pulled: false}
-                ],
-                gold: 100,
-                items: [], // Используем массив вместо ds_list для простоты
-                mechanic_training_completed: false,
-                archivist_quiz_completed: false,
-                elder_trial_completed: false
-            };
+            global.game_progress = create_default_game_progress();
 
             // Статус экспедиции
             global.expedition_complete = false;
@@ -248,22 +281,27 @@ function get_save_info() {
         file_text_close(file);
         
         if (content != "") {
-            var loaded_data = json_parse(content);
+            var loaded_data = parse_save_json(content, SAVE_FILE_NAME + ".sav");
+            if (loaded_data == undefined) {
+                return info;
+            }
+
+            var normalized_progress = normalize_loaded_game_progress(save_struct_value(loaded_data, "game_progress", {}));
             info.exists = true;
-            info.game_state = loaded_data.game_state;
-            info.gold = loaded_data.game_progress.gold;
+            info.game_state = save_struct_value(loaded_data, "game_state", "menu");
+            info.gold = normalized_progress.gold;
             
             // Подсчитываем количество завершенных уровней
-            for (var i = 0; i < array_length(loaded_data.game_progress.levels); i++) {
-                if (loaded_data.game_progress.levels[i].completed) {
+            for (var i = 0; i < array_length(normalized_progress.levels); i++) {
+                if (normalized_progress.levels[i].completed) {
                     info.levels_completed++;
                 }
-                if (loaded_data.game_progress.levels[i].lever_pulled) {
+                if (normalized_progress.levels[i].lever_pulled) {
                     info.levels_opened++;
                 }
             }
             
-            info.items_count = array_length(loaded_data.game_progress.items);
+            info.items_count = array_length(normalized_progress.items);
             info.expedition_progress = info.levels_opened;
         }
     }

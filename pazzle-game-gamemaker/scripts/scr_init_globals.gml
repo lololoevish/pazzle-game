@@ -32,22 +32,14 @@ if (!variable_global_exists("initialized")) {
     // Инициализация основных игровых состояний
     global.game_state = "menu";
 
+    var initial_levels = [];
+    for (var level_index = 0; level_index < 24; level_index++) {
+        array_push(initial_levels, {completed: false, lever_pulled: false});
+    }
+
     // Инициализация прогресса игры
     global.game_progress = {
-        levels: [
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false},
-            {completed: false, lever_pulled: false}
-        ],
+        levels: initial_levels,
         gold: 100,
         items: [], // Используем массив вместо ds_list для простоты
         mechanic_training_completed: false,

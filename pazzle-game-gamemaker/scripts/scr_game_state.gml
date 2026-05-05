@@ -1,7 +1,7 @@
 // Управление состоянием игры
 // Соответствует GameState из Rust-версии
 
-var GAME_LEVEL_COUNT = 12;
+var GAME_LEVEL_COUNT = 24;
 
 function create_new_game_state() {
     var state_data = {
@@ -233,22 +233,14 @@ function init_global_vars() {
         // Инициализация основных игровых состояний
         global.game_state = "menu";
 
-        // Инициализация прогресса игры (расширено до 12 уровней)
+        var initial_levels = [];
+        for (var level_index = 0; level_index < GAME_LEVEL_COUNT; level_index++) {
+            array_push(initial_levels, {completed: false, lever_pulled: false});
+        }
+
+        // Инициализация прогресса игры
         global.game_progress = {
-            levels: [
-                {completed: false, lever_pulled: false}, // Уровень 1
-                {completed: false, lever_pulled: false}, // Уровень 2
-                {completed: false, lever_pulled: false}, // Уровень 3
-                {completed: false, lever_pulled: false}, // Уровень 4
-                {completed: false, lever_pulled: false}, // Уровень 5
-                {completed: false, lever_pulled: false}, // Уровень 6
-                {completed: false, lever_pulled: false}, // Уровень 7
-                {completed: false, lever_pulled: false}, // Уровень 8
-                {completed: false, lever_pulled: false}, // Уровень 9
-                {completed: false, lever_pulled: false}, // Уровень 10
-                {completed: false, lever_pulled: false}, // Уровень 11
-                {completed: false, lever_pulled: false}  // Уровень 12
-            ],
+            levels: initial_levels,
             gold: 100,
             items: [], // Используем массив вместо ds_list для простоты
             mechanic_training_completed: false,

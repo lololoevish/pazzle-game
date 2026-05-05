@@ -32,7 +32,9 @@
     }
     
     // Обработка состояний игры
-    switch(global.game_state) {
+    if (is_playing_level_state(global.game_state)) {
+        handle_playing_state();
+    } else switch(global.game_state) {
         case "menu":
             // Логика меню
             handle_menu_state();
@@ -40,21 +42,6 @@
         case "town":
             // Логика города
             handle_town_state();
-            break;
-        case "playing_level_1":
-        case "playing_level_2":
-        case "playing_level_3":
-        case "playing_level_4":
-        case "playing_level_5":
-        case "playing_level_6":
-        case "playing_level_7":
-        case "playing_level_8":
-        case "playing_level_9":
-        case "playing_level_10":
-        case "playing_level_11":
-        case "playing_level_12":
-            // Логика игры
-            handle_playing_state();
             break;
         case "victory":
             // Логика финальной сцены
@@ -102,26 +89,16 @@ function handle_input() {
         if (script_exists(scr_audio_manager)) {
             play_event_sound("ui_cancel");
         }
-        switch(global.game_state) {
-            case "playing_level_1":
-            case "playing_level_2":
-            case "playing_level_3":
-            case "playing_level_4":
-            case "playing_level_5":
-            case "playing_level_6":
-            case "playing_level_7":
-            case "playing_level_8":
-            case "playing_level_9":
-            case "playing_level_10":
-            case "playing_level_11":
-            case "playing_level_12":
-                // Можно добавить меню паузы
-                break;
-            default:
-                // Для других состояний можем вернуть в меню
-                break;
+        if (is_playing_level_state(global.game_state)) {
+            // Можно добавить меню паузы
+        } else {
+            // Для других состояний можем вернуть в меню
         }
     }
+}
+
+function is_playing_level_state(state_name) {
+    return string_pos("playing_level_", state_name) == 1;
 }
 
 // Функция обработки завершения головоломки

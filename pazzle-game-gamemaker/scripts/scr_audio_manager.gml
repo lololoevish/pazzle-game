@@ -255,25 +255,15 @@ function play_music_by_state(game_state) {
         case "town":
             sound_to_play = get_sound_resource("snd_town_bg");
             break;
-        case "playing_level_1":
-        case "playing_level_2":
-        case "playing_level_3":
-        case "playing_level_4":
-        case "playing_level_5":
-        case "playing_level_6":
-        case "playing_level_7":
-        case "playing_level_8":
-        case "playing_level_9":
-        case "playing_level_10":
-        case "playing_level_11":
-        case "playing_level_12":
-            sound_to_play = get_sound_resource("snd_level_bg");
-            break;
         case "victory":
             sound_to_play = get_sound_resource("snd_victory_bg");
             break;
         default:
-            show_debug_message("WARNING: No music defined for state '" + game_state + "'");
+            if (string_pos("playing_level_", game_state) == 1) {
+                sound_to_play = get_sound_resource("snd_level_bg");
+            } else {
+                show_debug_message("WARNING: No music defined for state '" + game_state + "'");
+            }
             break;
     }
     

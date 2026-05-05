@@ -1,7 +1,7 @@
 // scr_level_transition_platformer.gml
 // Скрипт для реализации коротких платформенных переходов между уровнями
 
-#macro TRANSITION_DEFAULT_LEVEL_COUNT 12
+#macro TRANSITION_DEFAULT_LEVEL_COUNT 24
 
 // Инициализация системы переходов
 function init_level_transitions() {
@@ -121,6 +121,20 @@ function init_level_transitions() {
                               {"type": "moving_platform", "position": 280}, {"type": "gap", "position": 340, "size": 50}],
                     collectibles: ["trophy", "gem", "power_up"],
                     enemies: [{"type": "walker", "position": 150}, {"type": "flyer", "position": 300}]
+                },
+                // Переходы уровней 12-24
+                "rm_cave_12_config_to_rm_cave_13_config": {source_room: "rm_cave_12_config", destination_room: "rm_cave_13_config", transition_type: "platformer", length: 420, obstacles: [{"type": "gap", "position": 120, "size": 50}], collectibles: ["gem"], enemies: []},
+                "rm_cave_13_config_to_rm_cave_14_config": {source_room: "rm_cave_13_config", destination_room: "rm_cave_14_config", transition_type: "platformer", length: 430, obstacles: [{"type": "moving_platform", "position": 180}], collectibles: ["coin", "key"], enemies: [{"type": "walker", "position": 240}]},
+                "rm_cave_14_config_to_rm_cave_15_config": {source_room: "rm_cave_14_config", destination_room: "rm_cave_15_config", transition_type: "platformer", length: 440, obstacles: [{"type": "spikes", "position": 210}], collectibles: ["power_up"], enemies: []},
+                "rm_cave_15_config_to_rm_cave_16_config": {source_room: "rm_cave_15_config", destination_room: "rm_cave_16_config", transition_type: "platformer", length: 450, obstacles: [{"type": "gap", "position": 130, "size": 60}, {"type": "moving_platform", "position": 280}], collectibles: ["gem", "coin"], enemies: [{"type": "flyer", "position": 320}]},
+                "rm_cave_16_config_to_rm_cave_17_config": {source_room: "rm_cave_16_config", destination_room: "rm_cave_17_config", transition_type: "platformer", length: 460, obstacles: [{"type": "gap", "position": 160, "size": 50}], collectibles: ["key"], enemies: []},
+                "rm_cave_17_config_to_rm_cave_18_config": {source_room: "rm_cave_17_config", destination_room: "rm_cave_18_config", transition_type: "platformer", length: 470, obstacles: [{"type": "spikes", "position": 220}, {"type": "gap", "position": 340, "size": 50}], collectibles: ["power_up", "coin"], enemies: [{"type": "walker", "position": 260}]},
+                "rm_cave_18_config_to_rm_cave_19_config": {source_room: "rm_cave_18_config", destination_room: "rm_cave_19_config", transition_type: "platformer", length: 480, obstacles: [{"type": "moving_platform", "position": 240}], collectibles: ["gem"], enemies: []},
+                "rm_cave_19_config_to_rm_cave_20_config": {source_room: "rm_cave_19_config", destination_room: "rm_cave_20_config", transition_type: "platformer", length: 490, obstacles: [{"type": "gap", "position": 180, "size": 70}], collectibles: ["coin", "trophy"], enemies: [{"type": "flyer", "position": 360}]},
+                "rm_cave_20_config_to_rm_cave_21_config": {source_room: "rm_cave_20_config", destination_room: "rm_cave_21_config", transition_type: "platformer", length: 500, obstacles: [{"type": "spikes", "position": 240}], collectibles: ["power_up"], enemies: []},
+                "rm_cave_21_config_to_rm_cave_22_config": {source_room: "rm_cave_21_config", destination_room: "rm_cave_22_config", transition_type: "platformer", length: 510, obstacles: [{"type": "gap", "position": 150, "size": 60}, {"type": "moving_platform", "position": 330}], collectibles: ["gem", "key"], enemies: [{"type": "walker", "position": 280}]},
+                "rm_cave_22_config_to_rm_cave_23_config": {source_room: "rm_cave_22_config", destination_room: "rm_cave_23_config", transition_type: "platformer", length: 520, obstacles: [{"type": "spikes", "position": 260}], collectibles: ["coin", "gem"], enemies: []},
+                "rm_cave_23_config_to_rm_cave_24_config": {source_room: "rm_cave_23_config", destination_room: "rm_cave_24_config", transition_type: "platformer", length: 540, obstacles: [{"type": "gap", "position": 160, "size": 80}, {"type": "spikes", "position": 300}, {"type": "moving_platform", "position": 420}], collectibles: ["trophy", "gem", "power_up"], enemies: [{"type": "walker", "position": 220}, {"type": "flyer", "position": 390}]}
                 }
             },
             // Обратные переходы (из уровней в город)
@@ -234,6 +248,18 @@ function get_room_name_for_level(level_num) {
         case 10: return "rm_cave_10_config";
         case 11: return "rm_cave_11_config";
         case 12: return "rm_cave_12_config";
+        case 13: return "rm_cave_13_config";
+        case 14: return "rm_cave_14_config";
+        case 15: return "rm_cave_15_config";
+        case 16: return "rm_cave_16_config";
+        case 17: return "rm_cave_17_config";
+        case 18: return "rm_cave_18_config";
+        case 19: return "rm_cave_19_config";
+        case 20: return "rm_cave_20_config";
+        case 21: return "rm_cave_21_config";
+        case 22: return "rm_cave_22_config";
+        case 23: return "rm_cave_23_config";
+        case 24: return "rm_cave_24_config";
         default: return "";
     }
 }

@@ -1,0 +1,101 @@
+{
+	"cave_id": "cave22_star_map",
+	"level": 22,
+	"theme": "star_map",
+	"naming_policy": "Sprite names describe level, role, material, and purpose: spr_caveNN_<theme>_<role>_<detail>.",
+	"color_palette": {
+		"primary": "#14101f",
+		"accent": "#7dd3fc",
+		"details": "#334155",
+		"light": "#fde68a"
+	},
+	"background": {
+		"sprite": "spr_cave22_star_map_wide_background",
+		"size": "800x600",
+		"description": "Фон: Звёздная карта"
+	},
+	"furniture": [
+		{
+			"sprite": "spr_cave22_star_map_central_puzzle_device",
+			"size": "160x160",
+			"layer": "Furniture",
+			"animated": true,
+			"frames": 8,
+			"fps": 10,
+			"description": "Главный механизм головоломки",
+			"placement": "center",
+			"frequency": "unique"
+		},
+		{
+			"sprite": "spr_cave22_star_map_exit_lever_pedestal",
+			"size": "96x128",
+			"layer": "Furniture",
+			"animated": false,
+			"description": "Пьедестал рычага выхода",
+			"placement": "exit",
+			"frequency": "unique"
+		}
+	],
+	"decorations": [
+		{
+			"sprite": "spr_cave22_star_map_wall_story_runes",
+			"size": "64x64",
+			"layer": "Decorations_Walls",
+			"animated": false,
+			"description": "Настенные руны-подсказки",
+			"placement": "walls",
+			"frequency": "common"
+		},
+		{
+			"sprite": "spr_cave22_star_map_floor_path_markers",
+			"size": "32x32",
+			"layer": "Decorations_Floor",
+			"animated": false,
+			"description": "Метки безопасного пути",
+			"placement": "floor",
+			"frequency": "common"
+		},
+		{
+			"sprite": "spr_cave22_star_map_foreground_depth_stones",
+			"size": "128x96",
+			"layer": "Decorations_Foreground",
+			"animated": false,
+			"description": "Передние камни глубины",
+			"placement": "foreground",
+			"frequency": "medium"
+		}
+	],
+	"effects": [
+		{
+			"sprite": "spr_cave22_star_map_ambient_particle_motes",
+			"size": "16x16",
+			"layer": "Effects_Air",
+			"animated": true,
+			"frames": 6,
+			"fps": 12,
+			"alpha": 0.55,
+			"description": "Частицы атмосферы"
+		},
+		{
+			"sprite": "spr_cave22_star_map_puzzle_success_flash",
+			"size": "192x192",
+			"layer": "Effects_Puzzle",
+			"animated": true,
+			"frames": 10,
+			"fps": 18,
+			"alpha": 0.9,
+			"description": "Вспышка решения пазла",
+			"trigger": "puzzle_complete"
+		}
+	],
+	"ambient_sounds": [
+		"snd_cave22_star_map_ambience",
+		"snd_cave22_star_map_puzzle_pulse"
+	],
+	"lighting": {
+		"ambient_light": 0.35,
+		"shadow_intensity": 0.65,
+		"pulsing": true,
+		"pulse_speed": 0.35
+	}
+}
