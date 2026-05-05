@@ -39,11 +39,12 @@
 
 ## Контроль изменений
 
-### Последний проверенный коммит: a2501b1b
+### Последний проверенный коммит: e3c7ce5
 
 ### Хронология изменений
 
 - 28.04.2026: Повторно скачан актуальный `AGENTS.md` из `Ravva/projects-tracker` и сверены локальные `AGENTS.md`; подтверждено, что `memory_bank/projectbrief.md` содержит обязательный раздел `## Project Deliverables` в формате таблицы `ID | Deliverable | Status | Weight`, все статусы входят в `pending`/`in_progress`/`completed`/`blocked`, арифметическая проверка фактических строк дала `10 + 12 + 10 + 10 + 8 + 8 + 8 + 8 + 8 + 10 + 8 + 8 = 100`.
+- 28.04.2026: После коммита проверки deliverables обновлён `last_checked_commit` до `e3c7ce5`.
 - 28.04.2026: Исправлены Markdown-документы, которые ошибочно представляли Rust/Python или 6-уровневую модель как актуальный scope: обновлены root `README.md`, `current_task.md`, `pazzle-game-gamemaker/README.md`, `memory_bank/systemPatterns.md`, модульные заметки Memory Bank, `memory_bank/other/legacy.md`, `docs/achievements_system.md`, `docs/cave_assets_7_12_guide.md`, `docs/levels_7_12_guide.md`, `docs/audio_dramaturgy_guide.md` и `docs/gms2_testing_strategy.md`
 - 28.04.2026: После коммита синхронизации Memory Bank обновлён `last_checked_commit` до `a2501b1b`.
 - 28.04.2026: Скачан и сверен актуальный `AGENTS.md` из `Ravva/projects-tracker`; подтверждено, что локальный `memory_bank/AGENTS.md` соответствует актуальным правилам, `memory_bank/projectbrief.md` содержит раздел `## Project Deliverables` в формате таблицы `ID | Deliverable | Status | Weight`, все статусы канонические, сумма весов подтверждена как `10 + 12 + 10 + 10 + 8 + 8 + 8 + 8 + 8 + 10 + 8 + 8 = 100`
