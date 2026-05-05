@@ -39,11 +39,13 @@
 
 ## Контроль изменений
 
-### Последний проверенный коммит: 8b704c43339cea2fd16039e5ea0fd5377a9994f5
+### Последний проверенный коммит: a2501b1b
 
 ### Хронология изменений
 
+- 28.04.2026: Повторно скачан актуальный `AGENTS.md` из `Ravva/projects-tracker` и сверены локальные `AGENTS.md`; подтверждено, что `memory_bank/projectbrief.md` содержит обязательный раздел `## Project Deliverables` в формате таблицы `ID | Deliverable | Status | Weight`, все статусы входят в `pending`/`in_progress`/`completed`/`blocked`, арифметическая проверка фактических строк дала `10 + 12 + 10 + 10 + 8 + 8 + 8 + 8 + 8 + 10 + 8 + 8 = 100`.
 - 28.04.2026: Исправлены Markdown-документы, которые ошибочно представляли Rust/Python или 6-уровневую модель как актуальный scope: обновлены root `README.md`, `current_task.md`, `pazzle-game-gamemaker/README.md`, `memory_bank/systemPatterns.md`, модульные заметки Memory Bank, `memory_bank/other/legacy.md`, `docs/achievements_system.md`, `docs/cave_assets_7_12_guide.md`, `docs/levels_7_12_guide.md`, `docs/audio_dramaturgy_guide.md` и `docs/gms2_testing_strategy.md`
+- 28.04.2026: После коммита синхронизации Memory Bank обновлён `last_checked_commit` до `a2501b1b`.
 - 28.04.2026: Скачан и сверен актуальный `AGENTS.md` из `Ravva/projects-tracker`; подтверждено, что локальный `memory_bank/AGENTS.md` соответствует актуальным правилам, `memory_bank/projectbrief.md` содержит раздел `## Project Deliverables` в формате таблицы `ID | Deliverable | Status | Weight`, все статусы канонические, сумма весов подтверждена как `10 + 12 + 10 + 10 + 8 + 8 + 8 + 8 + 8 + 10 + 8 + 8 = 100`
 - 28.04.2026: Продолжен аудит GMS2 runtime-багов; заменены невалидные `global_exists`, `room_get_name_index`, `map_exists` и `function_exists`-паттерны, разведены конфликтующие функции переходов `initiate_level_transition`/`initiate_interlevel_transition`, добавлены безопасные проверки optional global-переменных для аудио, UI, VN-портретов, игрока и puzzle-состояний, исправлены вызовы `sprite_add` с неполной сигнатурой
 - 28.04.2026: Выполнен аудит GMS2-кода на legacy-хардкоды количества уровней; `scr_achievement_manager.gml` больше не считает половину маршрута и полное завершение через фиксированные `6`/`12`, а использует фактическую длину `global.game_progress.levels`; `scr_level_transition_platformer.gml` больше не определяет последний уровень через литерал `12` в условии перехода
