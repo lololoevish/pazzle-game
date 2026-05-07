@@ -57,6 +57,14 @@ venv.bak/
 *.swo
 *~
 
+# Node
+node_modules/
+dist/
+.env
+.parcel-cache
+.cache
+.DS_Store
+
 # OS
 .DS_Store
 Thumbs.db
