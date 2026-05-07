@@ -1,0 +1,877 @@
+import Phaser from "phaser";
+import { LEVEL_COUNT } from "../game/constants";
+import { completeLevel } from "../game/GameState";
+import { loadProgress, saveProgress } from "../game/SaveSystem";
+import { addHelp, addPanel, addTitle } from "../systems/UiSystem";
+
+type CaveData = {
+	level?: number;
+};
+
+type Interactable = {
+	name: string;
+	object: Phaser.GameObjects.GameObject;
+	action: () => void;
+};
+
+type AutoZone = {
+	zone: Phaser.GameObjects.Zone;
+	action: () => void;
+	triggered: boolean;
+};
+
+type WordCell = {
+	x: number;
+	y: number;
+	letter: string;
+	rect: Phaser.GameObjects.Rectangle;
+};
+
+type MemoryCard = {
+	index: number;
+	symbol: string;
+	rect: Phaser.GameObjects.Rectangle;
+	label: Phaser.GameObjects.Text;
+	revealed: boolean;
+	matched: boolean;
+};
+
+const CAVE_BOUNDS = { x: 72, y: 112, width: 816, height: 340 };
+
+export class CaveScene extends Phaser.Scene {
+	private level = 1;
+	private solved = false;
+	private statusText?: Phaser.GameObjects.Text;
+	private player?: Phaser.Physics.Arcade.Sprite;
+	private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
+	private wasd?: Record<string, Phaser.Input.Keyboard.Key>;
+	private interactKey?: Phaser.Input.Keyboard.Key;
+	private spaceKey?: Phaser.Input.Keyboard.Key;
+	private escKey?: Phaser.Input.Keyboard.Key;
+	private solids?: Phaser.Physics.Arcade.StaticGroup;
+	private lever?: Phaser.Physics.Arcade.Sprite;
+	private readonly interactables: Interactable[] = [];
+	private readonly autoZones: AutoZone[] = [];
+	private readonly wordCells: WordCell[] = [];
+	private readonly foundWords = new Set<string>();
+	private wordStart?: WordCell;
+	private rhythmSequence: number[] = [];
+	private rhythmRound = 1;
+	private rhythmInputIndex = 0;
+	private rhythmShowing = false;
+	private readonly rhythmButtons: Phaser.GameObjects.Rectangle[] = [];
+	private readonly memoryCards: MemoryCard[] = [];
+	private firstMemoryCard?: MemoryCard;
+	private memoryLocked = false;
+	private crystalCount = 0;
+
+	public constructor() {
+		super("CaveScene");
+	}
+
+	public init(data: CaveData): void {
+		this.level = Math.min(
+			LEVEL_COUNT,
+			Math.max(1, Number(data.level) || loadProgress().currentLevel),
+		);
+		this.solved = false;
+		this.interactables.length = 0;
+		this.autoZones.length = 0;
+		this.wordCells.length = 0;
+		this.foundWords.clear();
+		this.wordStart = undefined;
+		this.rhythmSequence = [];
+		this.rhythmRound = 1;
+		this.rhythmInputIndex = 0;
+		this.rhythmShowing = false;
+		this.rhythmButtons.length = 0;
+		this.memoryCards.length = 0;
+		this.firstMemoryCard = undefined;
+		this.memoryLocked = false;
+	}
+
+	public create(): void {
+		this.cameras.main.setBackgroundColor("#1e1b4b");
+		this.physics.world.setBounds(
+			CAVE_BOUNDS.x,
+			CAVE_BOUNDS.y,
+			CAVE_BOUNDS.width,
+			CAVE_BOUNDS.height,
+		);
+		this.solids = this.physics.add.staticGroup();
+
+		addTitle(this, `Пещера ${this.level}`, 34);
+		this.add
+			.text(480, 68, this.getPuzzleName(), {
+				fontFamily: "Arial",
+				fontSize: "20px",
+				color: "#c4b5fd",
+			})
+			.setOrigin(0.5);
+		addPanel(this, 480, 282, 850, 350);
+		this.add.text(92, 120, this.getPuzzlePrompt(), {
+			fontFamily: "Arial",
+			fontSize: "18px",
+			color: "#f8fafc",
+			wordWrap: { width: 760 },
+			lineSpacing: 5,
+		});
+		this.statusText = this.add.text(92, 405, "", {
+			fontFamily: "Arial",
+			fontSize: "17px",
+			color: "#fde68a",
+			wordWrap: { width: 760 },
+		});
+
+		this.createRoomCollision();
+		this.createAutoExit();
+		this.createPuzzle();
+		this.createLever();
+
+		this.player = this.physics.add
+			.sprite(128, 382, "player")
+			.setCollideWorldBounds(true);
+		this.player.setDisplaySize(36, 44).setDepth(20);
+		if (this.solids) {
+			this.physics.add.collider(this.player, this.solids);
+		}
+
+		for (const autoZone of this.autoZones) {
+			this.physics.add.overlap(this.player, autoZone.zone, () =>
+				this.triggerAutoZone(autoZone),
+			);
+		}
+
+		this.refreshStatus(
+			"Герой больше не проходит сквозь стены. Для выхода просто зайди в проход слева.",
+		);
+		addHelp(
+			this,
+			"WASD/стрелки — движение, E/Space — действие, Esc — хаб. Проходы работают автоматически.",
+		);
+
+		this.cursors = this.input.keyboard?.createCursorKeys();
+		this.wasd = this.input.keyboard?.addKeys("W,A,S,D") as Record<
+			string,
+			Phaser.Input.Keyboard.Key
+		>;
+		this.interactKey = this.input.keyboard?.addKey(
+			Phaser.Input.Keyboard.KeyCodes.E,
+		);
+		this.spaceKey = this.input.keyboard?.addKey(
+			Phaser.Input.Keyboard.KeyCodes.SPACE,
+		);
+		this.escKey = this.input.keyboard?.addKey(
+			Phaser.Input.Keyboard.KeyCodes.ESC,
+		);
+	}
+
+	public update(): void {
+		if (!this.player || !this.cursors || !this.wasd) {
+			return;
+		}
+
+		const speed = 172;
+
+		// Логика скольжения для лабиринта (как в GMS2)
+		if (!this.solved && (this.level - 1) % 5 === 0 && this.isPlayerInMaze()) {
+			this.updateMazeMovement();
+		} else {
+			const left = this.cursors.left.isDown || this.wasd.A.isDown;
+			const right = this.cursors.right.isDown || this.wasd.D.isDown;
+			const up = this.cursors.up.isDown || this.wasd.W.isDown;
+			const down = this.cursors.down.isDown || this.wasd.S.isDown;
+			this.player.setVelocity(
+				(Number(right) - Number(left)) * speed,
+				(Number(down) - Number(up)) * speed,
+			);
+		}
+
+		const pressedInteract = this.interactKey
+			? Phaser.Input.Keyboard.JustDown(this.interactKey)
+			: false;
+		const pressedSpace = this.spaceKey
+			? Phaser.Input.Keyboard.JustDown(this.spaceKey)
+			: false;
+		if (pressedInteract || pressedSpace) {
+			this.interact();
+		}
+
+		if (this.escKey && Phaser.Input.Keyboard.JustDown(this.escKey)) {
+			this.scene.start("TownScene");
+		}
+
+		this.updateWordSearchLine();
+	}
+
+	private isPlayerInMaze(): boolean {
+		return this.player
+			? this.player.x > 250 &&
+					this.player.x < 590 &&
+					this.player.y > 110 &&
+					this.player.y < 440
+			: false;
+	}
+
+	private mazeMoving = false;
+	private mazeDir = { x: 0, y: 0 };
+
+	private updateMazeMovement(): void {
+		if (!this.player || !this.cursors || !this.wasd) return;
+
+		if (this.mazeMoving) {
+			const speed = 260;
+			this.player.setVelocity(this.mazeDir.x * speed, this.mazeDir.y * speed);
+
+			// Если скорость упала почти до нуля (столкнулись со стеной)
+			if (this.player.body && this.player.body.velocity.length() < 10) {
+				this.mazeMoving = false;
+				this.player.setVelocity(0, 0);
+			}
+			return;
+		}
+
+		const left = this.cursors.left.isDown || this.wasd.A.isDown;
+		const right = this.cursors.right.isDown || this.wasd.D.isDown;
+		const up = this.cursors.up.isDown || this.wasd.W.isDown;
+		const down = this.cursors.down.isDown || this.wasd.S.isDown;
+
+		if (left || right || up || down) {
+			this.mazeMoving = true;
+			this.mazeDir = {
+				x: Number(right) - Number(left),
+				y: Number(down) - Number(up),
+			};
+			// Приоритет горизонтали если нажато по диагонали (для простоты как в GML)
+			if (this.mazeDir.x !== 0) this.mazeDir.y = 0;
+		} else {
+			this.player.setVelocity(0, 0);
+		}
+	}
+
+	private selectionLine?: Phaser.GameObjects.Graphics;
+
+	private updateWordSearchLine(): void {
+		if (!this.wordStart || !this.player) {
+			this.selectionLine?.clear();
+			return;
+		}
+
+		if (!this.selectionLine) {
+			this.selectionLine = this.add.graphics().setDepth(15);
+		}
+
+		this.selectionLine.clear();
+		this.selectionLine.lineStyle(4, 0x93c5fd, 0.5);
+		this.selectionLine.lineBetween(
+			this.wordStart.rect.x,
+			this.wordStart.rect.y,
+			this.player.x,
+			this.player.y,
+		);
+	}
+
+	private createRoomCollision(): void {
+		this.add
+			.rectangle(
+				480,
+				282,
+				CAVE_BOUNDS.width,
+				CAVE_BOUNDS.height,
+				0x2e2669,
+				0.45,
+			)
+			.setStrokeStyle(2, 0x8b5cf6);
+		this.createWall(480, 105, 840, 18);
+		this.createWall(480, 460, 840, 18);
+		this.createWall(60, 282, 18, 256);
+		this.createWall(900, 282, 18, 340);
+		this.createWall(190, 208, 150, 20);
+		this.createWall(720, 228, 180, 20);
+		this.createWall(410, 372, 190, 20);
+	}
+
+	private createWall(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+	): void {
+		const wall = this.add
+			.rectangle(x, y, width, height, 0x0f172a, 0.94)
+			.setStrokeStyle(1, 0x475569);
+		this.physics.add.existing(wall, true);
+		this.solids?.add(wall);
+	}
+
+	private createAutoExit(): void {
+		this.add
+			.rectangle(72, 382, 24, 86, 0x14532d, 0.7)
+			.setStrokeStyle(2, 0x86efac);
+		this.add
+			.text(90, 432, "Выход", {
+				fontFamily: "Arial",
+				fontSize: "14px",
+				color: "#dcfce7",
+			})
+			.setOrigin(0.5);
+		const exitZone = this.add.zone(72, 382, 28, 92);
+		this.physics.add.existing(exitZone, true);
+		this.autoZones.push({
+			zone: exitZone,
+			action: () => this.scene.start("TownScene"),
+			triggered: false,
+		});
+	}
+
+	private createLever(): void {
+		this.lever = this.physics.add
+			.staticSprite(812, 382, "lever")
+			.setDisplaySize(42, 50);
+		this.add
+			.text(812, 428, "Рычаг", {
+				fontFamily: "Arial",
+				fontSize: "14px",
+				color: "#f8fafc",
+			})
+			.setOrigin(0.5);
+		this.interactables.push({
+			name: "Рычаг",
+			object: this.lever,
+			action: () => this.pullLever(),
+		});
+	}
+
+	private createPuzzle(): void {
+		switch ((this.level - 1) % 5) {
+			case 0:
+				this.createMazePuzzle();
+				break;
+			case 1:
+				this.createWordSearchPuzzle();
+				break;
+			case 2:
+				this.createRhythmPuzzle();
+				break;
+			case 3:
+				this.createMemoryMatchPuzzle();
+				break;
+			default:
+				this.createPlatformerPuzzle();
+				break;
+		}
+	}
+
+	private createPlatformerPuzzle(): void {
+		const platforms = [
+			{ x: 300, y: 380, w: 120, h: 20 },
+			{ x: 500, y: 300, w: 120, h: 20 },
+			{ x: 350, y: 220, w: 100, h: 20 },
+			{ x: 650, y: 200, w: 100, h: 20 },
+		];
+		for (const p of platforms) {
+			this.createWall(p.x, p.y, p.w, p.h);
+		}
+
+		const crystalPositions = [
+			{ x: 300, y: 340 },
+			{ x: 500, y: 260 },
+			{ x: 350, y: 180 },
+			{ x: 650, y: 160 },
+		];
+		this.crystalCount = 0;
+		for (const pos of crystalPositions) {
+			const crystal = this.add
+				.sprite(pos.x, pos.y, "crystal")
+				.setDisplaySize(24, 24);
+			this.physics.add.existing(crystal, true);
+			const zone = this.add.zone(pos.x, pos.y, 30, 30);
+			this.physics.add.existing(zone, true);
+			this.autoZones.push({
+				zone: zone,
+				action: () => {
+					if (crystal.active) {
+						crystal.destroy();
+						this.crystalCount += 1;
+						this.refreshStatus(
+							`Кристаллов собрано: ${this.crystalCount}/${crystalPositions.length}`,
+						);
+						if (this.crystalCount >= crystalPositions.length) {
+							this.markSolved("Все кристаллы собраны! Теперь опусти рычаг.");
+						}
+					}
+				},
+				triggered: false,
+			});
+		}
+	}
+
+	private createMazePuzzle(): void {
+		const grid = [
+			"111111111111111",
+			"100010000000001",
+			"101010111011101",
+			"101000100010001",
+			"101110101110101",
+			"100000101000101",
+			"111011101011101",
+			"100010001000001",
+			"101110111110101",
+			"100000000010001",
+			"101111101011101",
+			"100000101000101",
+			"101110101110101",
+			"100010000000001",
+			"111111111111111",
+		];
+		const cell = 20;
+		const startX = 270;
+		const startY = 128;
+		for (const [rowIndex, row] of grid.entries()) {
+			for (const [colIndex, value] of [...row].entries()) {
+				const x = startX + colIndex * cell;
+				const y = startY + rowIndex * cell;
+				if (value === "1") {
+					this.createWall(x, y, cell, cell);
+				} else {
+					this.add.rectangle(x, y, cell - 1, cell - 1, 0xf8fafc, 0.1);
+				}
+			}
+		}
+		this.add.rectangle(
+			startX + 13 * cell,
+			startY + 13 * cell,
+			26,
+			26,
+			0x22c55e,
+			0.85,
+		);
+		this.add
+			.text(startX + 13 * cell, startY + 13 * cell, "Ф", {
+				fontFamily: "Arial",
+				fontSize: "16px",
+				color: "#052e16",
+			})
+			.setOrigin(0.5);
+		const goal = this.add.zone(startX + 13 * cell, startY + 13 * cell, 28, 28);
+		this.physics.add.existing(goal, true);
+		this.autoZones.push({
+			zone: goal,
+			action: () =>
+				this.markSolved(
+					"Лабиринт пройден, как в GMS2-версии: доберись до финиша и затем опусти рычаг.",
+				),
+			triggered: false,
+		});
+	}
+
+	private createWordSearchPuzzle(): void {
+		const rows = [
+			"КФЛАБИРИНТ",
+			"АЩЦУКЕНГШЗ",
+			"ПАЗЗЛОРПАВ",
+			"ЫВАПРОЛДЖЭ",
+			"ПЕЩЕРАВЫАП",
+			"РОЛДЖЭЯЧСМ",
+			"ГОРОДКЕНГШ",
+			"ЗХЪФЫВАПРО",
+			"ЛДЖЭЯЧСМИТ",
+			"ЬБЮЙЦУКЕНГ",
+		];
+		const cell = 26;
+		const startX = 248;
+		const startY = 170;
+		for (const [y, row] of rows.entries()) {
+			for (const [x, letter] of [...row].entries()) {
+				const rect = this.add
+					.rectangle(
+						startX + x * cell,
+						startY + y * cell,
+						cell - 2,
+						cell - 2,
+						0xf8fafc,
+						0.9,
+					)
+					.setStrokeStyle(1, 0x334155);
+				this.add
+					.text(rect.x, rect.y, letter, {
+						fontFamily: "Arial",
+						fontSize: "14px",
+						color: "#020617",
+					})
+					.setOrigin(0.5);
+				const wordCell = { x, y, letter, rect };
+				this.wordCells.push(wordCell);
+				this.interactables.push({
+					name: `Буква ${letter}`,
+					object: rect,
+					action: () => this.selectWordCell(wordCell),
+				});
+			}
+		}
+		this.add.text(590, 174, "Найди слова:\nЛАБИРИНТ\nПАЗЗЛ\nПЕЩЕРА\nГОРОД", {
+			fontFamily: "Arial",
+			fontSize: "18px",
+			color: "#e0f2fe",
+			lineSpacing: 8,
+		});
+	}
+
+	private createRhythmPuzzle(): void {
+		this.rhythmRound = 1;
+		this.startRhythmRound();
+		const colors = [0x7f1d1d, 0x166534, 0x1d4ed8, 0xa16207];
+		for (let index = 0; index < 4; index += 1) {
+			const x = 300 + index * 110;
+			const button = this.add
+				.rectangle(x, 305, 74, 74, colors[index], 0.7)
+				.setStrokeStyle(3, 0xf8fafc);
+			this.rhythmButtons.push(button);
+			this.add
+				.text(x, 305, `${index + 1}`, {
+					fontFamily: "Arial",
+					fontSize: "28px",
+					color: "#ffffff",
+				})
+				.setOrigin(0.5);
+			this.interactables.push({
+				name: `Ритм ${index + 1}`,
+				object: button,
+				action: () => this.pressRhythmButton(index),
+			});
+		}
+		this.showRhythmPattern();
+	}
+
+	private createMemoryMatchPuzzle(): void {
+		const symbols = ["A", "B", "C", "D", "A", "B", "C", "D"];
+		const shuffled = this.shuffle(symbols);
+		for (const [index, symbol] of shuffled.entries()) {
+			const col = index % 4;
+			const row = Math.floor(index / 4);
+			const x = 330 + col * 90;
+			const y = 238 + row * 76;
+			const rect = this.add
+				.rectangle(x, y, 66, 56, 0x1d4ed8, 0.95)
+				.setStrokeStyle(2, 0xbfdbfe);
+			const label = this.add
+				.text(x, y, "?", {
+					fontFamily: "Arial",
+					fontSize: "24px",
+					color: "#ffffff",
+				})
+				.setOrigin(0.5);
+			const card = {
+				index,
+				symbol,
+				rect,
+				label,
+				revealed: false,
+				matched: false,
+			};
+			this.memoryCards.push(card);
+			this.interactables.push({
+				name: `Карта ${index + 1}`,
+				object: rect,
+				action: () => this.flipMemoryCard(card),
+			});
+		}
+	}
+
+	private selectWordCell(cell: WordCell): void {
+		if (!this.wordStart) {
+			this.wordStart = cell;
+			cell.rect.setFillStyle(0x93c5fd, 1);
+			this.refreshStatus(
+				`Начало выделения: ${cell.letter}. Подойди к последней букве слова и нажми E/Space.`,
+			);
+			return;
+		}
+
+		const selected = this.getWordBetween(this.wordStart, cell);
+		this.wordStart = undefined;
+		if (!selected) {
+			this.refreshStatus(
+				"В GMS2 слово выбирается прямой линией. Выбери горизонталь, вертикаль или диагональ.",
+			);
+			return;
+		}
+
+		const reversed = [...selected.word].reverse().join("");
+		const target = ["ЛАБИРИНТ", "ПАЗЗЛ", "ПЕЩЕРА", "ГОРОД"].find(
+			(word) => word === selected.word || word === reversed,
+		);
+		if (!target || this.foundWords.has(target)) {
+			this.refreshStatus(`Слово "${selected.word}" не засчитано.`);
+			return;
+		}
+
+		this.foundWords.add(target);
+		for (const foundCell of selected.cells) {
+			foundCell.rect.setFillStyle(0x86efac, 1);
+		}
+		if (this.foundWords.size >= 4) {
+			this.markSolved("Все слова найдены. Теперь опусти рычаг.");
+			return;
+		}
+		this.refreshStatus(
+			`Найдено слово: ${target}. Осталось: ${4 - this.foundWords.size}.`,
+		);
+	}
+
+	private getWordBetween(
+		start: WordCell,
+		end: WordCell,
+	): { word: string; cells: WordCell[] } | undefined {
+		const dx = Math.sign(end.x - start.x);
+		const dy = Math.sign(end.y - start.y);
+		if (
+			start.x !== end.x &&
+			start.y !== end.y &&
+			Math.abs(end.x - start.x) !== Math.abs(end.y - start.y)
+		) {
+			return undefined;
+		}
+		let x = start.x;
+		let y = start.y;
+		let word = "";
+		const cells: WordCell[] = [];
+		while (true) {
+			const cell = this.wordCells.find(
+				(candidate) => candidate.x === x && candidate.y === y,
+			);
+			if (!cell) {
+				return undefined;
+			}
+			word += cell.letter;
+			cells.push(cell);
+			if (x === end.x && y === end.y) {
+				break;
+			}
+			x += dx;
+			y += dy;
+		}
+		return { word, cells };
+	}
+
+	private startRhythmRound(): void {
+		this.rhythmSequence = Array.from({ length: this.rhythmRound }, () =>
+			Phaser.Math.Between(0, 3),
+		);
+		this.rhythmInputIndex = 0;
+	}
+
+	private showRhythmPattern(): void {
+		this.rhythmShowing = true;
+		this.refreshStatus(
+			`Раунд ${this.rhythmRound}/4: запомни подсветку кнопок, потом подойди к ним героем.`,
+		);
+		for (const [index, buttonIndex] of this.rhythmSequence.entries()) {
+			this.time.delayedCall(450 + index * 520, () => {
+				const button = this.rhythmButtons[buttonIndex];
+				button?.setAlpha(1);
+				this.time.delayedCall(260, () => button?.setAlpha(0.45));
+			});
+		}
+		this.time.delayedCall(700 + this.rhythmSequence.length * 520, () => {
+			this.rhythmShowing = false;
+			this.refreshStatus(
+				"Теперь повтори последовательность: подходи к цветным кнопкам и нажимай E/Space.",
+			);
+		});
+	}
+
+	private pressRhythmButton(index: number): void {
+		if (this.rhythmShowing) {
+			this.refreshStatus("Подожди, пока паттерн закончится.");
+			return;
+		}
+		if (index !== this.rhythmSequence[this.rhythmInputIndex]) {
+			this.refreshStatus("Ошибка ритма. Раунд начался заново.");
+			this.startRhythmRound();
+			this.showRhythmPattern();
+			return;
+		}
+		this.rhythmInputIndex += 1;
+		if (this.rhythmInputIndex < this.rhythmSequence.length) {
+			this.refreshStatus(
+				`Верно. Осталось нажать ${this.rhythmSequence.length - this.rhythmInputIndex}.`,
+			);
+			return;
+		}
+		if (this.rhythmRound >= 4) {
+			this.markSolved(
+				"Ритм пройден. В GMS2 максимум 8 раундов, в web-port пока 4 для быстрого прохождения.",
+			);
+			return;
+		}
+		this.rhythmRound += 1;
+		this.startRhythmRound();
+		this.showRhythmPattern();
+	}
+
+	private flipMemoryCard(card: MemoryCard): void {
+		if (this.memoryLocked || card.matched || card.revealed) {
+			return;
+		}
+		card.revealed = true;
+		card.rect.setFillStyle(0xf8fafc, 1);
+		card.label.setText(card.symbol).setColor("#020617");
+		if (!this.firstMemoryCard) {
+			this.firstMemoryCard = card;
+			this.refreshStatus("Первая карта открыта. Найди пару и нажми E/Space.");
+			return;
+		}
+		if (this.firstMemoryCard.symbol === card.symbol) {
+			card.matched = true;
+			this.firstMemoryCard.matched = true;
+			card.rect.setFillStyle(0x22c55e, 1);
+			this.firstMemoryCard.rect.setFillStyle(0x22c55e, 1);
+			this.firstMemoryCard = undefined;
+			if (this.memoryCards.every((item) => item.matched)) {
+				this.markSolved("Все пары найдены. Теперь опусти рычаг.");
+				return;
+			}
+			this.refreshStatus("Пара найдена. Продолжай искать остальные.");
+			return;
+		}
+		const previous = this.firstMemoryCard;
+		this.firstMemoryCard = undefined;
+		this.memoryLocked = true;
+		this.refreshStatus("Карты не совпали. Они скоро закроются.");
+		this.time.delayedCall(700, () => {
+			for (const item of [previous, card]) {
+				item.revealed = false;
+				item.rect.setFillStyle(0x1d4ed8, 0.95);
+				item.label.setText("?").setColor("#ffffff");
+			}
+			this.memoryLocked = false;
+		});
+	}
+
+	private interact(): void {
+		if (!this.player) {
+			return;
+		}
+		const player = this.player;
+		const nearest = this.interactables.find((item) => {
+			const position = this.getObjectPosition(item.object);
+			return (
+				Phaser.Math.Distance.Between(
+					player.x,
+					player.y,
+					position.x,
+					position.y,
+				) < 32
+			);
+		});
+		if (!nearest) {
+			this.refreshStatus("Подойди вплотную к объекту пазла или рычагу.");
+			return;
+		}
+		nearest.action();
+	}
+
+	private triggerAutoZone(autoZone: AutoZone): void {
+		if (autoZone.triggered) {
+			return;
+		}
+		autoZone.triggered = true;
+		autoZone.action();
+	}
+
+	private getObjectPosition(object: Phaser.GameObjects.GameObject): {
+		x: number;
+		y: number;
+	} {
+		const positioned =
+			object as unknown as Phaser.GameObjects.Components.Transform;
+		return { x: positioned.x, y: positioned.y };
+	}
+
+	private refreshStatus(text: string): void {
+		this.statusText?.setText(text);
+	}
+
+	private markSolved(text: string): void {
+		if (this.solved) {
+			return;
+		}
+		this.solved = true;
+		this.refreshStatus(text);
+
+		const solvedMsg = this.add
+			.text(480, 282, "РЕШЕНО!", {
+				fontFamily: "Arial Black",
+				fontSize: "64px",
+				color: "#22c55e",
+				stroke: "#064e3b",
+				strokeThickness: 8,
+			})
+			.setOrigin(0.5)
+			.setDepth(100)
+			.setAlpha(0);
+
+		this.tweens.add({
+			targets: solvedMsg,
+			alpha: 1,
+			scale: { from: 0.5, to: 1.2 },
+			duration: 600,
+			ease: "Back.easeOut",
+			yoyo: true,
+			hold: 1000,
+			onComplete: () => solvedMsg.destroy(),
+		});
+	}
+
+	private pullLever(): void {
+		if (!this.solved) {
+			this.refreshStatus(
+				"Рычаг пока не поддаётся. Сначала реши задачу героем.",
+			);
+			return;
+		}
+		const progress = completeLevel(loadProgress(), this.level);
+		saveProgress(progress);
+		if (this.level >= LEVEL_COUNT) {
+			this.scene.start("VictoryScene");
+			return;
+		}
+		this.scene.start("TownScene");
+	}
+
+	private getPuzzleName(): string {
+		const names = [
+			"Лабиринт",
+			"Поиск слов",
+			"Ритм/Паттерн",
+			"Memory Match",
+			"Платформер",
+		];
+		return names[(this.level - 1) % names.length];
+	}
+
+	private getPuzzlePrompt(): string {
+		switch ((this.level - 1) % 5) {
+			case 0:
+				return "Лабиринт как в GMS2: используй WASD для скольжения до зелёного финиша.";
+			case 1:
+				return "Поиск слов: выбери первую и последнюю букву слова прямой линией через E/Space. Синяя линия подскажет выбор.";
+			case 2:
+				return "Ритм: запоминай последовательность цветных кнопок и повторяй её героем.";
+			case 3:
+				return "Memory Match: открывай карты героем, ищи пары и жди, если карты не совпали.";
+			default:
+				return "Платформер: прыгай по парящим островам и собери все кристаллы.";
+		}
+	}
+
+	private shuffle<T>(items: T[]): T[] {
+		const result = [...items];
+		for (let index = result.length - 1; index > 0; index -= 1) {
+			const swapIndex = Phaser.Math.Between(0, index);
+			[result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+		}
+		return result;
+	}
+}

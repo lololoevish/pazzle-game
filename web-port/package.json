@@ -1,0 +1,21 @@
+{
+  "name": "adventure-puzzle-game-web-port",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check": "biome check --write src"
+  },
+  "dependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "phaser": "^3.90.0",
+    "vite": "^7.1.12"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
+    "typescript": "^5.9.3"
+  }
+}
