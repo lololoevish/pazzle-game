@@ -207,6 +207,7 @@ export class CaveScene extends Phaser.Scene {
 		this.createAutoExit();
 		this.createPuzzle();
 		this.createLever();
+		this.createAtmosphere();
 
 		this.player = this.physics.add
 			.sprite(128, 382, "player")
@@ -438,6 +439,45 @@ export class CaveScene extends Phaser.Scene {
 			action: () => this.scene.start("TownScene"),
 			triggered: false,
 		});
+	}
+
+	private createAtmosphere(): void {
+		// Виньетка
+		const vignette = this.add.graphics().setDepth(100).setScrollFactor(0);
+		vignette.fillGradientStyle(
+			0x000000,
+			0x000000,
+			0x000000,
+			0x000000,
+			0,
+			0,
+			0.4,
+			0.4,
+		);
+		vignette.fillRect(0, 0, 960, 540);
+
+		// Летающие частицы (пыль/магия)
+		for (let i = 0; i < 20; i++) {
+			const x = Phaser.Math.Between(
+				CAVE_BOUNDS.x,
+				CAVE_BOUNDS.x + CAVE_BOUNDS.width,
+			);
+			const y = Phaser.Math.Between(
+				CAVE_BOUNDS.y,
+				CAVE_BOUNDS.y + CAVE_BOUNDS.height,
+			);
+			const dot = this.add.circle(x, y, 1, 0xffffff, 0.3).setDepth(5);
+
+			this.tweens.add({
+				targets: dot,
+				x: x + Phaser.Math.Between(-20, 20),
+				y: y + Phaser.Math.Between(-20, 20),
+				alpha: 0.1,
+				duration: Phaser.Math.Between(2000, 5000),
+				yoyo: true,
+				repeat: -1,
+			});
+		}
 	}
 
 	private createLever(): void {

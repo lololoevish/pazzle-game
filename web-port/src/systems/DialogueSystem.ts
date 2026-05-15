@@ -19,7 +19,7 @@ function getSpeakerInfo(speaker: string): SpeakerInfo {
 
 export class DialogueSystem {
 	private readonly scene: Phaser.Scene;
-	private panel?: Phaser.GameObjects.Rectangle;
+	private panel?: Phaser.GameObjects.GameObject;
 	private portrait?: Phaser.GameObjects.Rectangle;
 	private portraitLetter?: Phaser.GameObjects.Text;
 	private speakerText?: Phaser.GameObjects.Text;
@@ -48,11 +48,29 @@ export class DialogueSystem {
 		this.typing = true;
 
 		// Панель диалога
-		this.panel = this.scene.add
-			.rectangle(480, 432, 860, 130, 0x111827)
-			.setAlpha(0.9)
-			.setStrokeStyle(1, 0x334155)
-			.setDepth(50);
+		let panelObj: Phaser.GameObjects.GameObject;
+		if ("nineslice" in this.scene.add) {
+			panelObj = (this.scene.add as any).nineslice(
+				480,
+				432,
+				"uiPanel",
+				undefined,
+				860,
+				130,
+				20,
+				20,
+				20,
+				20,
+			);
+			(panelObj as any).setDepth(50);
+		} else {
+			panelObj = (this.scene.add as any)
+				.rectangle(480, 432, 860, 130, 0x111827)
+				.setAlpha(0.9)
+				.setStrokeStyle(1, 0x334155)
+				.setDepth(50);
+		}
+		this.panel = panelObj;
 
 		// Портрет-прямоугольник
 		this.portrait = this.scene.add
