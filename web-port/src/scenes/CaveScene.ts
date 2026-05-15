@@ -94,6 +94,31 @@ const CAVE_THEMES: readonly CaveTheme[] = [
 ];
 
 const CAVE_BOUNDS = { x: 72, y: 112, width: 816, height: 340 };
+const MAZE_CELL_SIZE = 20;
+const MAZE_START_X = 270;
+const MAZE_START_Y = 128;
+const MAZE_START_COL = 0;
+const MAZE_START_ROW = 13;
+const MAZE_GOAL_COL = 13;
+const MAZE_GOAL_ROW = 13;
+
+const MAZE_GRID = [
+	"111111111111111",
+	"100010000000001",
+	"101010111011101",
+	"101000100010001",
+	"101110101110101",
+	"100000101000101",
+	"111011101011101",
+	"100010001000001",
+	"101110111110101",
+	"100000000010001",
+	"101111101011101",
+	"100000101000101",
+	"101110101110101",
+	"000010000000001",
+	"111111111111111",
+] as const;
 
 export class CaveScene extends Phaser.Scene {
 	private level = 1;
@@ -125,6 +150,9 @@ export class CaveScene extends Phaser.Scene {
 	private memoryLocked = false;
 	private crystalCount = 0;
 	private theme: CaveTheme = CAVE_THEMES[0];
+	private mazeCol = MAZE_START_COL;
+	private mazeRow = MAZE_START_ROW;
+	private mazeMoveLocked = false;
 
 	public constructor() {
 		super("CaveScene");
@@ -149,8 +177,9 @@ export class CaveScene extends Phaser.Scene {
 		this.memoryCards.length = 0;
 		this.firstMemoryCard = undefined;
 		this.memoryLocked = false;
-		this.mazeMoving = false;
-		this.mazeDir = { x: 0, y: 0 };
+		this.mazeCol = MAZE_START_COL;
+		this.mazeRow = MAZE_START_ROW;
+		this.mazeMoveLocked = false;
 		this.selectionLine = undefined;
 		this.crystalCount = 0;
 		this.theme = CAVE_THEMES[(this.level - 1) % 5];
@@ -223,7 +252,7 @@ export class CaveScene extends Phaser.Scene {
 		} else {
 			this.player.setDisplaySize(36, 44).setDepth(20);
 		}
-		if (this.solids) {
+		if (this.solids && (this.level - 1) % 5 !== 0) {
 			this.physics.add.collider(this.player, this.solids);
 		}
 
@@ -301,7 +330,7 @@ export class CaveScene extends Phaser.Scene {
 
 	private getPlayerStartPosition(): { x: number; y: number } {
 		if ((this.level - 1) % 5 === 0) {
-			return { x: 270, y: 388 };
+			return this.getMazeCellCenter(MAZE_START_COL, MAZE_START_ROW);
 		}
 
 		return { x: 128, y: 382 };
@@ -337,21 +366,11 @@ export class CaveScene extends Phaser.Scene {
 		}
 	}
 
-	private mazeMoving = false;
-	private mazeDir = { x: 0, y: 0 };
-
 	private updateMazeMovement(): void {
 		if (!this.player || !this.cursors || !this.wasd) return;
+		this.player.setVelocity(0, 0);
 
-		if (this.mazeMoving) {
-			const speed = 260;
-			this.player.setVelocity(this.mazeDir.x * speed, this.mazeDir.y * speed);
-
-			// Если скорость упала почти до нуля (столкнулись со стеной)
-			if (this.player.body && this.player.body.velocity.length() < 10) {
-				this.mazeMoving = false;
-				this.player.setVelocity(0, 0);
-			}
+		if (this.mazeMoveLocked) {
 			return;
 		}
 
@@ -361,24 +380,99 @@ export class CaveScene extends Phaser.Scene {
 		const slideDown = this.wasd.S.isDown;
 
 		if (slideLeft || slideRight || slideUp || slideDown) {
-			this.mazeMoving = true;
-			this.mazeDir = {
+			const direction = {
 				x: Number(slideRight) - Number(slideLeft),
 				y: Number(slideDown) - Number(slideUp),
 			};
 			// Приоритет горизонтали если нажато по диагонали (для простоты как в GML)
-			if (this.mazeDir.x !== 0) this.mazeDir.y = 0;
+			if (direction.x !== 0) direction.y = 0;
+			this.slideMazeMarker(direction.x, direction.y);
 		} else {
-			const speed = 118;
-			const left = this.cursors.left.isDown;
-			const right = this.cursors.right.isDown;
-			const up = this.cursors.up.isDown;
-			const down = this.cursors.down.isDown;
-			this.player.setVelocity(
-				(Number(right) - Number(left)) * speed,
-				(Number(down) - Number(up)) * speed,
-			);
+			const stepLeft = Phaser.Input.Keyboard.JustDown(this.cursors.left);
+			const stepRight = Phaser.Input.Keyboard.JustDown(this.cursors.right);
+			const stepUp = Phaser.Input.Keyboard.JustDown(this.cursors.up);
+			const stepDown = Phaser.Input.Keyboard.JustDown(this.cursors.down);
+
+			if (stepLeft || stepRight || stepUp || stepDown) {
+				const direction = {
+					x: Number(stepRight) - Number(stepLeft),
+					y: Number(stepDown) - Number(stepUp),
+				};
+				if (direction.x !== 0) direction.y = 0;
+				this.moveMazeMarker(direction.x, direction.y);
+			}
 		}
+	}
+
+	private moveMazeMarker(dx: number, dy: number): void {
+		if (!this.player || (dx === 0 && dy === 0)) return;
+
+		const nextCol = this.mazeCol + dx;
+		const nextRow = this.mazeRow + dy;
+		if (!this.isMazeOpen(nextCol, nextRow)) {
+			this.refreshStatus("Там стена. Стрелками двигайся по открытым клеткам.");
+			return;
+		}
+
+		this.setMazeMarkerCell(nextCol, nextRow, 90);
+	}
+
+	private slideMazeMarker(dx: number, dy: number): void {
+		if (!this.player || (dx === 0 && dy === 0)) return;
+
+		let targetCol = this.mazeCol;
+		let targetRow = this.mazeRow;
+		while (this.isMazeOpen(targetCol + dx, targetRow + dy)) {
+			targetCol += dx;
+			targetRow += dy;
+		}
+
+		if (targetCol === this.mazeCol && targetRow === this.mazeRow) {
+			this.refreshStatus("Скольжение заблокировано стеной рядом.");
+			return;
+		}
+
+		const distance =
+			Math.abs(targetCol - this.mazeCol) + Math.abs(targetRow - this.mazeRow);
+		this.setMazeMarkerCell(targetCol, targetRow, 90 + distance * 55);
+	}
+
+	private setMazeMarkerCell(col: number, row: number, duration: number): void {
+		if (!this.player) return;
+
+		this.mazeCol = col;
+		this.mazeRow = row;
+		this.mazeMoveLocked = true;
+		const target = this.getMazeCellCenter(col, row);
+		this.tweens.add({
+			targets: this.player,
+			x: target.x,
+			y: target.y,
+			duration,
+			ease: "Sine.easeInOut",
+			onComplete: () => {
+				this.mazeMoveLocked = false;
+				if (col === MAZE_GOAL_COL && row === MAZE_GOAL_ROW) {
+					this.markSolved(
+						"Лабиринт пройден. Теперь подойди к рычагу и нажми E/Space.",
+					);
+				}
+			},
+		});
+	}
+
+	private getMazeCellCenter(
+		col: number,
+		row: number,
+	): { x: number; y: number } {
+		return {
+			x: MAZE_START_X + col * MAZE_CELL_SIZE,
+			y: MAZE_START_Y + row * MAZE_CELL_SIZE,
+		};
+	}
+
+	private isMazeOpen(col: number, row: number): boolean {
+		return MAZE_GRID[row]?.[col] === "0";
 	}
 
 	private selectionLine?: Phaser.GameObjects.Graphics;
@@ -635,26 +729,10 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createMazePuzzle(): void {
-		const grid = [
-			"111111111111111",
-			"100010000000001",
-			"101010111011101",
-			"101000100010001",
-			"101110101110101",
-			"100000101000101",
-			"111011101011101",
-			"100010001000001",
-			"101110111110101",
-			"100000000010001",
-			"101111101011101",
-			"100000101000101",
-			"101110101110101",
-			"000010000000001",
-			"111111111111111",
-		];
-		const cell = 20;
-		const startX = 270;
-		const startY = 128;
+		const grid = MAZE_GRID;
+		const cell = MAZE_CELL_SIZE;
+		const startX = MAZE_START_X;
+		const startY = MAZE_START_Y;
 		this.add
 			.rectangle(startX, startY + 13 * cell, 28, 28, 0x38bdf8, 0.35)
 			.setStrokeStyle(2, 0x7dd3fc, 0.8);
