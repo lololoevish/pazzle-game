@@ -11,6 +11,10 @@ export const SPRITE_KEYS = [
 	"lever",
 	"caveEntrance",
 	"crystal",
+	"townBackground",
+	"caveBackground",
+	"uiPanel",
+	"button",
 ] as const;
 
 export type SpriteKey = (typeof SPRITE_KEYS)[number];

@@ -45,12 +45,36 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		this.cameras.main.setBackgroundColor("#16301f");
+		this.add.image(480, 270, "townBackground").setAlpha(0.6);
+
 		this.interactables.length = 0;
 		this.autoZones.length = 0;
 		this.solids = this.physics.add.staticGroup();
-		this.add
-			.rectangle(480, 270, 900, 470, 0x1f5130, 1)
-			.setStrokeStyle(3, 0x5fa36f);
+
+		// Основная панель города
+		const hasNineSlice = "nineslice" in this.add;
+		let mainPanel: Phaser.GameObjects.GameObject;
+
+		if (hasNineSlice) {
+			mainPanel = (this.add as any).nineslice(
+				480,
+				270,
+				"uiPanel",
+				undefined,
+				900,
+				470,
+				20,
+				20,
+				20,
+				20,
+			);
+			(mainPanel as any).setAlpha(0.85);
+		} else {
+			mainPanel = this.add
+				.rectangle(480, 270, 900, 470, 0x1f5130, 0.85)
+				.setStrokeStyle(3, 0x5fa36f);
+		}
+
 		this.add.text(32, 24, "Город-хаб", {
 			fontFamily: "Arial",
 			fontSize: "28px",
@@ -234,6 +258,10 @@ export class TownScene extends Phaser.Scene {
 	}
 
 	private interact(): void {
+		if (this.dialogue?.isVisible) {
+			this.dialogue.hide();
+			return;
+		}
 		if (!this.player) {
 			return;
 		}
@@ -257,8 +285,9 @@ export class TownScene extends Phaser.Scene {
 
 	private refreshStatus(): void {
 		const progress = loadProgress();
+		const npcCount = Object.values(progress.npcRewards).filter(Boolean).length;
 		this.statusText?.setText(
-			`Прогресс: ${getCompletedLevelCount(progress)}/${LEVEL_COUNT} | Текущая пещера: ${progress.currentLevel} | Золото: ${progress.gold}`,
+			`Прогресс: ${getCompletedLevelCount(progress)}/${LEVEL_COUNT} | Текущая пещера: ${progress.currentLevel} | Золото: ${progress.gold} | NPC: ${npcCount}/3`,
 		);
 	}
 

@@ -36,6 +36,63 @@ type MemoryCard = {
 	matched: boolean;
 };
 
+type CaveTheme = {
+	bgColor: string;
+	panelFill: number;
+	wallFill: number;
+	wallStroke: number;
+	accent: number;
+	labelColor: string;
+};
+
+const CAVE_THEMES: readonly CaveTheme[] = [
+	// 0: Лабиринт — глубокий индиго/фиолетовый
+	{
+		bgColor: "#1e1b4b",
+		panelFill: 0x2e2669,
+		wallFill: 0x0f172a,
+		wallStroke: 0x475569,
+		accent: 0x8b5cf6,
+		labelColor: "#c4b5fd",
+	},
+	// 1: Поиск слов — тёмный океанский синий
+	{
+		bgColor: "#0c1635",
+		panelFill: 0x1e3a5f,
+		wallFill: 0x0a1628,
+		wallStroke: 0x1e40af,
+		accent: 0x3b82f6,
+		labelColor: "#93c5fd",
+	},
+	// 2: Ритм — тёмный багряный
+	{
+		bgColor: "#1a0505",
+		panelFill: 0x450a0a,
+		wallFill: 0x180404,
+		wallStroke: 0x991b1b,
+		accent: 0xef4444,
+		labelColor: "#fca5a5",
+	},
+	// 3: Memory Match — тёмный изумруд
+	{
+		bgColor: "#041a1a",
+		panelFill: 0x064e3b,
+		wallFill: 0x022c22,
+		wallStroke: 0x065f46,
+		accent: 0x10b981,
+		labelColor: "#6ee7b7",
+	},
+	// 4: Платформер — тёмный янтарь
+	{
+		bgColor: "#1a0c00",
+		panelFill: 0x451a03,
+		wallFill: 0x1c0a00,
+		wallStroke: 0x7c2d12,
+		accent: 0xf59e0b,
+		labelColor: "#fde68a",
+	},
+];
+
 const CAVE_BOUNDS = { x: 72, y: 112, width: 816, height: 340 };
 
 export class CaveScene extends Phaser.Scene {
@@ -59,11 +116,15 @@ export class CaveScene extends Phaser.Scene {
 	private rhythmRound = 1;
 	private rhythmInputIndex = 0;
 	private rhythmShowing = false;
-	private readonly rhythmButtons: Phaser.GameObjects.Rectangle[] = [];
+	private readonly rhythmButtons: (
+		| Phaser.GameObjects.Rectangle
+		| Phaser.GameObjects.Sprite
+	)[] = [];
 	private readonly memoryCards: MemoryCard[] = [];
 	private firstMemoryCard?: MemoryCard;
 	private memoryLocked = false;
 	private crystalCount = 0;
+	private theme: CaveTheme = CAVE_THEMES[0];
 
 	public constructor() {
 		super("CaveScene");
@@ -88,10 +149,20 @@ export class CaveScene extends Phaser.Scene {
 		this.memoryCards.length = 0;
 		this.firstMemoryCard = undefined;
 		this.memoryLocked = false;
+		this.mazeMoving = false;
+		this.mazeDir = { x: 0, y: 0 };
+		this.selectionLine = undefined;
+		this.crystalCount = 0;
+		this.theme = CAVE_THEMES[(this.level - 1) % 5];
 	}
 
 	public create(): void {
-		this.cameras.main.setBackgroundColor("#1e1b4b");
+		this.cameras.main.setBackgroundColor(this.theme.bgColor);
+		this.add
+			.image(480, 270, "caveBackground")
+			.setAlpha(0.4)
+			.setTint(this.theme.panelFill);
+
 		this.physics.world.setBounds(
 			CAVE_BOUNDS.x,
 			CAVE_BOUNDS.y,
@@ -105,10 +176,19 @@ export class CaveScene extends Phaser.Scene {
 			.text(480, 68, this.getPuzzleName(), {
 				fontFamily: "Arial",
 				fontSize: "20px",
-				color: "#c4b5fd",
+				color: this.theme.labelColor,
 			})
 			.setOrigin(0.5);
-		addPanel(this, 480, 282, 850, 350);
+
+		// Основная панель пещеры
+		if ("nineslice" in this.add) {
+			(this.add as any)
+				.nineslice(480, 282, "uiPanel", undefined, 850, 350, 20, 20, 20, 20)
+				.setAlpha(0.6);
+		} else {
+			addPanel(this, 480, 282, 850, 350);
+		}
+
 		this.add.text(92, 120, this.getPuzzlePrompt(), {
 			fontFamily: "Arial",
 			fontSize: "18px",
@@ -171,10 +251,16 @@ export class CaveScene extends Phaser.Scene {
 			return;
 		}
 
+		const isPlatformer = (this.level - 1) % 5 === 4;
 		const speed = 172;
 
-		// Логика скольжения для лабиринта (как в GMS2)
-		if (!this.solved && (this.level - 1) % 5 === 0 && this.isPlayerInMaze()) {
+		if (isPlatformer) {
+			this.updatePlatformerMovement();
+		} else if (
+			!this.solved &&
+			(this.level - 1) % 5 === 0 &&
+			this.isPlayerInMaze()
+		) {
 			this.updateMazeMovement();
 		} else {
 			const left = this.cursors.left.isDown || this.wasd.A.isDown;
@@ -202,6 +288,36 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		this.updateWordSearchLine();
+	}
+
+	private updatePlatformerMovement(): void {
+		if (!this.player || !this.cursors || !this.wasd) return;
+
+		const speed = 200;
+		const jumpForce = -450;
+		const left = this.cursors.left.isDown || this.wasd.A.isDown;
+		const right = this.cursors.right.isDown || this.wasd.D.isDown;
+		const jump =
+			Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
+			Phaser.Input.Keyboard.JustDown(this.wasd.W) ||
+			(this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey));
+
+		this.player.setGravityY(1000);
+		this.player.setVelocityX((Number(right) - Number(left)) * speed);
+
+		if (
+			jump &&
+			(this.player.body?.blocked.down || this.player.body?.touching.down)
+		) {
+			this.player.setVelocityY(jumpForce);
+		}
+
+		// Если упали слишком низко
+		if (this.player.y > 450) {
+			this.player.setPosition(128, 382);
+			this.player.setVelocity(0, 0);
+			this.refreshStatus("Ты упал в бездну! Попробуй еще раз.");
+		}
 	}
 
 	private isPlayerInMaze(): boolean {
@@ -278,10 +394,10 @@ export class CaveScene extends Phaser.Scene {
 				282,
 				CAVE_BOUNDS.width,
 				CAVE_BOUNDS.height,
-				0x2e2669,
+				this.theme.panelFill,
 				0.45,
 			)
-			.setStrokeStyle(2, 0x8b5cf6);
+			.setStrokeStyle(2, this.theme.accent);
 		this.createWall(480, 105, 840, 18);
 		this.createWall(480, 460, 840, 18);
 		this.createWall(60, 282, 18, 256);
@@ -298,8 +414,8 @@ export class CaveScene extends Phaser.Scene {
 		height: number,
 	): void {
 		const wall = this.add
-			.rectangle(x, y, width, height, 0x0f172a, 0.94)
-			.setStrokeStyle(1, 0x475569);
+			.rectangle(x, y, width, height, this.theme.wallFill, 0.94)
+			.setStrokeStyle(1, this.theme.wallStroke);
 		this.physics.add.existing(wall, true);
 		this.solids?.add(wall);
 	}
@@ -519,52 +635,60 @@ export class CaveScene extends Phaser.Scene {
 
 	private createRhythmPuzzle(): void {
 		this.rhythmRound = 1;
-		this.startRhythmRound();
-		const colors = [0x7f1d1d, 0x166534, 0x1d4ed8, 0xa16207];
+		const colors = [0xff4444, 0x44ff44, 0x4444ff, 0xffff44];
 		for (let index = 0; index < 4; index += 1) {
 			const x = 300 + index * 110;
 			const button = this.add
-				.rectangle(x, 305, 74, 74, colors[index], 0.7)
-				.setStrokeStyle(3, 0xf8fafc);
-			this.rhythmButtons.push(button);
+				.sprite(x, 305, "button")
+				.setDisplaySize(80, 80)
+				.setTint(colors[index])
+				.setAlpha(0.6);
+
+			this.rhythmButtons.push(button as any);
 			this.add
 				.text(x, 305, `${index + 1}`, {
-					fontFamily: "Arial",
-					fontSize: "28px",
+					fontFamily: "Arial Black",
+					fontSize: "32px",
 					color: "#ffffff",
+					stroke: "#000000",
+					strokeThickness: 4,
 				})
 				.setOrigin(0.5);
 			this.interactables.push({
-				name: `Ритм ${index + 1}`,
+				name: `Кнопка ${index + 1}`,
 				object: button,
 				action: () => this.pressRhythmButton(index),
 			});
 		}
+		this.startRhythmRound();
 		this.showRhythmPattern();
 	}
 
 	private createMemoryMatchPuzzle(): void {
-		const symbols = ["A", "B", "C", "D", "A", "B", "C", "D"];
+		const symbols = ["💎", "🏆", "🌟", "🔥", "💎", "🏆", "🌟", "🔥"];
 		const shuffled = this.shuffle(symbols);
 		for (const [index, symbol] of shuffled.entries()) {
 			const col = index % 4;
 			const row = Math.floor(index / 4);
-			const x = 330 + col * 90;
-			const y = 238 + row * 76;
+			const x = 330 + col * 100;
+			const y = 238 + row * 86;
+
 			const rect = this.add
-				.rectangle(x, y, 66, 56, 0x1d4ed8, 0.95)
-				.setStrokeStyle(2, 0xbfdbfe);
+				.sprite(x, y, "uiPanel")
+				.setDisplaySize(80, 70)
+				.setTint(0x4a5568);
+
 			const label = this.add
 				.text(x, y, "?", {
 					fontFamily: "Arial",
-					fontSize: "24px",
+					fontSize: "32px",
 					color: "#ffffff",
 				})
 				.setOrigin(0.5);
 			const card = {
 				index,
 				symbol,
-				rect,
+				rect: rect as any,
 				label,
 				revealed: false,
 				matched: false,
@@ -581,19 +705,37 @@ export class CaveScene extends Phaser.Scene {
 	private selectWordCell(cell: WordCell): void {
 		if (!this.wordStart) {
 			this.wordStart = cell;
-			cell.rect.setFillStyle(0x93c5fd, 1);
-			this.refreshStatus(
-				`Начало выделения: ${cell.letter}. Подойди к последней букве слова и нажми E/Space.`,
-			);
+			const rect = cell.rect as unknown as Phaser.GameObjects.GameObject;
+			if ("setTint" in rect) {
+				(rect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+					0x93c5fd,
+				);
+			} else if ("setFillStyle" in rect) {
+				(rect as unknown as Phaser.GameObjects.Rectangle).setFillStyle(
+					0x93c5fd,
+					1,
+				);
+			}
+			this.refreshStatus(`Начало: ${cell.letter}. Выбери конец слова.`);
 			return;
 		}
 
 		const selected = this.getWordBetween(this.wordStart, cell);
-		this.wordStart = undefined;
 		if (!selected) {
-			this.refreshStatus(
-				"В GMS2 слово выбирается прямой линией. Выбери горизонталь, вертикаль или диагональ.",
-			);
+			const startRect = this.wordStart
+				.rect as unknown as Phaser.GameObjects.GameObject;
+			if ("setTint" in startRect) {
+				(startRect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+					0xffffff,
+				);
+			} else if ("setFillStyle" in startRect) {
+				(startRect as unknown as Phaser.GameObjects.Rectangle).setFillStyle(
+					0xf8fafc,
+					1,
+				);
+			}
+			this.wordStart = undefined;
+			this.refreshStatus("Выбирай по прямой!");
 			return;
 		}
 
@@ -601,22 +743,46 @@ export class CaveScene extends Phaser.Scene {
 		const target = ["ЛАБИРИНТ", "ПАЗЗЛ", "ПЕЩЕРА", "ГОРОД"].find(
 			(word) => word === selected.word || word === reversed,
 		);
-		if (!target || this.foundWords.has(target)) {
-			this.refreshStatus(`Слово "${selected.word}" не засчитано.`);
-			return;
-		}
 
-		this.foundWords.add(target);
-		for (const foundCell of selected.cells) {
-			foundCell.rect.setFillStyle(0x86efac, 1);
+		if (target && !this.foundWords.has(target)) {
+			this.foundWords.add(target);
+			for (const foundCell of selected.cells) {
+				const foundRect =
+					foundCell.rect as unknown as Phaser.GameObjects.GameObject;
+				if ("setTint" in foundRect) {
+					(foundRect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+						0x86efac,
+					);
+				} else if ("setFillStyle" in foundRect) {
+					(foundRect as unknown as Phaser.GameObjects.Rectangle).setFillStyle(
+						0x86efac,
+						1,
+					);
+				}
+			}
+			if (this.foundWords.size >= 4) {
+				this.markSolved("Слова найдены! Опусти рычаг.");
+			} else {
+				this.refreshStatus(
+					`Найдено: ${target}. Ещё ${4 - this.foundWords.size}.`,
+				);
+			}
+		} else {
+			const startRect = this.wordStart
+				.rect as unknown as Phaser.GameObjects.GameObject;
+			if ("setTint" in startRect) {
+				(startRect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+					0xffffff,
+				);
+			} else if ("setFillStyle" in startRect) {
+				(startRect as unknown as Phaser.GameObjects.Rectangle).setFillStyle(
+					0xf8fafc,
+					1,
+				);
+			}
+			this.refreshStatus("Не то слово...");
 		}
-		if (this.foundWords.size >= 4) {
-			this.markSolved("Все слова найдены. Теперь опусти рычаг.");
-			return;
-		}
-		this.refreshStatus(
-			`Найдено слово: ${target}. Осталось: ${4 - this.foundWords.size}.`,
-		);
+		this.wordStart = undefined;
 	}
 
 	private getWordBetween(
@@ -715,34 +881,56 @@ export class CaveScene extends Phaser.Scene {
 			return;
 		}
 		card.revealed = true;
-		card.rect.setFillStyle(0xf8fafc, 1);
-		card.label.setText(card.symbol).setColor("#020617");
+
+		const rect = card.rect as unknown as Phaser.GameObjects.GameObject;
+		if ("setTint" in rect) {
+			(rect as unknown as Phaser.GameObjects.Components.Tint).setTint(0xffffff);
+		}
+
+		card.label.setText(card.symbol).setColor("#000000");
 		if (!this.firstMemoryCard) {
 			this.firstMemoryCard = card;
-			this.refreshStatus("Первая карта открыта. Найди пару и нажми E/Space.");
+			this.refreshStatus("Первая карта открыта. Найди пару!");
 			return;
 		}
 		if (this.firstMemoryCard.symbol === card.symbol) {
 			card.matched = true;
 			this.firstMemoryCard.matched = true;
-			card.rect.setFillStyle(0x22c55e, 1);
-			this.firstMemoryCard.rect.setFillStyle(0x22c55e, 1);
+
+			const firstRect = this.firstMemoryCard
+				.rect as unknown as Phaser.GameObjects.GameObject;
+			if ("setTint" in rect) {
+				(rect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+					0x86efac,
+				);
+			}
+			if ("setTint" in firstRect) {
+				(firstRect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+					0x86efac,
+				);
+			}
+
 			this.firstMemoryCard = undefined;
 			if (this.memoryCards.every((item) => item.matched)) {
-				this.markSolved("Все пары найдены. Теперь опусти рычаг.");
+				this.markSolved("Все пары найдены! Опусти рычаг.");
 				return;
 			}
-			this.refreshStatus("Пара найдена. Продолжай искать остальные.");
+			this.refreshStatus("Пара найдена!");
 			return;
 		}
 		const previous = this.firstMemoryCard;
 		this.firstMemoryCard = undefined;
 		this.memoryLocked = true;
-		this.refreshStatus("Карты не совпали. Они скоро закроются.");
-		this.time.delayedCall(700, () => {
+		this.refreshStatus("Не совпало...");
+		this.time.delayedCall(800, () => {
 			for (const item of [previous, card]) {
 				item.revealed = false;
-				item.rect.setFillStyle(0x1d4ed8, 0.95);
+				const itemRect = item.rect as unknown as Phaser.GameObjects.GameObject;
+				if ("setTint" in itemRect) {
+					(itemRect as unknown as Phaser.GameObjects.Components.Tint).setTint(
+						0x4a5568,
+					);
+				}
 				item.label.setText("?").setColor("#ffffff");
 			}
 			this.memoryLocked = false;

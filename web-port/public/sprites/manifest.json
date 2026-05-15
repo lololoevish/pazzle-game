@@ -5,5 +5,9 @@
   "npcArchivist": "",
   "lever": "",
   "caveEntrance": "",
-  "crystal": ""
+  "crystal": "",
+  "townBackground": "",
+  "caveBackground": "",
+  "uiPanel": "",
+  "button": ""
 }
