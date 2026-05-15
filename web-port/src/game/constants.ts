@@ -19,6 +19,10 @@ export const SPRITE_KEYS = [
 	"caveWall",
 	"runeGlow",
 	"mist",
+	"grassPatch",
+	"stonePebble",
+	"torchGlow",
+	"starSparkle",
 ] as const;
 
 export type SpriteKey = (typeof SPRITE_KEYS)[number];

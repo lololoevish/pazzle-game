@@ -238,6 +238,7 @@ export class CaveScene extends Phaser.Scene {
 
 		this.createRoomCollision();
 		this.createAutoExit();
+		this.createSceneDecorations();
 		this.createPuzzle();
 		this.createLever();
 		this.createAtmosphere();
@@ -539,6 +540,64 @@ export class CaveScene extends Phaser.Scene {
 		const wallBody = this.add.rectangle(x, y, width, height, 0x000000, 0);
 		this.physics.add.existing(wallBody, true);
 		this.solids?.add(wallBody);
+	}
+
+	private createSceneDecorations(): void {
+		const pebbles = [
+			{ x: 150, y: 430, scale: 0.7 },
+			{ x: 258, y: 150, scale: 0.55 },
+			{ x: 622, y: 428, scale: 0.65 },
+			{ x: 820, y: 254, scale: 0.5 },
+		];
+		for (const item of pebbles) {
+			this.add
+				.sprite(item.x, item.y, "stonePebble")
+				.setTint(this.theme.wallStroke)
+				.setScale(item.scale)
+				.setAlpha(0.45)
+				.setDepth(3);
+		}
+
+		for (const item of [
+			{ x: 118, y: 142, scale: 0.9 },
+			{ x: 850, y: 142, scale: 0.9 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "torchGlow")
+				.setTint(this.theme.accent)
+				.setScale(item.scale)
+				.setAlpha(0.38)
+				.setDepth(3);
+		}
+
+		for (let i = 0; i < 8; i++) {
+			const sparkle = this.add
+				.sprite(
+					Phaser.Math.Between(
+						CAVE_BOUNDS.x + 50,
+						CAVE_BOUNDS.x + CAVE_BOUNDS.width - 50,
+					),
+					Phaser.Math.Between(
+						CAVE_BOUNDS.y + 30,
+						CAVE_BOUNDS.y + CAVE_BOUNDS.height - 30,
+					),
+					"starSparkle",
+				)
+				.setTint(this.theme.accent)
+				.setAlpha(0.2)
+				.setScale(Phaser.Math.FloatBetween(0.35, 0.7))
+				.setDepth(4);
+
+			this.tweens.add({
+				targets: sparkle,
+				alpha: 0.55,
+				scale: sparkle.scale * 1.25,
+				duration: Phaser.Math.Between(900, 1800),
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+		}
 	}
 
 	private createAutoExit(): void {

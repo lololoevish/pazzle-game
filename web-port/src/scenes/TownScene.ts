@@ -54,6 +54,7 @@ export class TownScene extends Phaser.Scene {
 		this.interactables.length = 0;
 		this.autoZones.length = 0;
 		this.solids = this.physics.add.staticGroup();
+		this.createDecorations();
 
 		// Основная панель города
 		const hasNineSlice = "nineslice" in this.add;
@@ -256,6 +257,46 @@ export class TownScene extends Phaser.Scene {
 			})
 			.setOrigin(0.5);
 		this.interactables.push({ name, body: npc, action });
+	}
+
+	private createDecorations(): void {
+		const grass = [
+			{ x: 138, y: 132, scale: 0.9 },
+			{ x: 292, y: 408, scale: 1.1 },
+			{ x: 684, y: 412, scale: 1 },
+			{ x: 828, y: 128, scale: 0.8 },
+			{ x: 432, y: 248, scale: 0.7 },
+		];
+		for (const item of grass) {
+			this.add
+				.sprite(item.x, item.y, "grassPatch")
+				.setScale(item.scale)
+				.setAlpha(0.75)
+				.setDepth(2);
+		}
+
+		const pebbles = [
+			{ x: 188, y: 422, tint: 0x94a3b8 },
+			{ x: 392, y: 308, tint: 0x64748b },
+			{ x: 584, y: 316, tint: 0x94a3b8 },
+			{ x: 772, y: 420, tint: 0x64748b },
+		];
+		for (const item of pebbles) {
+			this.add
+				.sprite(item.x, item.y, "stonePebble")
+				.setTint(item.tint)
+				.setAlpha(0.55)
+				.setDepth(2);
+		}
+
+		for (const x of [220, 480, 740]) {
+			this.add
+				.sprite(x, 136, "starSparkle")
+				.setTint(0xfef3c7)
+				.setAlpha(0.35)
+				.setScale(0.6)
+				.setDepth(3);
+		}
 	}
 
 	private createTownCollision(): void {

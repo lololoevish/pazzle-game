@@ -19,6 +19,10 @@ const PLACEHOLDER_COLORS: Record<SpriteKey, number> = {
 	caveWall: 0x111827,
 	runeGlow: 0x67e8f9,
 	mist: 0xcbd5e1,
+	grassPatch: 0x22c55e,
+	stonePebble: 0x94a3b8,
+	torchGlow: 0xf97316,
+	starSparkle: 0xfef3c7,
 };
 
 export async function fetchSpriteManifest(): Promise<SpriteManifest> {
@@ -84,6 +88,18 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 		} else if (key === "mist") {
 			width = 128;
 			height = 64;
+		} else if (key === "grassPatch") {
+			width = 48;
+			height = 32;
+		} else if (key === "stonePebble") {
+			width = 32;
+			height = 24;
+		} else if (key === "torchGlow") {
+			width = 64;
+			height = 64;
+		} else if (key === "starSparkle") {
+			width = 24;
+			height = 24;
 		}
 
 		const graphics = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -304,6 +320,55 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.fillEllipse(78, 34, 90, 28);
 			graphics.fillStyle(0xffffff, 0.07);
 			graphics.fillEllipse(58, 22, 70, 18);
+		} else if (key === "grassPatch") {
+			// Декоративный пучок травы для хаба.
+			graphics.fillStyle(0x000000, 0.15);
+			graphics.fillEllipse(24, 28, 36, 8);
+			for (let i = 0; i < 9; i++) {
+				const x = 7 + i * 4;
+				const bladeHeight = 10 + (i % 3) * 5;
+				graphics.lineStyle(2, color, 0.9);
+				graphics.lineBetween(
+					x,
+					27,
+					x + Phaser.Math.Between(-4, 4),
+					27 - bladeHeight,
+				);
+				graphics.lineStyle(1, 0xbbf7d0, 0.6);
+				graphics.lineBetween(x + 1, 27, x + 2, 20);
+			}
+			graphics.fillStyle(0xfacc15, 0.85);
+			graphics.fillCircle(35, 15, 2);
+		} else if (key === "stonePebble") {
+			// Маленький камень/галька для глубины пола.
+			graphics.fillStyle(0x000000, 0.18);
+			graphics.fillEllipse(16, 20, 22, 6);
+			graphics.fillGradientStyle(color, 0xe2e8f0, 0x475569, 0x334155, 1);
+			graphics.fillEllipse(16, 12, 24, 16);
+			graphics.lineStyle(1, 0x0f172a, 0.4);
+			graphics.strokeEllipse(16, 12, 24, 16);
+			graphics.lineStyle(1, 0xffffff, 0.25);
+			graphics.lineBetween(9, 8, 19, 6);
+		} else if (key === "torchGlow") {
+			// Теплое пятно света/факел без физики.
+			graphics.fillStyle(color, 0.1);
+			graphics.fillCircle(32, 32, 30);
+			graphics.fillStyle(color, 0.18);
+			graphics.fillCircle(32, 32, 18);
+			graphics.fillStyle(0xfef3c7, 0.9);
+			graphics.fillTriangle(32, 12, 43, 39, 21, 39);
+			graphics.fillStyle(0xef4444, 0.85);
+			graphics.fillTriangle(32, 20, 39, 40, 25, 40);
+		} else if (key === "starSparkle") {
+			// Маленькая искра/пыльца.
+			graphics.lineStyle(2, color, 0.9);
+			graphics.lineBetween(12, 1, 12, 23);
+			graphics.lineBetween(1, 12, 23, 12);
+			graphics.lineStyle(1, 0xffffff, 0.7);
+			graphics.lineBetween(5, 5, 19, 19);
+			graphics.lineBetween(19, 5, 5, 19);
+			graphics.fillStyle(color, 0.6);
+			graphics.fillCircle(12, 12, 3);
 		} else {
 			graphics.fillStyle(PLACEHOLDER_COLORS[key], 1);
 			graphics.fillRoundedRect(0, 0, width, height, 8);
