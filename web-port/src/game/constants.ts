@@ -15,6 +15,7 @@ export const SPRITE_KEYS = [
 	"caveBackground",
 	"uiPanel",
 	"button",
+	"tileFloor",
 ] as const;
 
 export type SpriteKey = (typeof SPRITE_KEYS)[number];

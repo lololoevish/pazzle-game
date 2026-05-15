@@ -15,6 +15,7 @@ const PLACEHOLDER_COLORS: Record<SpriteKey, number> = {
 	caveBackground: 0x1a1a2e,
 	uiPanel: 0x2d3748,
 	button: 0x4a5568,
+	tileFloor: 0x1f2937,
 };
 
 export async function fetchSpriteManifest(): Promise<SpriteManifest> {
@@ -68,6 +69,9 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 		} else if (key === "crystal") {
 			width = 32;
 			height = 32;
+		} else if (key === "tileFloor") {
+			width = 32;
+			height = 32;
 		}
 
 		const graphics = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -78,80 +82,140 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.fillGradientStyle(color, color, 0x000000, 0x000000, 1);
 			graphics.fillRect(0, 0, width, height);
 
-			// Текстура (камни или трава)
-			graphics.lineStyle(1, 0xffffff, 0.03);
-			for (let i = 0; i < 400; i++) {
-				const x = Math.random() * width;
-				const y = Math.random() * height;
-				if (key === "caveBackground") {
-					graphics.strokeCircle(x, y, Math.random() * 3);
-				} else {
-					graphics.lineBetween(x, y, x + 2, y + 4);
+			// Текстура
+			if (key === "caveBackground") {
+				// Камни и трещины
+				graphics.lineStyle(2, 0x000000, 0.2);
+				for (let i = 0; i < 50; i++) {
+					const x = Math.random() * width;
+					const y = Math.random() * height;
+					const size = 10 + Math.random() * 40;
+					graphics.beginPath();
+					graphics.moveTo(x, y);
+					graphics.lineTo(x + size, y + size / 2);
+					graphics.strokePath();
+				}
+				graphics.lineStyle(1, 0xffffff, 0.05);
+				for (let i = 0; i < 200; i++) {
+					graphics.strokeCircle(
+						Math.random() * width,
+						Math.random() * height,
+						Math.random() * 3,
+					);
+				}
+			} else {
+				// Трава и дорожки
+				graphics.fillStyle(0x064e3b, 0.2);
+				for (let i = 0; i < 100; i++) {
+					graphics.fillEllipse(
+						Math.random() * width,
+						Math.random() * height,
+						4,
+						2,
+					);
+				}
+				graphics.lineStyle(1, 0xffffff, 0.03);
+				for (let i = 0; i < 400; i++) {
+					const x = Math.random() * width;
+					const y = Math.random() * height;
+					graphics.lineBetween(x, y, x, y - 3);
 				}
 			}
 		} else if (key === "player") {
+			// Тень под ногами
+			graphics.fillStyle(0x000000, 0.3);
+			graphics.fillEllipse(20, 44, 15, 6);
+
 			// Герой с глазами и "рюкзаком"
 			graphics.fillStyle(color, 1);
-			graphics.fillRoundedRect(4, 4, 32, 40, 8);
+			graphics.fillRoundedRect(4, 2, 32, 40, 8);
 			graphics.lineStyle(2, 0xffffff, 0.5);
-			graphics.strokeRoundedRect(4, 4, 32, 40, 8);
+			graphics.strokeRoundedRect(4, 2, 32, 40, 8);
 
 			// Глаза
 			graphics.fillStyle(0xffffff, 1);
-			graphics.fillRect(10, 14, 6, 6);
-			graphics.fillRect(24, 14, 6, 6);
+			graphics.fillRect(10, 12, 6, 6);
+			graphics.fillRect(24, 12, 6, 6);
 			graphics.fillStyle(0x000000, 1);
-			graphics.fillRect(12, 16, 2, 2);
-			graphics.fillRect(26, 16, 2, 2);
+			graphics.fillRect(12, 14, 2, 2);
+			graphics.fillRect(26, 14, 2, 2);
 		} else if (key.startsWith("npc")) {
+			// Тень
+			graphics.fillStyle(0x000000, 0.3);
+			graphics.fillEllipse(20, 44, 15, 6);
+
 			// NPC с отличительными чертами
 			graphics.fillStyle(color, 1);
-			graphics.fillRoundedRect(4, 4, 32, 40, 10);
+			graphics.fillRoundedRect(4, 2, 32, 40, 10);
 			graphics.lineStyle(2, 0x000000, 0.3);
-			graphics.strokeRoundedRect(4, 4, 32, 40, 10);
+			graphics.strokeRoundedRect(4, 2, 32, 40, 10);
 
-			// Глаза (закрыты или прищурены)
+			// Глаза
 			graphics.lineStyle(2, 0x000000, 0.6);
-			graphics.lineBetween(10, 18, 16, 18);
-			graphics.lineBetween(24, 18, 30, 18);
+			graphics.lineBetween(10, 16, 16, 16);
+			graphics.lineBetween(24, 16, 30, 16);
 
 			if (key === "npcElder") {
 				// Борода
 				graphics.fillStyle(0xffffff, 0.9);
-				graphics.fillTriangle(10, 24, 30, 24, 20, 44);
+				graphics.fillTriangle(10, 22, 30, 22, 20, 42);
 			} else if (key === "npcMechanic") {
 				// Пояс с инструментами
 				graphics.fillStyle(0x4b5563, 1);
-				graphics.fillRect(4, 28, 32, 6);
+				graphics.fillRect(4, 26, 32, 6);
+				graphics.fillStyle(0x9ca3af, 1);
+				graphics.fillRect(10, 26, 4, 8); // Инструмент 1
+				graphics.fillRect(26, 26, 4, 8); // Инструмент 2
 			} else if (key === "npcArchivist") {
-				// Монокль или книга
+				// Монокль и книга
 				graphics.lineStyle(1, 0xffd700, 1);
-				graphics.strokeCircle(27, 18, 5);
-				graphics.lineBetween(27, 13, 27, 5);
+				graphics.strokeCircle(27, 16, 5);
+				graphics.lineBetween(27, 11, 27, 3);
+				graphics.fillStyle(0xffffff, 0.8);
+				graphics.fillRect(8, 28, 12, 10); // Книжка
 			}
 		} else if (key === "crystal") {
-			// Кристалл (ромб с блеском)
+			// Тень
+			graphics.fillStyle(0x000000, 0.2);
+			graphics.fillEllipse(16, 28, 12, 4);
+
+			// Кристалл (многогранный ромб)
 			graphics.fillStyle(color, 1);
 			graphics.beginPath();
-			graphics.moveTo(16, 2);
-			graphics.lineTo(30, 16);
-			graphics.lineTo(16, 30);
-			graphics.lineTo(2, 16);
+			graphics.moveTo(16, 0);
+			graphics.lineTo(32, 16);
+			graphics.lineTo(16, 32);
+			graphics.lineTo(0, 16);
 			graphics.closePath();
 			graphics.fill();
-			graphics.lineStyle(2, 0xffffff, 0.8);
+
+			// Грани
+			graphics.lineStyle(1, 0xffffff, 0.6);
+			graphics.lineBetween(16, 0, 16, 32);
+			graphics.lineBetween(0, 16, 32, 16);
+			graphics.lineStyle(2, 0xffffff, 0.9);
 			graphics.strokePath();
+
 			// Блеск
-			graphics.fillStyle(0xffffff, 0.5);
-			graphics.fillTriangle(16, 6, 26, 16, 16, 16);
+			graphics.fillStyle(0xffffff, 0.6);
+			graphics.fillTriangle(16, 4, 28, 16, 16, 16);
+			graphics.fillTriangle(16, 28, 4, 16, 16, 16);
 		} else if (key === "lever") {
+			// Тень
+			graphics.fillStyle(0x000000, 0.3);
+			graphics.fillEllipse(20, 44, 18, 6);
+
 			// Рычаг с основанием
 			graphics.fillStyle(0x374151, 1);
-			graphics.fillRect(8, 36, 24, 10);
+			graphics.fillRoundedRect(4, 34, 32, 12, 4);
 			graphics.lineStyle(4, 0x9ca3af, 1);
 			graphics.lineBetween(20, 36, 20, 12);
+
+			// Набалдашник с бликом
 			graphics.fillStyle(0xef4444, 1);
 			graphics.fillCircle(20, 10, 8);
+			graphics.fillStyle(0xffffff, 0.4);
+			graphics.fillCircle(17, 7, 3);
 		} else if (key === "caveEntrance") {
 			// Арка входа
 			graphics.fillStyle(0x111827, 1);
@@ -182,6 +246,14 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.fillRoundedRect(0, 0, width, height, 6);
 			graphics.lineStyle(2, 0xffffff, 0.4);
 			graphics.strokeRoundedRect(1, 1, width - 2, height - 2, 6);
+		} else if (key === "tileFloor") {
+			// Плитка пола
+			graphics.fillStyle(color, 1);
+			graphics.fillRect(0, 0, width, height);
+			graphics.lineStyle(1, 0x000000, 0.3);
+			graphics.strokeRect(0, 0, width, height);
+			graphics.lineStyle(1, 0xffffff, 0.1);
+			graphics.strokeRect(1, 1, width - 2, height - 2);
 		} else {
 			graphics.fillStyle(PLACEHOLDER_COLORS[key], 1);
 			graphics.fillRoundedRect(0, 0, width, height, 8);

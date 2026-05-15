@@ -162,6 +162,10 @@ export class CaveScene extends Phaser.Scene {
 			.image(480, 270, "caveBackground")
 			.setAlpha(0.4)
 			.setTint(this.theme.panelFill);
+		this.add
+			.tileSprite(480, 270, 960, 540, "tileFloor")
+			.setAlpha(0.2)
+			.setTint(this.theme.wallFill);
 
 		this.physics.world.setBounds(
 			CAVE_BOUNDS.x,
@@ -484,6 +488,16 @@ export class CaveScene extends Phaser.Scene {
 		this.lever = this.physics.add
 			.staticSprite(812, 382, "lever")
 			.setDisplaySize(42, 50);
+
+		this.tweens.add({
+			targets: this.lever,
+			angle: 5,
+			duration: 1200,
+			yoyo: true,
+			repeat: -1,
+			ease: "Sine.easeInOut",
+		});
+
 		this.add
 			.text(812, 428, "Рычаг", {
 				fontFamily: "Arial",
@@ -540,6 +554,16 @@ export class CaveScene extends Phaser.Scene {
 			const crystal = this.add
 				.sprite(pos.x, pos.y, "crystal")
 				.setDisplaySize(24, 24);
+
+			this.tweens.add({
+				targets: crystal,
+				scale: 0.9,
+				duration: 800,
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+
 			this.physics.add.existing(crystal, true);
 			const zone = this.add.zone(pos.x, pos.y, 30, 30);
 			this.physics.add.existing(zone, true);

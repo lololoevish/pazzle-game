@@ -46,6 +46,10 @@ export class TownScene extends Phaser.Scene {
 
 		this.cameras.main.setBackgroundColor("#16301f");
 		this.add.image(480, 270, "townBackground").setAlpha(0.6);
+		this.add
+			.tileSprite(480, 270, 960, 540, "tileFloor")
+			.setAlpha(0.15)
+			.setTint(0x166534);
 
 		this.interactables.length = 0;
 		this.autoZones.length = 0;
@@ -86,6 +90,16 @@ export class TownScene extends Phaser.Scene {
 			.sprite(480, 350, "player")
 			.setCollideWorldBounds(true);
 		this.player.setDisplaySize(40, 48);
+
+		this.tweens.add({
+			targets: this.player,
+			scaleY: 0.96,
+			duration: 1200,
+			yoyo: true,
+			repeat: -1,
+			ease: "Sine.easeInOut",
+		});
+
 		this.createTownCollision();
 		this.physics.add.collider(this.player, this.solids);
 
