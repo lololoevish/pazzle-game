@@ -213,10 +213,16 @@ export class CaveScene extends Phaser.Scene {
 		this.createLever();
 		this.createAtmosphere();
 
+		const playerStart = this.getPlayerStartPosition();
 		this.player = this.physics.add
-			.sprite(128, 382, "player")
+			.sprite(playerStart.x, playerStart.y, "player")
 			.setCollideWorldBounds(true);
-		this.player.setDisplaySize(36, 44).setDepth(20);
+		if ((this.level - 1) % 5 === 0) {
+			this.player.setDisplaySize(16, 16).setDepth(20);
+			this.player.setCircle(7, 1, 1);
+		} else {
+			this.player.setDisplaySize(36, 44).setDepth(20);
+		}
 		if (this.solids) {
 			this.physics.add.collider(this.player, this.solids);
 		}
@@ -232,7 +238,9 @@ export class CaveScene extends Phaser.Scene {
 		);
 		addHelp(
 			this,
-			"WASD/стрелки — движение, E/Space — действие, Esc — хаб. Проходы работают автоматически.",
+			(this.level - 1) % 5 === 0
+				? "Лабиринт: стрелки — точное движение, WASD — скольжение до стены, Esc — хаб."
+				: "WASD/стрелки — движение, E/Space — действие, Esc — хаб. Проходы работают автоматически.",
 		);
 
 		this.cursors = this.input.keyboard?.createCursorKeys();
@@ -261,11 +269,7 @@ export class CaveScene extends Phaser.Scene {
 
 		if (isPlatformer) {
 			this.updatePlatformerMovement();
-		} else if (
-			!this.solved &&
-			(this.level - 1) % 5 === 0 &&
-			this.isPlayerInMaze()
-		) {
+		} else if (!this.solved && (this.level - 1) % 5 === 0) {
 			this.updateMazeMovement();
 		} else {
 			const left = this.cursors.left.isDown || this.wasd.A.isDown;
@@ -293,6 +297,14 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		this.updateWordSearchLine();
+	}
+
+	private getPlayerStartPosition(): { x: number; y: number } {
+		if ((this.level - 1) % 5 === 0) {
+			return { x: 270, y: 388 };
+		}
+
+		return { x: 128, y: 382 };
 	}
 
 	private updatePlatformerMovement(): void {
@@ -325,15 +337,6 @@ export class CaveScene extends Phaser.Scene {
 		}
 	}
 
-	private isPlayerInMaze(): boolean {
-		return this.player
-			? this.player.x > 250 &&
-					this.player.x < 590 &&
-					this.player.y > 110 &&
-					this.player.y < 440
-			: false;
-	}
-
 	private mazeMoving = false;
 	private mazeDir = { x: 0, y: 0 };
 
@@ -352,21 +355,29 @@ export class CaveScene extends Phaser.Scene {
 			return;
 		}
 
-		const left = this.cursors.left.isDown || this.wasd.A.isDown;
-		const right = this.cursors.right.isDown || this.wasd.D.isDown;
-		const up = this.cursors.up.isDown || this.wasd.W.isDown;
-		const down = this.cursors.down.isDown || this.wasd.S.isDown;
+		const slideLeft = this.wasd.A.isDown;
+		const slideRight = this.wasd.D.isDown;
+		const slideUp = this.wasd.W.isDown;
+		const slideDown = this.wasd.S.isDown;
 
-		if (left || right || up || down) {
+		if (slideLeft || slideRight || slideUp || slideDown) {
 			this.mazeMoving = true;
 			this.mazeDir = {
-				x: Number(right) - Number(left),
-				y: Number(down) - Number(up),
+				x: Number(slideRight) - Number(slideLeft),
+				y: Number(slideDown) - Number(slideUp),
 			};
 			// Приоритет горизонтали если нажато по диагонали (для простоты как в GML)
 			if (this.mazeDir.x !== 0) this.mazeDir.y = 0;
 		} else {
-			this.player.setVelocity(0, 0);
+			const speed = 118;
+			const left = this.cursors.left.isDown;
+			const right = this.cursors.right.isDown;
+			const up = this.cursors.up.isDown;
+			const down = this.cursors.down.isDown;
+			this.player.setVelocity(
+				(Number(right) - Number(left)) * speed,
+				(Number(down) - Number(up)) * speed,
+			);
 		}
 	}
 
@@ -418,16 +429,22 @@ export class CaveScene extends Phaser.Scene {
 		width: number,
 		height: number,
 	): void {
-		const wall = this.add
+		const wallVisual = this.add
 			.tileSprite(x, y, width, height, "caveWall")
 			.setTint(this.theme.wallFill)
-			.setAlpha(0.96);
+			.setAlpha(0.96)
+			.setDepth(2);
 		this.add
 			.rectangle(x, y, width, height, 0x000000, 0)
 			.setStrokeStyle(1, this.theme.wallStroke, 0.65)
-			.setDepth(wall.depth + 1);
-		this.physics.add.existing(wall, true);
-		this.solids?.add(wall);
+			.setDepth(wallVisual.depth + 1);
+
+		// Важно: физику держим на Rectangle, а не на TileSprite.
+		// После визуального апгрейда TileSprite-стены могли давать нестабильные Arcade-body,
+		// из-за чего пазлы с лабиринтом/платформами переставали нормально работать.
+		const wallBody = this.add.rectangle(x, y, width, height, 0x000000, 0);
+		this.physics.add.existing(wallBody, true);
+		this.solids?.add(wallBody);
 	}
 
 	private createAutoExit(): void {
@@ -455,7 +472,7 @@ export class CaveScene extends Phaser.Scene {
 			.tileSprite(480, 280, 900, 220, "mist")
 			.setAlpha(0.28)
 			.setTint(this.theme.accent)
-			.setDepth(4);
+			.setDepth(1);
 
 		for (const rune of [
 			{ x: 160, y: 150, scale: 0.52 },
@@ -467,7 +484,7 @@ export class CaveScene extends Phaser.Scene {
 				.setTint(this.theme.accent)
 				.setScale(rune.scale)
 				.setAlpha(0.55)
-				.setDepth(6);
+				.setDepth(3);
 		}
 
 		// Виньетка
@@ -514,7 +531,7 @@ export class CaveScene extends Phaser.Scene {
 			.setTint(this.theme.accent)
 			.setScale(0.7)
 			.setAlpha(0.4)
-			.setDepth(6);
+			.setDepth(3);
 
 		this.lever = this.physics.add
 			.staticSprite(812, 382, "lever")
@@ -632,12 +649,22 @@ export class CaveScene extends Phaser.Scene {
 			"101111101011101",
 			"100000101000101",
 			"101110101110101",
-			"100010000000001",
+			"000010000000001",
 			"111111111111111",
 		];
 		const cell = 20;
 		const startX = 270;
 		const startY = 128;
+		this.add
+			.rectangle(startX, startY + 13 * cell, 28, 28, 0x38bdf8, 0.35)
+			.setStrokeStyle(2, 0x7dd3fc, 0.8);
+		this.add
+			.text(startX, startY + 13 * cell, "СТ", {
+				fontFamily: "Arial",
+				fontSize: "10px",
+				color: "#e0f2fe",
+			})
+			.setOrigin(0.5);
 		for (const [rowIndex, row] of grid.entries()) {
 			for (const [colIndex, value] of [...row].entries()) {
 				const x = startX + colIndex * cell;
@@ -668,6 +695,13 @@ export class CaveScene extends Phaser.Scene {
 				fontFamily: "Arial",
 				fontSize: "16px",
 				color: "#052e16",
+			})
+			.setOrigin(0.5);
+		this.add
+			.text(startX + 13 * cell, startY + 13 * cell + 26, "Финиш", {
+				fontFamily: "Arial",
+				fontSize: "11px",
+				color: "#bbf7d0",
 			})
 			.setOrigin(0.5);
 		const goal = this.add.zone(startX + 13 * cell, startY + 13 * cell, 28, 28);
@@ -1143,7 +1177,7 @@ export class CaveScene extends Phaser.Scene {
 	private getPuzzlePrompt(): string {
 		switch ((this.level - 1) % 5) {
 			case 0:
-				return "Лабиринт как в GMS2: используй WASD для скольжения до зелёного финиша.";
+				return "Лабиринт: стрелками двигай героя точно, WASD запускает скольжение до стены. Доберись до зелёного финиша; он не двигается.";
 			case 1:
 				return "Поиск слов: выбери первую и последнюю букву слова прямой линией через E/Space. Синяя линия подскажет выбор.";
 			case 2:
