@@ -9,5 +9,9 @@
   "townBackground": "",
   "caveBackground": "",
   "uiPanel": "",
-  "button": ""
+  "button": "",
+  "tileFloor": "",
+  "caveWall": "",
+  "runeGlow": "",
+  "mist": ""
 }

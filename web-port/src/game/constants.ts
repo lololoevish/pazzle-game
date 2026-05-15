@@ -16,6 +16,9 @@ export const SPRITE_KEYS = [
 	"uiPanel",
 	"button",
 	"tileFloor",
+	"caveWall",
+	"runeGlow",
+	"mist",
 ] as const;
 
 export type SpriteKey = (typeof SPRITE_KEYS)[number];

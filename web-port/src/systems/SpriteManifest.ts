@@ -1,4 +1,4 @@
-import type Phaser from "phaser";
+import Phaser from "phaser";
 import { SPRITE_KEYS, type SpriteKey } from "../game/constants";
 
 export type SpriteManifest = Partial<Record<SpriteKey, string>>;
@@ -16,6 +16,9 @@ const PLACEHOLDER_COLORS: Record<SpriteKey, number> = {
 	uiPanel: 0x2d3748,
 	button: 0x4a5568,
 	tileFloor: 0x1f2937,
+	caveWall: 0x111827,
+	runeGlow: 0x67e8f9,
+	mist: 0xcbd5e1,
 };
 
 export async function fetchSpriteManifest(): Promise<SpriteManifest> {
@@ -72,6 +75,15 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 		} else if (key === "tileFloor") {
 			width = 32;
 			height = 32;
+		} else if (key === "caveWall") {
+			width = 64;
+			height = 64;
+		} else if (key === "runeGlow") {
+			width = 48;
+			height = 48;
+		} else if (key === "mist") {
+			width = 128;
+			height = 64;
 		}
 
 		const graphics = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -254,6 +266,44 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.strokeRect(0, 0, width, height);
 			graphics.lineStyle(1, 0xffffff, 0.1);
 			graphics.strokeRect(1, 1, width - 2, height - 2);
+		} else if (key === "caveWall") {
+			// Неровный каменный блок для стен и платформ.
+			graphics.fillGradientStyle(color, color, 0x020617, 0x020617, 1);
+			graphics.fillRoundedRect(0, 0, width, height, 6);
+			graphics.lineStyle(2, 0x475569, 0.7);
+			graphics.strokeRoundedRect(1, 1, width - 2, height - 2, 6);
+			graphics.lineStyle(1, 0x000000, 0.35);
+			graphics.lineBetween(8, 18, 56, 14);
+			graphics.lineBetween(12, 42, 48, 50);
+			graphics.lineBetween(30, 6, 22, 34);
+			graphics.lineStyle(1, 0xffffff, 0.1);
+			for (let i = 0; i < 12; i++) {
+				graphics.strokeCircle(
+					Phaser.Math.Between(6, width - 6),
+					Phaser.Math.Between(6, height - 6),
+					Phaser.Math.Between(1, 3),
+				);
+			}
+		} else if (key === "runeGlow") {
+			// Магическая руна с мягким свечением.
+			graphics.fillStyle(color, 0.14);
+			graphics.fillCircle(24, 24, 22);
+			graphics.fillStyle(color, 0.22);
+			graphics.fillCircle(24, 24, 14);
+			graphics.lineStyle(3, color, 0.95);
+			graphics.strokeCircle(24, 24, 10);
+			graphics.lineBetween(24, 10, 24, 38);
+			graphics.lineBetween(12, 24, 36, 24);
+			graphics.lineStyle(2, 0xffffff, 0.7);
+			graphics.strokeCircle(24, 24, 4);
+		} else if (key === "mist") {
+			// Полупрозрачный слой тумана для глубины.
+			graphics.fillStyle(color, 0.08);
+			graphics.fillEllipse(34, 30, 78, 24);
+			graphics.fillStyle(color, 0.06);
+			graphics.fillEllipse(78, 34, 90, 28);
+			graphics.fillStyle(0xffffff, 0.07);
+			graphics.fillEllipse(58, 22, 70, 18);
 		} else {
 			graphics.fillStyle(PLACEHOLDER_COLORS[key], 1);
 			graphics.fillRoundedRect(0, 0, width, height, 8);

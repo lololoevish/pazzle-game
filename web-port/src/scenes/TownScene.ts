@@ -148,6 +148,17 @@ export class TownScene extends Phaser.Scene {
 		const entrance = this.physics.add
 			.staticSprite(480, 455, "caveEntrance")
 			.setDisplaySize(72, 72);
+		this.add
+			.sprite(480, 455, "runeGlow")
+			.setTint(0x86efac)
+			.setScale(1.35)
+			.setAlpha(0.35)
+			.setDepth(0);
+		this.add
+			.tileSprite(480, 465, 180, 70, "mist")
+			.setTint(0xbbf7d0)
+			.setAlpha(0.22)
+			.setDepth(1);
 		this.autoZones.push({
 			body: entrance,
 			action: () =>

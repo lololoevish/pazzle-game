@@ -419,8 +419,13 @@ export class CaveScene extends Phaser.Scene {
 		height: number,
 	): void {
 		const wall = this.add
-			.rectangle(x, y, width, height, this.theme.wallFill, 0.94)
-			.setStrokeStyle(1, this.theme.wallStroke);
+			.tileSprite(x, y, width, height, "caveWall")
+			.setTint(this.theme.wallFill)
+			.setAlpha(0.96);
+		this.add
+			.rectangle(x, y, width, height, 0x000000, 0)
+			.setStrokeStyle(1, this.theme.wallStroke, 0.65)
+			.setDepth(wall.depth + 1);
 		this.physics.add.existing(wall, true);
 		this.solids?.add(wall);
 	}
@@ -446,6 +451,25 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createAtmosphere(): void {
+		this.add
+			.tileSprite(480, 280, 900, 220, "mist")
+			.setAlpha(0.28)
+			.setTint(this.theme.accent)
+			.setDepth(4);
+
+		for (const rune of [
+			{ x: 160, y: 150, scale: 0.52 },
+			{ x: 820, y: 170, scale: 0.46 },
+			{ x: 730, y: 400, scale: 0.38 },
+		]) {
+			this.add
+				.sprite(rune.x, rune.y, "runeGlow")
+				.setTint(this.theme.accent)
+				.setScale(rune.scale)
+				.setAlpha(0.55)
+				.setDepth(6);
+		}
+
 		// Виньетка
 		const vignette = this.add.graphics().setDepth(100).setScrollFactor(0);
 		vignette.fillGradientStyle(
@@ -485,6 +509,13 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createLever(): void {
+		this.add
+			.sprite(812, 382, "runeGlow")
+			.setTint(this.theme.accent)
+			.setScale(0.7)
+			.setAlpha(0.4)
+			.setDepth(6);
+
 		this.lever = this.physics.add
 			.staticSprite(812, 382, "lever")
 			.setDisplaySize(42, 50);
@@ -626,6 +657,12 @@ export class CaveScene extends Phaser.Scene {
 			0x22c55e,
 			0.85,
 		);
+		this.add
+			.sprite(startX + 13 * cell, startY + 13 * cell, "runeGlow")
+			.setTint(0x22c55e)
+			.setAlpha(0.55)
+			.setScale(0.55)
+			.setDepth(7);
 		this.add
 			.text(startX + 13 * cell, startY + 13 * cell, "Ф", {
 				fontFamily: "Arial",
