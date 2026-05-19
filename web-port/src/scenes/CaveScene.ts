@@ -143,6 +143,8 @@ export class CaveScene extends Phaser.Scene {
 	private interactKey?: Phaser.Input.Keyboard.Key;
 	private spaceKey?: Phaser.Input.Keyboard.Key;
 	private escKey?: Phaser.Input.Keyboard.Key;
+	private shiftKey?: Phaser.Input.Keyboard.Key;
+	private numberKeys: Phaser.Input.Keyboard.Key[] = [];
 	private solids?: Phaser.Physics.Arcade.StaticGroup;
 	private lever?: Phaser.Physics.Arcade.Sprite;
 	private readonly interactables: Interactable[] = [];
@@ -176,6 +178,10 @@ export class CaveScene extends Phaser.Scene {
 	private songSequence: number[] = [];
 	private songInputIndex = 0;
 	private jumpingSafeIndex = 0;
+	private finalNextRune = 1;
+	private riddleAnswers: string[] = [];
+	private jumpingPath: number[] = [];
+	private focusRing?: Phaser.GameObjects.Arc;
 
 	public constructor() {
 		super("CaveScene");
@@ -215,6 +221,9 @@ export class CaveScene extends Phaser.Scene {
 		this.songSequence = [];
 		this.songInputIndex = 0;
 		this.jumpingSafeIndex = 0;
+		this.finalNextRune = 1;
+		this.riddleAnswers = [];
+		this.jumpingPath = [];
 		this.theme = CAVE_THEMES[(this.level - 1) % CAVE_THEMES.length];
 	}
 
@@ -274,6 +283,11 @@ export class CaveScene extends Phaser.Scene {
 			color: "#fde68a",
 			wordWrap: { width: 760 },
 		});
+		this.focusRing = this.add
+			.circle(0, 0, 36)
+			.setStrokeStyle(3, 0xfde68a, 0.95)
+			.setDepth(80)
+			.setVisible(false);
 
 		this.createRoomCollision();
 		this.createAutoExit();
@@ -309,7 +323,7 @@ export class CaveScene extends Phaser.Scene {
 			this,
 			this.getPuzzleType() === "maze"
 				? "Лабиринт: стрелки — точное движение, WASD — скольжение до стены, Esc — хаб."
-				: "WASD/стрелки — движение, E/Space/цифры — действие, Esc — хаб. Проходы работают автоматически.",
+				: "WASD/стрелки — движение, Shift — ускорение, E/Space/цифры — действие, Esc — хаб. Проходы работают автоматически.",
 		);
 
 		this.cursors = this.input.keyboard?.createCursorKeys();
@@ -326,21 +340,35 @@ export class CaveScene extends Phaser.Scene {
 		this.escKey = this.input.keyboard?.addKey(
 			Phaser.Input.Keyboard.KeyCodes.ESC,
 		);
+		this.shiftKey = this.input.keyboard?.addKey(
+			Phaser.Input.Keyboard.KeyCodes.SHIFT,
+		);
+		this.numberKeys = [
+			Phaser.Input.Keyboard.KeyCodes.ONE,
+			Phaser.Input.Keyboard.KeyCodes.TWO,
+			Phaser.Input.Keyboard.KeyCodes.THREE,
+			Phaser.Input.Keyboard.KeyCodes.FOUR,
+			Phaser.Input.Keyboard.KeyCodes.FIVE,
+			Phaser.Input.Keyboard.KeyCodes.SIX,
+			Phaser.Input.Keyboard.KeyCodes.SEVEN,
+		]
+			.map((code) => this.input.keyboard?.addKey(code))
+			.filter(Boolean) as Phaser.Input.Keyboard.Key[];
 	}
 
-	public update(): void {
+	public update(_time: number, delta: number): void {
 		if (!this.player || !this.cursors || !this.wasd) {
 			return;
 		}
+		const dt = Math.min(delta / 1000, 0.05);
 
 		const isPlatformer = this.getPuzzleType() === "platformer";
 
 		if (isPlatformer) {
-			this.updatePlatformerMovement();
+			this.updatePlatformerMovement(dt);
 		} else if (!this.solved && this.getPuzzleType() === "maze") {
 			this.updateMazeMovement();
 		} else {
-			const dt = 1 / 60;
 			const left = this.cursors.left.isDown || this.wasd.A.isDown;
 			const right = this.cursors.right.isDown || this.wasd.D.isDown;
 			const up = this.cursors.up.isDown || this.wasd.W.isDown;
@@ -363,11 +391,13 @@ export class CaveScene extends Phaser.Scene {
 			const speed = diagonal
 				? PLAYER_CONFIG.topdownDiagonalSpeed
 				: PLAYER_CONFIG.topdownSpeed;
+			const sprint = this.shiftKey?.isDown ? PLAYER_CONFIG.sprintMultiplier : 1;
 			this.player.setVelocity(
-				this.currentMoveX * speed,
-				this.currentMoveY * speed,
+				this.currentMoveX * speed * sprint,
+				this.currentMoveY * speed * sprint,
 			);
 		}
+		this.updateInteractableFocus();
 
 		const pressedInteract = this.interactKey
 			? Phaser.Input.Keyboard.JustDown(this.interactKey)
@@ -378,6 +408,7 @@ export class CaveScene extends Phaser.Scene {
 		if (pressedInteract || pressedSpace) {
 			this.interact();
 		}
+		this.handleNumberInput();
 
 		if (this.escKey && Phaser.Input.Keyboard.JustDown(this.escKey)) {
 			this.scene.start("TownScene");
@@ -394,11 +425,10 @@ export class CaveScene extends Phaser.Scene {
 		return { x: 92, y: 468 };
 	}
 
-	private updatePlatformerMovement(): void {
+	private updatePlatformerMovement(dt: number): void {
 		if (!this.player || !this.cursors || !this.wasd) return;
 
 		const body = this.player.body as Phaser.Physics.Arcade.Body | undefined;
-		const dt = 1 / 60;
 		const left = this.cursors.left.isDown || this.wasd.A.isDown;
 		const right = this.cursors.right.isDown || this.wasd.D.isDown;
 		const jumpPressed =
@@ -428,7 +458,8 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		const inputX = Number(right) - Number(left);
-		const targetVelocity = inputX * PLAYER_CONFIG.platformerMoveSpeed;
+		const sprint = this.shiftKey?.isDown ? PLAYER_CONFIG.sprintMultiplier : 1;
+		const targetVelocity = inputX * PLAYER_CONFIG.platformerMoveSpeed * sprint;
 		const accel = onGround
 			? PLAYER_CONFIG.platformerGroundAcceleration
 			: PLAYER_CONFIG.platformerAirAcceleration;
@@ -1223,7 +1254,7 @@ export class CaveScene extends Phaser.Scene {
 		this.add.text(
 			210,
 			230,
-			"Финальное испытание арки: активируй 3 руны в порядке 1 → 2 → 3.",
+			"Финальное испытание арки: активируй 3 руны в порядке 1 → 2 → 3. Можно нажимать цифры 1–3.",
 			{
 				fontFamily: "Arial",
 				fontSize: "18px",
@@ -1231,7 +1262,7 @@ export class CaveScene extends Phaser.Scene {
 				wordWrap: { width: 430 },
 			},
 		);
-		let nextRune = 1;
+		this.finalNextRune = 1;
 		for (const rune of [
 			{ x: 270, y: 350, id: 1 },
 			{ x: 400, y: 292, id: 2 },
@@ -1252,21 +1283,23 @@ export class CaveScene extends Phaser.Scene {
 			this.interactables.push({
 				name: `Руна ${rune.id}`,
 				object: sprite,
-				action: () => {
-					if (rune.id !== nextRune) {
-						nextRune = 1;
-						this.refreshStatus("Порядок сбился. Начни с первой руны.");
-						return;
-					}
-					sprite.setAlpha(1).setTint(0x86efac);
-					nextRune += 1;
-					if (nextRune > 3) {
-						this.markSolved("Руны активированы. Финальное испытание пройдено.");
-					} else {
-						this.refreshStatus(`Верно. Теперь руна ${nextRune}.`);
-					}
-				},
+				action: () => this.pressFinalRune(rune.id, sprite),
 			});
+		}
+	}
+
+	private pressFinalRune(id: number, sprite?: Phaser.GameObjects.Sprite): void {
+		if (id !== this.finalNextRune) {
+			this.finalNextRune = 1;
+			this.refreshStatus("Порядок сбился. Начни с первой руны.");
+			return;
+		}
+		sprite?.setAlpha(1).setTint(0x86efac);
+		this.finalNextRune += 1;
+		if (this.finalNextRune > 3) {
+			this.markSolved("Руны активированы. Финальное испытание пройдено.");
+		} else {
+			this.refreshStatus(`Верно. Теперь руна ${this.finalNextRune}.`);
 		}
 	}
 
@@ -1277,6 +1310,7 @@ export class CaveScene extends Phaser.Scene {
 			{ question: "Что имеет лицо, но не может видеть?", answer: "МОНЕТА" },
 		];
 		const options = ["ДЫМ", "КАМЕНЬ", "ВРЕМЯ", "МОНЕТА"];
+		this.riddleAnswers = riddles.map((riddle) => riddle.answer);
 		const questionText = this.add.text(180, 215, "", {
 			fontFamily: "Arial",
 			fontSize: "20px",
@@ -1308,22 +1342,25 @@ export class CaveScene extends Phaser.Scene {
 			this.interactables.push({
 				name: `Ответ ${option}`,
 				object: button,
-				action: () => {
-					if (option !== riddles[this.riddleIndex].answer) {
-						this.refreshStatus(
-							"Ответ не подходит. Сфинкс ждёт другой вариант.",
-						);
-						return;
-					}
-					this.riddleIndex += 1;
-					if (this.riddleIndex >= riddles.length) {
-						this.markSolved("Все загадки Сфинкса решены.");
-					} else {
-						refreshQuestion();
-						this.refreshStatus("Верно. Следующая загадка.");
-					}
-				},
+				action: () => this.pressRiddleAnswer(option, refreshQuestion),
 			});
+		}
+	}
+
+	private pressRiddleAnswer(
+		answer: string,
+		refreshQuestion?: () => void,
+	): void {
+		if (answer !== this.riddleAnswers[this.riddleIndex]) {
+			this.refreshStatus("Ответ не подходит. Сфинкс ждёт другой вариант.");
+			return;
+		}
+		this.riddleIndex += 1;
+		if (this.riddleIndex >= this.riddleAnswers.length) {
+			this.markSolved("Все загадки Сфинкса решены.");
+		} else {
+			refreshQuestion?.();
+			this.refreshStatus("Верно. Следующая загадка.");
 		}
 	}
 
@@ -1334,7 +1371,7 @@ export class CaveScene extends Phaser.Scene {
 		this.add.text(
 			160,
 			210,
-			"Звуковые ловушки: повтори цепочку нот. В GMS2 используются клавиши 1–7.",
+			"Звуковые ловушки: повтори цепочку нот клавишами 1–7 или через E у кнопок.",
 			{
 				fontFamily: "Arial",
 				fontSize: "18px",
@@ -1378,11 +1415,12 @@ export class CaveScene extends Phaser.Scene {
 
 	private createJumpingPathPuzzle(): void {
 		const path = [0, 1, 0, 2, 1];
+		this.jumpingPath = path;
 		this.jumpingSafeIndex = 0;
 		this.add.text(
 			178,
 			212,
-			"Прыгающий путь: наступай на безопасные плиты в показанном порядке.",
+			"Прыгающий путь: нажимай дорожки 1–3 в показанном порядке или выбирай плиты героем.",
 			{
 				fontFamily: "Arial",
 				fontSize: "18px",
@@ -1416,19 +1454,26 @@ export class CaveScene extends Phaser.Scene {
 				this.interactables.push({
 					name: `Плита ${step + 1}-${lane + 1}`,
 					object: tile,
-					action: () => {
-						if (step !== this.jumpingSafeIndex || lane !== path[step]) {
-							this.jumpingSafeIndex = 0;
-							this.refreshStatus("Плита провалилась. Начни путь заново.");
-							return;
-						}
-						tile.setFillStyle(0x22c55e, 1);
-						this.jumpingSafeIndex += 1;
-						if (this.jumpingSafeIndex >= path.length)
-							this.markSolved("Прыгающий путь пройден.");
-					},
+					action: () => this.pressJumpingPathTile(step, lane, tile),
 				});
 			}
+		}
+	}
+
+	private pressJumpingPathTile(
+		step: number,
+		lane: number,
+		tile?: Phaser.GameObjects.Rectangle,
+	): void {
+		if (step !== this.jumpingSafeIndex || lane !== this.jumpingPath[step]) {
+			this.jumpingSafeIndex = 0;
+			this.refreshStatus("Плита провалилась. Начни путь заново.");
+			return;
+		}
+		tile?.setFillStyle(0x22c55e, 1);
+		this.jumpingSafeIndex += 1;
+		if (this.jumpingSafeIndex >= this.jumpingPath.length) {
+			this.markSolved("Прыгающий путь пройден.");
 		}
 	}
 
@@ -1450,7 +1495,7 @@ export class CaveScene extends Phaser.Scene {
 		this.songSequence = [0, 3, 1, 4, 2];
 		this.songInputIndex = 0;
 		const labels = ["I", "II", "III", "IV", "V"];
-		this.add.text(174, 218, "Песнь пещер: собери мелодию по рунам.", {
+		this.add.text(174, 218, "Песнь пещер: собери мелодию по рунам 1–5.", {
 			fontFamily: "Arial",
 			fontSize: "19px",
 			color: "#f8fafc",
@@ -1525,6 +1570,47 @@ export class CaveScene extends Phaser.Scene {
 			);
 		} else {
 			this.refreshStatus(`Верно. Шаг ${nextIndex + 1}/${sequence.length}.`);
+		}
+	}
+
+	private handleNumberInput(): void {
+		if (this.solved) return;
+
+		const pressedIndex = this.numberKeys.findIndex((key) =>
+			Phaser.Input.Keyboard.JustDown(key),
+		);
+		if (pressedIndex < 0) return;
+
+		const type = this.getPuzzleType();
+		if (type === "rhythm" && pressedIndex < 4) {
+			this.pressRhythmButton(pressedIndex);
+			return;
+		}
+
+		if (type === "final" || type === "epic_finale") {
+			if (pressedIndex < 3) this.pressFinalRune(pressedIndex + 1);
+			return;
+		}
+
+		if (type === "riddle") {
+			const options = ["ДЫМ", "КАМЕНЬ", "ВРЕМЯ", "МОНЕТА"];
+			const answer = options[pressedIndex];
+			if (answer) this.pressRiddleAnswer(answer);
+			return;
+		}
+
+		if (type === "sound_trap" && pressedIndex < 7) {
+			this.pressSequenceButton(pressedIndex, this.soundTrapSequence, "sound");
+			return;
+		}
+
+		if (type === "cave_song" && pressedIndex < 5) {
+			this.pressSequenceButton(pressedIndex, this.songSequence, "song");
+			return;
+		}
+
+		if (type === "jumping_path" && pressedIndex < 3) {
+			this.pressJumpingPathTile(this.jumpingSafeIndex, pressedIndex);
 		}
 	}
 
@@ -1767,23 +1853,49 @@ export class CaveScene extends Phaser.Scene {
 		if (!this.player) {
 			return;
 		}
-		const player = this.player;
-		const nearest = this.interactables.find((item) => {
-			const position = this.getObjectPosition(item.object);
-			return (
-				Phaser.Math.Distance.Between(
-					player.x,
-					player.y,
-					position.x,
-					position.y,
-				) < 32
-			);
-		});
+		const nearest = this.getNearestInteractable(40);
 		if (!nearest) {
 			this.refreshStatus("Подойди вплотную к объекту пазла или рычагу.");
 			return;
 		}
 		nearest.action();
+	}
+
+	private getNearestInteractable(
+		maxDistance: number,
+	): Interactable | undefined {
+		if (!this.player) return undefined;
+		let nearest: Interactable | undefined;
+		let nearestDistance = maxDistance;
+
+		for (const item of this.interactables) {
+			const position = this.getObjectPosition(item.object);
+			const distance = Phaser.Math.Distance.Between(
+				this.player.x,
+				this.player.y,
+				position.x,
+				position.y,
+			);
+			if (distance < nearestDistance) {
+				nearest = item;
+				nearestDistance = distance;
+			}
+		}
+
+		return nearest;
+	}
+
+	private updateInteractableFocus(): void {
+		const nearest = this.getNearestInteractable(62);
+		if (!nearest || !this.focusRing) {
+			this.focusRing?.setVisible(false);
+			return;
+		}
+		const position = this.getObjectPosition(nearest.object);
+		this.focusRing
+			.setPosition(position.x, position.y)
+			.setVisible(true)
+			.setAlpha(0.62 + Math.sin(this.time.now / 130) * 0.28);
 	}
 
 	private triggerAutoZone(autoZone: AutoZone): void {

@@ -22,6 +22,7 @@ export const PLAYER_CONFIG = {
 	coyoteTime: 0.5,
 	jumpBufferTime: 0.15,
 	interactionDistance: 96,
+	sprintMultiplier: 1.35,
 } as const;
 
 export const PUZZLE_TYPES = [

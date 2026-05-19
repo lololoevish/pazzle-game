@@ -32,11 +32,13 @@ export class TownScene extends Phaser.Scene {
 	private interactKey?: Phaser.Input.Keyboard.Key;
 	private spaceKey?: Phaser.Input.Keyboard.Key;
 	private escKey?: Phaser.Input.Keyboard.Key;
+	private shiftKey?: Phaser.Input.Keyboard.Key;
 	private readonly interactables: Interactable[] = [];
 	private readonly autoZones: AutoZone[] = [];
 	private solids?: Phaser.Physics.Arcade.StaticGroup;
 	private dialogue?: DialogueSystem;
 	private statusText?: Phaser.GameObjects.Text;
+	private focusRing?: Phaser.GameObjects.Arc;
 	private currentMoveX = 0;
 	private currentMoveY = 0;
 
@@ -187,6 +189,11 @@ export class TownScene extends Phaser.Scene {
 			fontSize: "18px",
 			color: "#e5e7eb",
 		});
+		this.focusRing = this.add
+			.circle(0, 0, 40)
+			.setStrokeStyle(3, 0xfde68a, 0.9)
+			.setDepth(30)
+			.setVisible(false);
 		this.refreshStatus();
 		for (const autoZone of this.autoZones) {
 			this.physics.add.overlap(this.player, autoZone.body, () =>
@@ -196,7 +203,7 @@ export class TownScene extends Phaser.Scene {
 
 		addHelp(
 			this,
-			"NPC — E/Space. Вход в пещеры работает автоматически: просто зайди в проход. Esc — меню.",
+			"WASD/стрелки — движение, Shift — ускорение, NPC — E/Space. Вход в пещеры работает автоматически. Esc — меню.",
 		);
 
 		this.cursors = this.input.keyboard?.createCursorKeys();
@@ -212,6 +219,9 @@ export class TownScene extends Phaser.Scene {
 		);
 		this.escKey = this.input.keyboard?.addKey(
 			Phaser.Input.Keyboard.KeyCodes.ESC,
+		);
+		this.shiftKey = this.input.keyboard?.addKey(
+			Phaser.Input.Keyboard.KeyCodes.SHIFT,
 		);
 	}
 
@@ -244,10 +254,12 @@ export class TownScene extends Phaser.Scene {
 		const speed = diagonal
 			? PLAYER_CONFIG.topdownDiagonalSpeed
 			: PLAYER_CONFIG.topdownSpeed;
+		const sprint = this.shiftKey?.isDown ? PLAYER_CONFIG.sprintMultiplier : 1;
 		this.player.setVelocity(
-			this.currentMoveX * speed,
-			this.currentMoveY * speed,
+			this.currentMoveX * speed * sprint,
+			this.currentMoveY * speed * sprint,
 		);
+		this.updateInteractableFocus();
 
 		const pressedInteract = this.interactKey
 			? Phaser.Input.Keyboard.JustDown(this.interactKey)
@@ -456,14 +468,7 @@ export class TownScene extends Phaser.Scene {
 			return;
 		}
 
-		const player = this.player;
-		const nearest = this.interactables.find((item) => {
-			const sprite = item.body as Phaser.Physics.Arcade.Sprite;
-			return (
-				Phaser.Math.Distance.Between(player.x, player.y, sprite.x, sprite.y) <
-				72
-			);
-		});
+		const nearest = this.getNearestInteractable(72);
 
 		if (nearest) {
 			nearest.action();
@@ -471,6 +476,43 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		this.dialogue?.show("Подсказка", "Подойди ближе к NPC или входу в пещеру.");
+	}
+
+	private getNearestInteractable(
+		maxDistance: number,
+	): Interactable | undefined {
+		if (!this.player) return undefined;
+		let nearest: Interactable | undefined;
+		let nearestDistance = maxDistance;
+
+		for (const item of this.interactables) {
+			const sprite = item.body as Phaser.Physics.Arcade.Sprite;
+			const distance = Phaser.Math.Distance.Between(
+				this.player.x,
+				this.player.y,
+				sprite.x,
+				sprite.y,
+			);
+			if (distance < nearestDistance) {
+				nearest = item;
+				nearestDistance = distance;
+			}
+		}
+
+		return nearest;
+	}
+
+	private updateInteractableFocus(): void {
+		const nearest = this.getNearestInteractable(96);
+		if (!nearest || !this.focusRing) {
+			this.focusRing?.setVisible(false);
+			return;
+		}
+		const sprite = nearest.body as Phaser.Physics.Arcade.Sprite;
+		this.focusRing
+			.setPosition(sprite.x, sprite.y)
+			.setVisible(true)
+			.setAlpha(0.65 + Math.sin(this.time.now / 140) * 0.25);
 	}
 
 	private refreshStatus(): void {
