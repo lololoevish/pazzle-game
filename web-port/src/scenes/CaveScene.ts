@@ -193,6 +193,18 @@ export class CaveScene extends Phaser.Scene {
 			Math.max(1, Number(data.level) || loadProgress().currentLevel),
 		);
 		this.solved = false;
+		this.statusText = undefined;
+		this.player = undefined;
+		this.cursors = undefined;
+		this.wasd = undefined;
+		this.interactKey = undefined;
+		this.spaceKey = undefined;
+		this.escKey = undefined;
+		this.shiftKey = undefined;
+		this.numberKeys = [];
+		this.solids = undefined;
+		this.lever = undefined;
+		this.focusRing = undefined;
 		this.interactables.length = 0;
 		this.autoZones.length = 0;
 		this.wordCells.length = 0;

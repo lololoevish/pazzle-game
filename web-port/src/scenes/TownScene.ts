@@ -47,6 +47,18 @@ export class TownScene extends Phaser.Scene {
 	}
 
 	public create(): void {
+		this.player = undefined;
+		this.cursors = undefined;
+		this.wasd = undefined;
+		this.interactKey = undefined;
+		this.spaceKey = undefined;
+		this.escKey = undefined;
+		this.shiftKey = undefined;
+		this.solids = undefined;
+		this.dialogue = undefined;
+		this.statusText = undefined;
+		this.focusRing = undefined;
+
 		const progress = loadProgress();
 		if (isExpeditionComplete(progress)) {
 			this.scene.start("VictoryScene");
