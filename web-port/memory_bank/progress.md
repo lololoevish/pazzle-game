@@ -16,4 +16,4 @@
 
 ## Контроль изменений
 
-- last_checked_commit: bd4a9638542528fc58b59636f3c0309d06ca0e31
+- last_checked_commit: 2026-05-19
