@@ -102,5 +102,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 2026-05-19
+- last_checked_commit: 21f132b
 - Последняя проверка: повторная синхронизация правил `AGENTS.md` и валидация `memory_bank/projectbrief.md` по таблице `## Project Deliverables`.
