@@ -28,4 +28,4 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 13db784cac8beea4e50ebddf6c06736e6cd99054
+- last_checked_commit: 4b51ca4bbc282609145e469fddf8131152d896cf
