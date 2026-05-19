@@ -64,6 +64,264 @@ export function queueManifestSprites(
 	}
 }
 
+const PIXEL_PATTERNS: Record<string, string[]> = {
+	player: [
+		"      ........      ",
+		"    ..GGGGGGGG..    ",
+		"   .GGGGGGGGGGGG.   ",
+		"  .GGDDDDDDDDDDGG.  ",
+		" .GDDWWDDDDDDWWDDG. ",
+		" .GDWWWWDDDDWWWWDDG. ",
+		" .GDWWDWDDDDWWDWDDG. ",
+		" .GDDDDDDDDDDDDDDDG. ",
+		"  .GDDDDDYDDDDDDDG.  ",
+		"   ..GDDYYYDDDDG..   ",
+		"    .PPPYYYYYPPP.    ",
+		"   .PPPPPYYYPPPPP.   ",
+		"  .PPPPPPPPPPPPPPP.  ",
+		"  .PPKKKKKKKKKKKPP.  ",
+		" .PPKKKKKKKKKKKKKPP. ",
+		" .PPKKKKKKKKKKKKKPP. ",
+		" .PPKKKKKKKKKKKKKPP. ",
+		" .PPKKKKKKKKKKKKKPP. ",
+		"  .PPKKKKKKKKKKKPP.  ",
+		"   .PPKKKKKKKKKPP.   ",
+		"    .PPKKKKKKKPP.    ",
+		"     .KKKKKKKKK.     ",
+		"      ..DD.DD..      ",
+		"        .. ..        ",
+	],
+	npcElder: [
+		"      ........      ",
+		"    ..WWWWWWWW..    ",
+		"   .WWWWWWWWWWWW.   ",
+		"  .WWSSWWWWWWSSWW.  ",
+		" .WWSSSSWWWWSSSSWW. ",
+		" .WWSS..WWWW..SSWW. ",
+		" .WWSSSSWWWWSSSSWW. ",
+		"  .WWWWWWWWWWWWWW.  ",
+		"   .WWWWWWWWWWWW.    ",
+		"   .EEEEWWWWEEEE.    ",
+		"  .EEEEEEWWEEEEEE.  ",
+		" .EEEEEEEEEEEEEEEE. ",
+		" .EEMMMMMMMMMMMMEE. ",
+		" .EEMMMMMMMMMMMMEE. ",
+		" .EEMMMMMMMMMMMMEE. ",
+		" .EEMMMMMMMMMMMMEE. ",
+		" .EEMMMMMMMMMMMMEE. ",
+		" .EEMMMMMMMMMMMMEE. ",
+		"  .EEMMMMMMMMMMEE.  ",
+		"   .EEMMMMMMMEE.    ",
+		"    .EEMMMMMMEE.    ",
+		"     .MMMMMMMM.     ",
+		"      ..EE.EE..     ",
+		"        .. ..       ",
+	],
+	npcMechanic: [
+		"      ........      ",
+		"    ..YYYYYYYY..    ",
+		"   .YYYYYYYYYYYY.   ",
+		"  .YYSSYYYYYYSSYY.  ",
+		" .YYSSSSYYYYSSSSYY. ",
+		" .YYSS..YYYY..SSYY. ",
+		" .YYSSSSYYYYSSSSYY. ",
+		"  .YYYYYYYYYYYYYY.  ",
+		"   .YYYYYYYYYYYY.    ",
+		"   .OOOOYYYYOOOO.    ",
+		"  .OOOOOOYYOOOOOO.  ",
+		" .OOOOOOOOOOOOOOOO. ",
+		" .OODDDDDDDDDDDDOO. ",
+		" .OODDDDDDDDDDDDOO. ",
+		" .OODDDDDDDDDDDDOO. ",
+		" .OODDDDDDDDDDDDOO. ",
+		" .OODDDDDDDDDDDDOO. ",
+		" .OODDDDDDDDDDDDOO. ",
+		"  .OODDDDDDDDDDOO.  ",
+		"   .OODDDDDDDDOO.    ",
+		"    .OODDDDDDOO.     ",
+		"     .DDDDDDDD.      ",
+		"      ..OO.OO..      ",
+		"        .. ..        ",
+	],
+	npcArchivist: [
+		"      ........      ",
+		"    ..VVVVVVVV..    ",
+		"   .VVVVVVVVVVVV.   ",
+		"  .VVSSVVVVVVSSVV.  ",
+		" .VVSSSSVVVVSSSSVV. ",
+		" .VVSS..VVVV..SSVV. ",
+		" .VVSSSSVVVVSSSSVV. ",
+		"  .VVVVVVVVVVVVVV.  ",
+		"   .VVVVVVVVVVVV.    ",
+		"   .KKKKVVVVKKKK.    ",
+		"  .KKKKKKVVKKKKKK.  ",
+		" .KKKKKKKKKKKKKKKK. ",
+		" .KKPPPPPPPPPPPPKK. ",
+		" .KKPPPPPPPPPPPPKK. ",
+		" .KKPPPPPPPPPPPPKK. ",
+		" .KKPPPPPPPPPPPPKK. ",
+		" .KKPPPPPPPPPPPPKK. ",
+		" .KKPPPPPPPPPPPPKK. ",
+		"  .KKPPPPPPPPPPKK.  ",
+		"   .KKPPPPPPPPKK.    ",
+		"    .KKPPPPPPKK.     ",
+		"     .PPPPPPPP.      ",
+		"      ..KK.KK..      ",
+		"        .. ..        ",
+	],
+	crystal: [
+		"      ....      ",
+		"     .WCC.      ",
+		"    .WCCCC.     ",
+		"   .WCCCCCC.    ",
+		"  .WCCCCCCCC.   ",
+		" .WCCCCCCCCCC.  ",
+		" .WCCCCCCCCCC.  ",
+		" .WCCCWWCCCCC.  ",
+		" .WCCWWWWCCCC.  ",
+		"  .WCCWWCCCC.   ",
+		"   .WCCCCCC.    ",
+		"    .WCCCC.     ",
+		"     .WCC.      ",
+		"      ....      ",
+		"                ",
+		"                ",
+	],
+	lever: [
+		"      ....      ",
+		"     .RRRR.     ",
+		"     .RWRR.     ",
+		"      .RR.      ",
+		"       MM       ",
+		"       MM       ",
+		"       MM       ",
+		"       MM       ",
+		"       MM       ",
+		"      .GG.      ",
+		"     .GGGG.     ",
+		"    .GGGGGG.    ",
+		"   .GGGGGGGG.   ",
+		"  .GGGGGGGGGG.  ",
+		"   ..........   ",
+		"                ",
+	],
+};
+
+const COLOR_MAPS: Record<string, Record<string, number>> = {
+	player: {
+		".": 0x0b132b,
+		G: 0x3a86c8,
+		D: 0x0f4c81,
+		W: 0xffffff,
+		P: 0x7c3aed,
+		K: 0x4c1d95,
+		Y: 0xf59e0b,
+	},
+	npcElder: {
+		".": 0x0b132b,
+		E: 0x047857,
+		M: 0x064e3b,
+		W: 0xf1f5f9,
+		S: 0xffe0b2,
+		B: 0x78350f,
+		Y: 0xfbbf24,
+		A: 0x60a5fa,
+	},
+	npcMechanic: {
+		".": 0x0b132b,
+		Y: 0xd97706,
+		O: 0x7c2d12,
+		D: 0x4b5563,
+		W: 0xffffff,
+		S: 0xffe0b2,
+	},
+	npcArchivist: {
+		".": 0x0b132b,
+		V: 0x312e81,
+		K: 0x1e1b4b,
+		P: 0xa78bfa,
+		W: 0xffffff,
+		S: 0xffe0b2,
+	},
+	crystal: {
+		".": 0x0b132b,
+		C: 0x22d3ee,
+		W: 0xffffff,
+	},
+	lever: {
+		".": 0x0b132b,
+		R: 0xef4444,
+		W: 0xffffff,
+		M: 0x9ca3af,
+		G: 0x374151,
+	},
+};
+
+function drawPixelPattern(
+	graphics: Phaser.GameObjects.Graphics,
+	pattern: string[],
+	colorMap: Record<string, number>,
+	pixelSize: number,
+	startX: number,
+	startY: number,
+): void {
+	for (let y = 0; y < pattern.length; y++) {
+		const row = pattern[y];
+		for (let x = 0; x < row.length; x++) {
+			const char = row[x];
+			if (char !== " " && colorMap[char] !== undefined) {
+				graphics.fillStyle(colorMap[char], 1);
+				graphics.fillRect(
+					startX + x * pixelSize,
+					startY + y * pixelSize,
+					pixelSize,
+					pixelSize,
+				);
+			}
+		}
+	}
+}
+
+// Вспомогательные функции для рисования честного пиксель-арта без сглаживания
+export function drawPixelCircle(
+	graphics: Phaser.GameObjects.Graphics,
+	cx: number,
+	cy: number,
+	r: number,
+	color: number,
+	alpha = 1,
+): void {
+	graphics.fillStyle(color, alpha);
+	const r2 = r * r;
+	for (let y = -r; y <= r; y += 2) {
+		for (let x = -r; x <= r; x += 2) {
+			if (x * x + y * y <= r2) {
+				graphics.fillRect(cx + x, cy + y, 2, 2);
+			}
+		}
+	}
+}
+
+export function addPixelNoise(
+	graphics: Phaser.GameObjects.Graphics,
+	x: number,
+	y: number,
+	w: number,
+	h: number,
+	color: number,
+	alpha = 0.15,
+	pixelSize = 2,
+): void {
+	graphics.fillStyle(color, alpha);
+	const density = 0.1;
+	const count = Math.floor((w * h * density) / (pixelSize * pixelSize));
+	for (let i = 0; i < count; i++) {
+		const px = Math.floor(Math.random() * (w / pixelSize)) * pixelSize;
+		const py = Math.floor(Math.random() * (h / pixelSize)) * pixelSize;
+		graphics.fillRect(x + px, y + py, pixelSize, pixelSize);
+	}
+}
+
 export function ensureSpriteTextures(scene: Phaser.Scene): void {
 	for (const key of SPRITE_KEYS) {
 		if (scene.textures.exists(key)) {
@@ -158,6 +416,8 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.fillGradientStyle(color, color, 0x000000, 0x000000, 1);
 			graphics.fillRect(0, 0, width, height);
 
+			addPixelNoise(graphics, 0, 0, width, height, 0xffffff, 0.04, 4);
+
 			// Текстура
 			if (key === "caveBackground") {
 				// Камни и трещины
@@ -173,10 +433,13 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 				}
 				graphics.lineStyle(1, 0xffffff, 0.05);
 				for (let i = 0; i < 200; i++) {
-					graphics.strokeCircle(
+					drawPixelCircle(
+						graphics,
 						Math.random() * width,
 						Math.random() * height,
 						Math.random() * 3,
+						0xffffff,
+						0.05,
 					);
 				}
 			} else {
@@ -201,59 +464,29 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			// Красивая градиентная тень под ногами
 			graphics.fillStyle(0x000000, 0.4);
 			graphics.fillEllipse(20, 44, 16, 5);
-			graphics.fillStyle(0x000000, 0.25);
-			graphics.fillEllipse(20, 44, 20, 7);
 
-			// Струящийся плащ за спиной
-			graphics.fillStyle(0x7c3aed, 0.95);
-			graphics.fillRoundedRect(2, 8, 36, 32, 6);
-			graphics.fillStyle(0x6d28d9, 1);
-			graphics.fillRect(6, 12, 28, 28);
-
-			// Тело с плавным градиентом
-			graphics.fillGradientStyle(color, color, 0x0284c7, 0x0c4a6e, 1);
-			graphics.fillRoundedRect(5, 3, 30, 38, 8);
-			graphics.lineStyle(1.5, 0xe0f2fe, 0.65);
-			graphics.strokeRoundedRect(5, 3, 30, 38, 8);
-
-			// Выразительные глаза с бликами и зрачками
-			graphics.fillStyle(0xffffff, 1);
-			graphics.fillCircle(13, 14, 4);
-			graphics.fillCircle(27, 14, 4);
-			graphics.fillStyle(0x0369a1, 1);
-			graphics.fillCircle(13, 14, 2);
-			graphics.fillCircle(27, 14, 2);
-			graphics.fillStyle(0xffffff, 1);
-			graphics.fillCircle(14, 13, 1.2);
-			graphics.fillCircle(28, 13, 1.2);
-
-			// Светящийся амулет на груди
-			graphics.fillStyle(0xfde68a, 1);
-			graphics.fillTriangle(20, 22, 17, 26, 23, 26);
-			graphics.fillStyle(0xf59e0b, 1);
-			graphics.fillTriangle(20, 30, 17, 26, 23, 26);
+			drawPixelPattern(
+				graphics,
+				PIXEL_PATTERNS.player,
+				COLOR_MAPS.player,
+				2,
+				0,
+				0,
+			);
 		} else if (key.startsWith("npc")) {
 			// Тень под ногами
 			graphics.fillStyle(0x000000, 0.4);
 			graphics.fillEllipse(20, 44, 16, 5);
 
 			if (key === "npcElder") {
-				// Староста в мудрой изумрудной мантии
-				graphics.fillGradientStyle(0x047857, 0x047857, 0x064e3b, 0x022c22, 1);
-				graphics.fillRoundedRect(4, 2, 32, 40, 10);
-				graphics.lineStyle(2, 0x10b981, 0.45);
-				graphics.strokeRoundedRect(4, 2, 32, 40, 10);
-
-				// Глаза (прищуренные, мудрые)
-				graphics.lineStyle(2.5, 0x1e293b, 0.8);
-				graphics.lineBetween(10, 15, 15, 14);
-				graphics.lineBetween(25, 14, 30, 15);
-
-				// Пышная прорисованная борода с локонами
-				graphics.fillStyle(0xf1f5f9, 0.95);
-				graphics.fillTriangle(8, 20, 32, 20, 20, 43);
-				graphics.fillStyle(0xe2e8f0, 0.85);
-				graphics.fillTriangle(14, 20, 26, 20, 20, 38);
+				drawPixelPattern(
+					graphics,
+					PIXEL_PATTERNS.npcElder,
+					COLOR_MAPS.npcElder,
+					2,
+					0,
+					0,
+				);
 
 				// Посох с сияющей сферой
 				graphics.fillStyle(0x78350f, 1);
@@ -265,30 +498,14 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 				graphics.fillStyle(0xffffff, 0.85);
 				graphics.fillCircle(33, -1, 2); // Блик на сфере
 			} else if (key === "npcMechanic") {
-				// Механик в оранжевой куртке и прочном жилете
-				graphics.fillGradientStyle(0xd97706, 0xd97706, 0x7c2d12, 0x451a03, 1);
-				graphics.fillRoundedRect(4, 2, 32, 40, 8);
-				graphics.lineStyle(1.5, 0xf59e0b, 0.5);
-				graphics.strokeRoundedRect(4, 2, 32, 40, 8);
-
-				// Защитный нагрудник
-				graphics.fillStyle(0x4b5563, 1);
-				graphics.fillRoundedRect(8, 22, 24, 18, 4);
-
-				// Глаза и защитные очки на лбу
-				graphics.fillStyle(0xffffff, 1);
-				graphics.fillCircle(13, 15, 3.5);
-				graphics.fillCircle(27, 15, 3.5);
-				graphics.fillStyle(0x000000, 1);
-				graphics.fillCircle(13, 15, 1.5);
-				graphics.fillCircle(27, 15, 1.5);
-
-				// Большие очки на лбу
-				graphics.fillStyle(0x1e293b, 0.95);
-				graphics.fillRect(6, 6, 28, 4);
-				graphics.fillStyle(0xfacc15, 0.88);
-				graphics.fillCircle(11, 8, 4);
-				graphics.fillCircle(29, 8, 4);
+				drawPixelPattern(
+					graphics,
+					PIXEL_PATTERNS.npcMechanic,
+					COLOR_MAPS.npcMechanic,
+					2,
+					0,
+					0,
+				);
 
 				// Серебряный гаечный ключ за плечом
 				graphics.fillStyle(0x9ca3af, 1);
@@ -298,29 +515,14 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 				graphics.fillStyle(0x000000, 1);
 				graphics.fillCircle(33.5, 9, 1.5); // Отверстие ключа
 			} else if (key === "npcArchivist") {
-				// Архивариус в мистической темной мантии со звездами
-				graphics.fillGradientStyle(0x312e81, 0x312e81, 0x1e1b4b, 0x090514, 1);
-				graphics.fillRoundedRect(4, 2, 32, 40, 9);
-				graphics.lineStyle(2, 0xa78bfa, 0.55);
-				graphics.strokeRoundedRect(4, 2, 32, 40, 9);
-
-				// Золотая вышивка
-				graphics.lineStyle(1.5, 0xfbbf24, 0.7);
-				graphics.lineBetween(8, 22, 32, 22);
-				graphics.lineBetween(8, 32, 32, 32);
-
-				// Глаза и золотой монокль
-				graphics.fillStyle(0xffffff, 1);
-				graphics.fillCircle(13, 15, 3.5);
-				graphics.fillCircle(27, 15, 3.5);
-				graphics.fillStyle(0x000000, 1);
-				graphics.fillCircle(13, 15, 1.5);
-				graphics.fillCircle(27, 15, 1.5);
-
-				// Монокль
-				graphics.lineStyle(1.5, 0xf59e0b, 1);
-				graphics.strokeCircle(13, 15, 5);
-				graphics.lineBetween(8, 15, 4, 24); // Цепочка монокля
+				drawPixelPattern(
+					graphics,
+					PIXEL_PATTERNS.npcArchivist,
+					COLOR_MAPS.npcArchivist,
+					2,
+					0,
+					0,
+				);
 
 				// Левитирующая открытая книга
 				graphics.fillStyle(0x4c1d95, 0.9);
@@ -335,87 +537,27 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.fillStyle(0x000000, 0.25);
 			graphics.fillEllipse(16, 28, 13, 4.5);
 
-			// Многогранный 3D кристалл
-			// 1. Левая грань (темная)
-			graphics.fillStyle(0x0891b2, 0.95);
-			graphics.beginPath();
-			graphics.moveTo(16, 1);
-			graphics.lineTo(4, 16);
-			graphics.lineTo(16, 31);
-			graphics.closePath();
-			graphics.fill();
-
-			// 2. Правая грань (светлая)
-			graphics.fillStyle(0x22d3ee, 0.95);
-			graphics.beginPath();
-			graphics.moveTo(16, 1);
-			graphics.lineTo(28, 16);
-			graphics.lineTo(16, 31);
-			graphics.closePath();
-			graphics.fill();
-
-			// 3. Центральное светящееся ядро
-			graphics.fillStyle(0xecfeff, 0.7);
-			graphics.beginPath();
-			graphics.moveTo(16, 4);
-			graphics.lineTo(10, 16);
-			graphics.lineTo(16, 28);
-			graphics.lineTo(22, 16);
-			graphics.closePath();
-			graphics.fill();
-
-			// 4. Ослепительные белые грани и блик
-			graphics.lineStyle(1.5, 0xffffff, 0.85);
-			graphics.beginPath();
-			graphics.moveTo(16, 1);
-			graphics.lineTo(4, 16);
-			graphics.lineTo(16, 31);
-			graphics.lineTo(28, 16);
-			graphics.closePath();
-			graphics.strokePath();
-
-			graphics.lineStyle(1.2, 0xffffff, 0.6);
-			graphics.lineBetween(16, 1, 16, 31);
-			graphics.lineBetween(4, 16, 28, 16);
-
-			// 5. Искры вокруг
-			graphics.fillStyle(0xffffff, 0.8);
-			graphics.fillRect(4, 4, 2, 2);
-			graphics.fillRect(26, 6, 2, 2);
-			graphics.fillRect(5, 25, 2, 2);
-			graphics.fillRect(25, 24, 2, 2);
+			drawPixelPattern(
+				graphics,
+				PIXEL_PATTERNS.crystal,
+				COLOR_MAPS.crystal,
+				2,
+				0,
+				0,
+			);
 		} else if (key === "lever") {
 			// Тень
 			graphics.fillStyle(0x000000, 0.35);
 			graphics.fillEllipse(20, 44, 19, 6.5);
 
-			// Каменный резной постамент
-			graphics.fillGradientStyle(0x374151, 0x374151, 0x1f2937, 0x111827, 1);
-			graphics.fillRoundedRect(3, 33, 34, 13, 5);
-			graphics.lineStyle(1.5, 0x4b5563, 0.8);
-			graphics.strokeRoundedRect(3, 33, 34, 13, 5);
-
-			// Рунический символ на постаменте
-			graphics.lineStyle(1, 0xef4444, 0.85);
-			graphics.strokeCircle(20, 39, 3.5);
-
-			// Металлическая ось
-			graphics.fillStyle(0x9ca3af, 1);
-			graphics.fillCircle(20, 33, 6);
-
-			// Прочный рычаг
-			graphics.lineStyle(4.5, 0x4b5563, 1);
-			graphics.lineBetween(20, 33, 20, 11);
-			graphics.lineStyle(2, 0xd1d5db, 0.8);
-			graphics.lineBetween(20, 32, 20, 12);
-
-			// Светящийся набалдашник с красивой аурой
-			graphics.fillStyle(0xef4444, 0.22);
-			graphics.fillCircle(20, 9, 13); // Аура свечения
-			graphics.fillStyle(0xef4444, 1);
-			graphics.fillCircle(20, 9, 7.5); // Сам шар
-			graphics.fillStyle(0xffffff, 0.8);
-			graphics.fillCircle(17.5, 6.5, 2.5); // Четкий блик
+			drawPixelPattern(
+				graphics,
+				PIXEL_PATTERNS.lever,
+				COLOR_MAPS.lever,
+				2,
+				0,
+				0,
+			);
 		} else if (key === "caveEntrance") {
 			// Величественная каменная арка
 			graphics.fillStyle(0x0f172a, 1); // Темный зев пещеры

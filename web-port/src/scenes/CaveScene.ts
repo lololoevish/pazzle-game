@@ -2027,7 +2027,13 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private getPuzzleType(): PuzzleType {
-		return PUZZLE_TYPES[(this.level - 1) % PUZZLE_TYPES.length];
+		if (this.level <= 12) {
+			return PUZZLE_TYPES[this.level - 1];
+		}
+		// Перетасованный порядок для второй половины (13-24), чтобы головоломки не повторялись линейно
+		const SHUFFLED_ORDER: number[] = [4, 0, 7, 1, 10, 2, 8, 3, 11, 5, 9, 6];
+		const index = SHUFFLED_ORDER[(this.level - 13) % 12];
+		return PUZZLE_TYPES[index];
 	}
 
 	private approach(current: number, target: number, amount: number): number {
