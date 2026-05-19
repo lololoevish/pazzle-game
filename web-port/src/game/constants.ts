@@ -1,6 +1,6 @@
 export const GAME_WIDTH = 800;
 export const GAME_HEIGHT = 600;
-export const LEVEL_COUNT = 24;
+export const LEVEL_COUNT = 36;
 export const SAVE_KEY = "adventure-puzzle-game-web-save-v1";
 
 export const PLAYER_CONFIG = {
@@ -38,6 +38,8 @@ export const PUZZLE_TYPES = [
 	"memory_advanced",
 	"cave_song",
 	"epic_finale",
+	"math_puzzle",
+	"simon_says",
 ] as const;
 
 export type PuzzleType = (typeof PUZZLE_TYPES)[number];

@@ -189,6 +189,9 @@ export class CaveScene extends Phaser.Scene {
 	private isDashing = false;
 	private dashCooldown = 0;
 	private jumpCount = 0;
+	private mathQuestion = "";
+	private mathAnswer = 0;
+	private mathOptions: number[] = [];
 	private readonly foundWords = new Set<string>();
 	private wordStart?: WordCell;
 	private rhythmSequence: number[] = [];
@@ -317,6 +320,24 @@ export class CaveScene extends Phaser.Scene {
 		const shuffledRiddles = this.shuffle(ALL_RIDDLES);
 		this.riddlesList = shuffledRiddles.slice(0, 3);
 		this.riddleAnswers = this.riddlesList.map((r) => r.answer);
+
+		// Инициализация Магической арифметики
+		const num1 = Phaser.Math.Between(3, 12);
+		const num2 = Phaser.Math.Between(2, 9);
+		const operation = Phaser.Math.Between(0, 2); // 0: +, 1: -, 2: *
+		if (operation === 0) {
+			this.mathQuestion = `${num1} + ${num2} = ?`;
+			this.mathAnswer = num1 + num2;
+		} else if (operation === 1) {
+			this.mathQuestion = `${num1 + num2} - ? = ${num1}`;
+			this.mathAnswer = num2;
+		} else {
+			this.mathQuestion = `? * ${num2} = ${num1 * num2}`;
+			this.mathAnswer = num1;
+		}
+		const wrong1 = this.mathAnswer + Phaser.Math.Between(1, 3);
+		const wrong2 = Math.max(1, this.mathAnswer - Phaser.Math.Between(1, 3));
+		this.mathOptions = this.shuffle([this.mathAnswer, wrong1, wrong2]);
 	}
 
 	public create(): void {
@@ -1180,6 +1201,12 @@ export class CaveScene extends Phaser.Scene {
 			case "epic_finale":
 				this.createEpicFinalePuzzle();
 				break;
+			case "math_puzzle":
+				this.createMathPuzzle();
+				break;
+			case "simon_says":
+				this.createSimonSaysPuzzle();
+				break;
 		}
 	}
 
@@ -1986,11 +2013,22 @@ export class CaveScene extends Phaser.Scene {
 		this.refreshStatus(
 			`Раунд ${this.rhythmRound}/4: запомни подсветку кнопок, потом подойди к ним героем.`,
 		);
+		const colors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b];
 		for (const [index, buttonIndex] of this.rhythmSequence.entries()) {
 			this.time.delayedCall(450 + index * 520, () => {
 				const button = this.rhythmButtons[buttonIndex];
-				button?.setAlpha(1);
-				this.time.delayedCall(260, () => button?.setAlpha(0.45));
+				if (button) {
+					button.setAlpha(1);
+					if ("texture" in button && button.texture.key === "crystal") {
+						(button as Phaser.GameObjects.Sprite).setTint(colors[buttonIndex]);
+						this.time.delayedCall(260, () => {
+							button.setAlpha(0.7);
+							(button as Phaser.GameObjects.Sprite).setTint(0x475569);
+						});
+					} else {
+						this.time.delayedCall(260, () => button.setAlpha(0.45));
+					}
+				}
 			});
 		}
 		this.time.delayedCall(700 + this.rhythmSequence.length * 520, () => {
@@ -2006,6 +2044,23 @@ export class CaveScene extends Phaser.Scene {
 			this.refreshStatus("Подожди, пока паттерн закончится.");
 			return;
 		}
+
+		// Подсвечиваем нажатый кристалл/кнопку
+		const colors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b];
+		const button = this.rhythmButtons[index];
+		if (button) {
+			button.setAlpha(1);
+			if ("texture" in button && button.texture.key === "crystal") {
+				(button as Phaser.GameObjects.Sprite).setTint(colors[index]);
+				this.time.delayedCall(200, () => {
+					button.setAlpha(0.7);
+					(button as Phaser.GameObjects.Sprite).setTint(0x475569);
+				});
+			} else {
+				this.time.delayedCall(200, () => button.setAlpha(0.45));
+			}
+		}
+
 		if (index !== this.rhythmSequence[this.rhythmInputIndex]) {
 			this.refreshStatus("Ошибка ритма. Раунд начался заново.");
 			this.startRhythmRound();
@@ -2222,6 +2277,8 @@ export class CaveScene extends Phaser.Scene {
 			memory_advanced: "Advanced Memory",
 			cave_song: "Песнь пещер",
 			epic_finale: "Эпический финал",
+			math_puzzle: "Магическая арифметика",
+			simon_says: "Световые кристаллы",
 		};
 		return names[this.getPuzzleType()];
 	}
@@ -2252,16 +2309,22 @@ export class CaveScene extends Phaser.Scene {
 				return "Песнь пещер: нажимай руны в порядке мелодии.";
 			case "epic_finale":
 				return "Эпический финал: заверши комбинированное испытание рун.";
+			case "math_puzzle":
+				return "Арифметика: реши уравнение на стене и встань на соответствующую плиту.";
+			case "simon_says":
+				return "Кристаллы: повтори последовательность вспышек кристаллов.";
 		}
 	}
 
 	private getPuzzleType(): PuzzleType {
-		if (this.level <= 12) {
+		if (this.level <= 14) {
 			return PUZZLE_TYPES[this.level - 1];
 		}
-		// Перетасованный порядок для второй половины (13-24), чтобы головоломки не повторялись линейно
-		const SHUFFLED_ORDER: number[] = [4, 0, 7, 1, 10, 2, 8, 3, 11, 5, 9, 6];
-		const index = SHUFFLED_ORDER[(this.level - 13) % 12];
+		// Перетасованная нелинейная последовательность для уровней 15-36, чтобы головоломки не повторялись линейно
+		const SHUFFLED_ORDER: number[] = [
+			4, 0, 7, 1, 10, 2, 8, 3, 11, 5, 9, 6, 12, 13, 5, 8, 2, 11, 0, 13, 12, 7,
+		];
+		const index = SHUFFLED_ORDER[(this.level - 15) % SHUFFLED_ORDER.length];
 		return PUZZLE_TYPES[index];
 	}
 
@@ -2278,6 +2341,95 @@ export class CaveScene extends Phaser.Scene {
 			[result[index], result[swapIndex]] = [result[swapIndex], result[index]];
 		}
 		return result;
+	}
+
+	private createMathPuzzle(): void {
+		this.add.text(174, 212, "Магическая арифметика: найди число на плите.", {
+			fontFamily: "Arial",
+			fontSize: "18px",
+			color: "#f8fafc",
+		});
+		this.add.text(174, 246, `Реши уравнение: ${this.mathQuestion}`, {
+			fontFamily: "Arial",
+			fontSize: "24px",
+			color: this.theme.labelColor,
+		});
+		for (const [index, option] of this.mathOptions.entries()) {
+			const x = 240 + index * 160;
+			const y = 370;
+			const tile = this.add
+				.rectangle(x, y, 92, 64, 0x1e293b, 0.95)
+				.setStrokeStyle(2, this.theme.accent);
+			this.add
+				.text(x, y, String(option), {
+					fontFamily: "Arial Black",
+					fontSize: "22px",
+					color: "#ffffff",
+				})
+				.setOrigin(0.5);
+			this.interactables.push({
+				name: `Число ${option}`,
+				object: tile,
+				action: () => this.pressMathTile(option, tile),
+			});
+		}
+	}
+
+	private pressMathTile(val: number, tile: Phaser.GameObjects.Rectangle): void {
+		if (this.solved) return;
+		if (val === this.mathAnswer) {
+			tile.setFillStyle(0x22c55e, 1);
+			this.cameras.main.shake(100, 0.003);
+			this.markSolved("Уравнение решено! Опусти рычаг.");
+		} else {
+			tile.setFillStyle(0xef4444, 1);
+			this.cameras.main.shake(150, 0.005);
+			this.refreshStatus("Неверно! Попробуй другую плиту.");
+			this.time.delayedCall(800, () => {
+				tile.setFillStyle(0x1e293b, 0.95);
+			});
+		}
+	}
+
+	private createSimonSaysPuzzle(): void {
+		this.rhythmRound = 1;
+		this.rhythmButtons.length = 0;
+		this.startRhythmRound();
+
+		this.add.text(174, 212, "Световые кристаллы: повтори вспышки кристаллов.", {
+			fontFamily: "Arial",
+			fontSize: "18px",
+			color: "#f8fafc",
+		});
+
+		const names = ["Красный", "Синий", "Зеленый", "Желтый"];
+		for (let i = 0; i < 4; i++) {
+			const x = 200 + i * 130;
+			const y = 350;
+
+			const crystal = this.add
+				.sprite(x, y, "crystal")
+				.setDisplaySize(64, 64)
+				.setTint(0x475569) // Потухший
+				.setAlpha(0.7);
+
+			this.rhythmButtons.push(crystal);
+			this.add
+				.text(x, y + 42, names[i], {
+					fontFamily: "Arial",
+					fontSize: "14px",
+					color: "#ffffff",
+				})
+				.setOrigin(0.5);
+
+			this.interactables.push({
+				name: `${names[i]} кристалл`,
+				object: crystal,
+				action: () => this.pressRhythmButton(i),
+			});
+		}
+
+		this.time.delayedCall(1000, () => this.showRhythmPattern());
 	}
 
 	private spawnStepParticle(x: number, y: number): void {
