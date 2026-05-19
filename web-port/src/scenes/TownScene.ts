@@ -295,6 +295,10 @@ export class TownScene extends Phaser.Scene {
 			})
 			.setOrigin(0.5);
 		this.interactables.push({ name, body: npc, action });
+
+		const staticBody = npc.body as Phaser.Physics.Arcade.StaticBody;
+		staticBody.setCircle(14, 8, 24);
+		this.solids?.add(npc);
 	}
 
 	private createDecorations(): void {
@@ -377,9 +381,9 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		for (const item of [
-			{ x: 200, y: 332, scale: 0.86 },
-			{ x: 400, y: 232, scale: 0.9 },
-			{ x: 600, y: 332, scale: 0.86 },
+			{ x: 200, y: 314, scale: 0.55 },
+			{ x: 400, y: 214, scale: 0.55 },
+			{ x: 600, y: 314, scale: 0.55 },
 			{ x: 400, y: 505, scale: 1.05 },
 		]) {
 			this.add

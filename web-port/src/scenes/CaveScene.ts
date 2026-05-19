@@ -274,14 +274,14 @@ export class CaveScene extends Phaser.Scene {
 			fontFamily: "Arial",
 			fontSize: "18px",
 			color: "#f8fafc",
-			wordWrap: { width: 760 },
+			wordWrap: { width: 616 },
 			lineSpacing: 5,
 		});
 		this.statusText = this.add.text(92, 468, "", {
 			fontFamily: "Arial",
 			fontSize: "17px",
 			color: "#fde68a",
-			wordWrap: { width: 760 },
+			wordWrap: { width: 616 },
 		});
 		this.focusRing = this.add
 			.circle(0, 0, 36)
@@ -925,6 +925,10 @@ export class CaveScene extends Phaser.Scene {
 		this.lever = this.physics.add
 			.staticSprite(700, 468, "lever")
 			.setDisplaySize(42, 50);
+
+		const staticBody = this.lever.body as Phaser.Physics.Arcade.StaticBody;
+		staticBody.setCircle(12, 9, 26);
+		this.solids?.add(this.lever);
 
 		this.tweens.add({
 			targets: this.lever,
