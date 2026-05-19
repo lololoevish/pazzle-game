@@ -825,5 +825,10 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 
 		graphics.generateTexture(key, width, height);
 		graphics.destroy();
+
+		const texture = scene.textures.get(key);
+		if (texture) {
+			texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+		}
 	}
 }

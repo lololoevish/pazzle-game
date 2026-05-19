@@ -434,7 +434,7 @@ export class CaveScene extends Phaser.Scene {
 			return this.getMazeCellCenter(MAZE_START_COL, MAZE_START_ROW);
 		}
 
-		return { x: 92, y: 468 };
+		return { x: 140, y: 468 };
 	}
 
 	private updatePlatformerMovement(dt: number): void {
