@@ -9,6 +9,33 @@ export class MenuScene extends Phaser.Scene {
 
 	public create(): void {
 		this.cameras.main.setBackgroundColor("#0f172a");
+		this.add.image(480, 270, "caveBackground").setAlpha(0.35).setTint(0x312e81);
+		this.add
+			.sprite(480, 196, "magicCircle")
+			.setTint(0xa78bfa)
+			.setScale(3.2)
+			.setAlpha(0.13);
+		for (const item of [
+			{ x: 180, y: 82, scale: 0.72 },
+			{ x: 740, y: 92, scale: 0.62 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "softCloud")
+				.setScale(item.scale)
+				.setAlpha(0.22);
+		}
+		for (const item of [
+			{ x: 160, y: 120, scale: 0.8 },
+			{ x: 800, y: 120, scale: 0.8 },
+			{ x: 240, y: 420, scale: 0.65 },
+			{ x: 720, y: 420, scale: 0.65 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "moonLantern")
+				.setScale(item.scale)
+				.setAlpha(0.72);
+		}
+
 		addTitle(this, "Adventure Puzzle Game", 110);
 		this.add
 			.text(480, 155, "Web-port без GameMaker", {

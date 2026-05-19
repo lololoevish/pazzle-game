@@ -23,6 +23,14 @@ export const SPRITE_KEYS = [
 	"stonePebble",
 	"torchGlow",
 	"starSparkle",
+	"townBanner",
+	"moonLantern",
+	"caveVine",
+	"magicCircle",
+	"softCloud",
+	"townPath",
+	"glowMushroom",
+	"caveCrystalCluster",
 ] as const;
 
 export type SpriteKey = (typeof SPRITE_KEYS)[number];

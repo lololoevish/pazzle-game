@@ -543,6 +543,74 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createSceneDecorations(): void {
+		for (const item of [
+			{ x: 180, y: 416, scale: 0.65, tint: 0xfb7185 },
+			{ x: 782, y: 414, scale: 0.55, tint: 0xc084fc },
+			{ x: 700, y: 246, scale: 0.44, tint: 0x67e8f9 },
+		]) {
+			const mushroom = this.add
+				.sprite(item.x, item.y, "glowMushroom")
+				.setTint(item.tint)
+				.setScale(item.scale)
+				.setAlpha(0.72)
+				.setDepth(4);
+
+			this.tweens.add({
+				targets: mushroom,
+				alpha: 1,
+				scale: item.scale * 1.08,
+				duration: Phaser.Math.Between(900, 1500),
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+		}
+
+		for (const item of [
+			{ x: 248, y: 118, scale: 0.52 },
+			{ x: 636, y: 118, scale: 0.46 },
+			{ x: 558, y: 452, scale: 0.5 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "caveCrystalCluster")
+				.setTint(this.theme.accent)
+				.setScale(item.scale)
+				.setAlpha(0.55)
+				.setDepth(4);
+		}
+
+		for (const item of [
+			{ x: 112, y: 206, scale: 0.68 },
+			{ x: 852, y: 212, scale: 0.72 },
+			{ x: 248, y: 402, scale: 0.55 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "caveVine")
+				.setTint(this.theme.accent)
+				.setScale(item.scale)
+				.setAlpha(0.42)
+				.setDepth(3);
+		}
+
+		for (const item of [
+			{ x: 480, y: 284, scale: 3.8, alpha: 0.06 },
+			{ x: 812, y: 382, scale: 1.05, alpha: 0.2 },
+		]) {
+			const circle = this.add
+				.sprite(item.x, item.y, "magicCircle")
+				.setTint(this.theme.accent)
+				.setScale(item.scale)
+				.setAlpha(item.alpha)
+				.setDepth(1);
+
+			this.tweens.add({
+				targets: circle,
+				angle: 360,
+				duration: 22000,
+				repeat: -1,
+			});
+		}
+
 		const pebbles = [
 			{ x: 150, y: 430, scale: 0.7 },
 			{ x: 258, y: 150, scale: 0.55 },

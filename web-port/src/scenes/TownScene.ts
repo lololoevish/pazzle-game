@@ -260,6 +260,98 @@ export class TownScene extends Phaser.Scene {
 	}
 
 	private createDecorations(): void {
+		for (const item of [
+			{ x: 190, y: 76, scale: 0.72, alpha: 0.28 },
+			{ x: 520, y: 94, scale: 0.58, alpha: 0.2 },
+			{ x: 790, y: 72, scale: 0.66, alpha: 0.24 },
+		]) {
+			const cloud = this.add
+				.sprite(item.x, item.y, "softCloud")
+				.setScale(item.scale)
+				.setAlpha(item.alpha)
+				.setDepth(1);
+
+			this.tweens.add({
+				targets: cloud,
+				x: cloud.x + 18,
+				duration: 6200,
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+		}
+
+		for (const item of [
+			{ x: 260, y: 345, scaleX: 1.8, scaleY: 0.72, angle: -4 },
+			{ x: 480, y: 402, scaleX: 2.1, scaleY: 0.78, angle: 0 },
+			{ x: 700, y: 345, scaleX: 1.8, scaleY: 0.72, angle: 4 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "townPath")
+				.setScale(item.scaleX, item.scaleY)
+				.setAngle(item.angle)
+				.setAlpha(0.36)
+				.setDepth(1);
+		}
+
+		for (const item of [
+			{ x: 270, y: 92, scale: 0.8, tint: 0xc4b5fd },
+			{ x: 690, y: 92, scale: 0.8, tint: 0xfde68a },
+		]) {
+			const banner = this.add
+				.sprite(item.x, item.y, "townBanner")
+				.setTint(item.tint)
+				.setScale(item.scale)
+				.setAlpha(0.82)
+				.setDepth(2);
+
+			this.tweens.add({
+				targets: banner,
+				y: banner.y + 4,
+				duration: 1700,
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+		}
+
+		for (const item of [
+			{ x: 96, y: 92, scale: 0.72 },
+			{ x: 864, y: 92, scale: 0.72 },
+			{ x: 96, y: 448, scale: 0.62 },
+			{ x: 864, y: 448, scale: 0.62 },
+		]) {
+			const lantern = this.add
+				.sprite(item.x, item.y, "moonLantern")
+				.setScale(item.scale)
+				.setAlpha(0.78)
+				.setDepth(3);
+
+			this.tweens.add({
+				targets: lantern,
+				alpha: 1,
+				scale: item.scale * 1.06,
+				duration: 1200,
+				yoyo: true,
+				repeat: -1,
+				ease: "Sine.easeInOut",
+			});
+		}
+
+		for (const item of [
+			{ x: 220, y: 222, scale: 0.86 },
+			{ x: 480, y: 202, scale: 0.9 },
+			{ x: 740, y: 222, scale: 0.86 },
+			{ x: 480, y: 454, scale: 1.05 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "magicCircle")
+				.setScale(item.scale)
+				.setTint(0xa7f3d0)
+				.setAlpha(0.16)
+				.setDepth(1);
+		}
+
 		const grass = [
 			{ x: 138, y: 132, scale: 0.9 },
 			{ x: 292, y: 408, scale: 1.1 },

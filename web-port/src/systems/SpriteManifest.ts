@@ -23,6 +23,14 @@ const PLACEHOLDER_COLORS: Record<SpriteKey, number> = {
 	stonePebble: 0x94a3b8,
 	torchGlow: 0xf97316,
 	starSparkle: 0xfef3c7,
+	townBanner: 0x7c3aed,
+	moonLantern: 0xfef9c3,
+	caveVine: 0x34d399,
+	magicCircle: 0xa78bfa,
+	softCloud: 0xe0f2fe,
+	townPath: 0xb45309,
+	glowMushroom: 0xfb7185,
+	caveCrystalCluster: 0x67e8f9,
 };
 
 export async function fetchSpriteManifest(): Promise<SpriteManifest> {
@@ -100,6 +108,30 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 		} else if (key === "starSparkle") {
 			width = 24;
 			height = 24;
+		} else if (key === "townBanner") {
+			width = 96;
+			height = 72;
+		} else if (key === "moonLantern") {
+			width = 48;
+			height = 72;
+		} else if (key === "caveVine") {
+			width = 44;
+			height = 96;
+		} else if (key === "magicCircle") {
+			width = 96;
+			height = 96;
+		} else if (key === "softCloud") {
+			width = 140;
+			height = 64;
+		} else if (key === "townPath") {
+			width = 128;
+			height = 64;
+		} else if (key === "glowMushroom") {
+			width = 48;
+			height = 48;
+		} else if (key === "caveCrystalCluster") {
+			width = 72;
+			height = 56;
 		}
 
 		const graphics = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -369,6 +401,134 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 			graphics.lineBetween(19, 5, 5, 19);
 			graphics.fillStyle(color, 0.6);
 			graphics.fillCircle(12, 12, 3);
+		} else if (key === "townBanner") {
+			// Тканевый баннер для оживления хаба.
+			graphics.fillStyle(0x000000, 0.2);
+			graphics.fillEllipse(48, 68, 70, 8);
+			graphics.fillGradientStyle(0x8b5cf6, 0x6d28d9, 0x4c1d95, 0x312e81, 1);
+			graphics.fillRoundedRect(8, 6, 80, 52, 8);
+			graphics.fillTriangle(8, 48, 8, 70, 28, 56);
+			graphics.fillTriangle(88, 48, 88, 70, 68, 56);
+			graphics.lineStyle(3, 0xfef3c7, 0.85);
+			graphics.lineBetween(14, 16, 82, 16);
+			graphics.lineStyle(2, 0xfbbf24, 0.9);
+			graphics.strokeCircle(48, 34, 12);
+			graphics.lineBetween(48, 20, 48, 48);
+			graphics.lineBetween(34, 34, 62, 34);
+			graphics.fillStyle(0xffffff, 0.18);
+			graphics.fillRoundedRect(14, 10, 28, 42, 6);
+		} else if (key === "moonLantern") {
+			// Тёплый подвесной фонарь со свечением.
+			graphics.fillStyle(0xfef3c7, 0.12);
+			graphics.fillCircle(24, 42, 28);
+			graphics.lineStyle(2, 0x78350f, 0.8);
+			graphics.lineBetween(24, 0, 24, 14);
+			graphics.fillStyle(0x92400e, 1);
+			graphics.fillRoundedRect(13, 15, 22, 34, 6);
+			graphics.fillGradientStyle(0xfef9c3, 0xfacc15, 0xfb923c, 0xf97316, 1);
+			graphics.fillEllipse(24, 32, 26, 30);
+			graphics.lineStyle(2, 0x451a03, 0.6);
+			graphics.strokeEllipse(24, 32, 26, 30);
+			graphics.fillStyle(0xffffff, 0.35);
+			graphics.fillEllipse(18, 25, 7, 10);
+		} else if (key === "caveVine") {
+			// Светящаяся лиана/корень для пещер.
+			graphics.lineStyle(4, 0x14532d, 0.9);
+			graphics.beginPath();
+			graphics.moveTo(22, 0);
+			graphics.lineTo(18, 18);
+			graphics.lineTo(26, 38);
+			graphics.lineTo(16, 62);
+			graphics.lineTo(24, 96);
+			graphics.strokePath();
+			for (const leaf of [
+				{ x: 14, y: 24 },
+				{ x: 30, y: 42 },
+				{ x: 12, y: 64 },
+				{ x: 31, y: 78 },
+			]) {
+				graphics.fillStyle(color, 0.78);
+				graphics.fillEllipse(leaf.x, leaf.y, 16, 8);
+				graphics.fillStyle(0xecfccb, 0.5);
+				graphics.fillCircle(leaf.x, leaf.y, 2);
+			}
+		} else if (key === "magicCircle") {
+			// Ритуальный круг для меню, победы и ключевых объектов.
+			graphics.fillStyle(color, 0.08);
+			graphics.fillCircle(48, 48, 46);
+			graphics.lineStyle(3, color, 0.85);
+			graphics.strokeCircle(48, 48, 38);
+			graphics.lineStyle(2, 0xffffff, 0.45);
+			graphics.strokeCircle(48, 48, 24);
+			for (let i = 0; i < 8; i++) {
+				const angle = (i / 8) * Math.PI * 2;
+				const innerX = 48 + Math.cos(angle) * 18;
+				const innerY = 48 + Math.sin(angle) * 18;
+				const outerX = 48 + Math.cos(angle) * 38;
+				const outerY = 48 + Math.sin(angle) * 38;
+				graphics.lineBetween(innerX, innerY, outerX, outerY);
+			}
+			graphics.fillStyle(0xffffff, 0.8);
+			graphics.fillCircle(48, 48, 4);
+		} else if (key === "softCloud") {
+			// Мягкое облако/дымка для параллакса и глубины.
+			graphics.fillStyle(color, 0.12);
+			graphics.fillEllipse(70, 42, 120, 28);
+			graphics.fillStyle(color, 0.32);
+			graphics.fillEllipse(42, 34, 54, 26);
+			graphics.fillEllipse(72, 28, 70, 34);
+			graphics.fillEllipse(104, 36, 58, 28);
+			graphics.fillStyle(0xffffff, 0.18);
+			graphics.fillEllipse(62, 24, 42, 14);
+		} else if (key === "townPath") {
+			// Неровная дорожная плитка для хаба.
+			graphics.fillGradientStyle(0x92400e, 0x78350f, color, 0x451a03, 1);
+			graphics.fillRoundedRect(0, 10, width, 44, 12);
+			graphics.lineStyle(2, 0xfbbf24, 0.18);
+			graphics.lineBetween(8, 24, 120, 18);
+			graphics.lineBetween(10, 42, 118, 48);
+			graphics.lineStyle(1, 0x000000, 0.25);
+			for (let i = 0; i < 7; i++) {
+				const x = 12 + i * 18;
+				graphics.strokeRoundedRect(x, 18 + (i % 2) * 8, 16, 18, 4);
+			}
+		} else if (key === "glowMushroom") {
+			// Светящийся гриб для пещерной биолюминесценции.
+			graphics.fillStyle(color, 0.12);
+			graphics.fillCircle(24, 24, 24);
+			graphics.fillStyle(0xe5e7eb, 0.9);
+			graphics.fillRoundedRect(19, 22, 10, 22, 5);
+			graphics.fillGradientStyle(color, 0xfda4af, 0xbe123c, 0x881337, 1);
+			graphics.fillEllipse(24, 20, 38, 24);
+			graphics.fillStyle(0xffffff, 0.75);
+			graphics.fillCircle(14, 17, 3);
+			graphics.fillCircle(24, 12, 2);
+			graphics.fillCircle(34, 19, 3);
+		} else if (key === "caveCrystalCluster") {
+			// Кластер кристаллов для стен и платформ.
+			graphics.fillStyle(0x000000, 0.2);
+			graphics.fillEllipse(36, 50, 54, 8);
+			for (const shard of [
+				{ x: 18, y: 38, h: 30, w: 12 },
+				{ x: 34, y: 30, h: 42, w: 16 },
+				{ x: 52, y: 40, h: 28, w: 12 },
+			]) {
+				graphics.fillStyle(color, 0.86);
+				graphics.beginPath();
+				graphics.moveTo(shard.x, shard.y - shard.h / 2);
+				graphics.lineTo(shard.x + shard.w / 2, shard.y);
+				graphics.lineTo(shard.x, shard.y + shard.h / 2);
+				graphics.lineTo(shard.x - shard.w / 2, shard.y);
+				graphics.closePath();
+				graphics.fill();
+				graphics.lineStyle(1, 0xffffff, 0.45);
+				graphics.lineBetween(
+					shard.x,
+					shard.y - shard.h / 2,
+					shard.x,
+					shard.y + shard.h / 2,
+				);
+			}
 		} else {
 			graphics.fillStyle(PLACEHOLDER_COLORS[key], 1);
 			graphics.fillRoundedRect(0, 0, width, height, 8);
