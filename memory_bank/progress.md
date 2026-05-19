@@ -9,6 +9,7 @@
 - 19.05.2026: Дополнительно улучшена графика `web-port`: добавлены заменяемые ассет-ключи `softCloud`, `townPath`, `glowMushroom`, `caveCrystalCluster`; процедурные fallback-текстуры расширены облачной дымкой, дорожной плиткой, светящимися грибами и кластерами кристаллов. Декор интегрирован в `MenuScene`, `TownScene`, `CaveScene` и `VictoryScene` как визуальные слои без изменения коллизий, прогресса и маршрута. Проверки: `bun run check` применил автоформатирование и оставил прежние предупреждения Biome по `any`; `bun run build` успешен с прежним предупреждением Vite о размере Phaser chunk.
 - 19.05.2026: Улучшена графика `web-port`: расширены `SPRITE_KEYS`/`manifest.json` ключами `townBanner`, `moonLantern`, `caveVine`, `magicCircle`; процедурные fallback-текстуры добавлены в `SpriteManifest.ts`, а `MenuScene`, `TownScene`, `CaveScene` и `VictoryScene` получили новые декоративные слои, анимации свечения и магические акценты без изменения игровой физики. Проверки: `bun run check` выполнен с прежними предупреждениями Biome по `any` в Phaser/nineslice-местах; `bun run build` успешен с прежним предупреждением Vite о размере Phaser chunk.
 - 20.05.2026: Добавлена `web-port/src/scenes/TransitionScene.ts` — паркур-сцена с platformer-прыжками и двойным прыжком, перекрывающая переходы между пещерами; в `PUZZLE_TYPES` добавлен `tic_tac_toe`; сцена зарегистрирована в `main.ts`. Biome: 1 файл авто-форматирован, 8 предупреждений `any` — предсуществующие Phaser/nineslice заглушки.
+- 20.05.2026: Реализован полноценный пазл `tic_tac_toe` в `CaveScene.ts`: клетки 3×3, одинарный ИИ (выиграть → заблокировать → центр → угол → random), автосброс доски, управление E/Space + клавиши 1-9; `getPuzzleType()` продлён до 15-го уровня, `numberKeys` расширен с 7 до 9. `bun run check` успешен, новых ошибок нет.
 - 20.05.2026: Скачан и применён актуальный `AGENTS.md` из `Ravva/projects-tracker`. `memory_bank/projectbrief.md` проверен: раздел `## Project Deliverables` присутствует, колонки `ID | Deliverable | Status | Weight`, статусы канонические; арифметическая проверка строк: 7+9+9+9+7+7+7+7+8+8+8+6+8 = 100. Обновлён Memory Bank, выполнен коммит и пуш.
 - 19.05.2026: Скачан актуальный `AGENTS.md` из `Ravva/projects-tracker` и синхронизирован корневой `AGENTS.md` с текущими правилами.
 - 19.05.2026: Проверен `memory_bank/projectbrief.md`: раздел `## Project Deliverables` присутствует, таблица использует колонки `ID | Deliverable | Status | Weight`, статусы входят в `pending`/`in_progress`/`completed`/`blocked`, арифметическая проверка фактических строк дала `7 + 9 + 9 + 9 + 7 + 7 + 7 + 7 + 8 + 8 + 8 + 6 + 8 = 100`.
@@ -111,5 +112,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: b6d20ae
-- Последняя проверка: валидация `AGENTS.md` из `Ravva/projects-tracker`, проверка `## Project Deliverables` (sum=100), добавлена `TransitionScene` и тип пазла `tic_tac_toe` в web-port.
+- last_checked_commit: a2a51f5
+- Последняя проверка: реализация `tic_tac_toe` пазла в `CaveScene.ts` с ИИ-противником, валидация `AGENTS.md` и `## Project Deliverables`.

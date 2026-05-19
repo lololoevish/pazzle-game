@@ -228,6 +228,14 @@ export class CaveScene extends Phaser.Scene {
 	private activeMazeGrid: string[] = [];
 	private wordSearchWords: string[] = [];
 	private riddlesList: { question: string; answer: string }[] = [];
+	private ticTacToeBoard: ("X" | "O" | "")[] = Array(9).fill("") as (
+		| "X"
+		| "O"
+		| ""
+	)[];
+	private readonly ticTacToeRects: Phaser.GameObjects.Rectangle[] = [];
+	private readonly ticTacToeLabels: Phaser.GameObjects.Text[] = [];
+	private ticTacToeLocked = false;
 
 	public constructor() {
 		super("CaveScene");
@@ -347,6 +355,10 @@ export class CaveScene extends Phaser.Scene {
 		const wrong1 = this.mathAnswer + Phaser.Math.Between(1, 3);
 		const wrong2 = Math.max(1, this.mathAnswer - Phaser.Math.Between(1, 3));
 		this.mathOptions = this.shuffle([this.mathAnswer, wrong1, wrong2]);
+		this.ticTacToeBoard = Array(9).fill("") as ("X" | "O" | "")[];
+		this.ticTacToeRects.length = 0;
+		this.ticTacToeLabels.length = 0;
+		this.ticTacToeLocked = false;
 	}
 
 	public create(): void {
@@ -473,6 +485,8 @@ export class CaveScene extends Phaser.Scene {
 			Phaser.Input.Keyboard.KeyCodes.FIVE,
 			Phaser.Input.Keyboard.KeyCodes.SIX,
 			Phaser.Input.Keyboard.KeyCodes.SEVEN,
+			Phaser.Input.Keyboard.KeyCodes.EIGHT,
+			Phaser.Input.Keyboard.KeyCodes.NINE,
 		]
 			.map((code) => this.input.keyboard?.addKey(code))
 			.filter(Boolean) as Phaser.Input.Keyboard.Key[];
@@ -1216,6 +1230,9 @@ export class CaveScene extends Phaser.Scene {
 			case "simon_says":
 				this.createSimonSaysPuzzle();
 				break;
+			case "tic_tac_toe":
+				this.createTicTacToePuzzle();
+				break;
 		}
 	}
 
@@ -1940,6 +1957,11 @@ export class CaveScene extends Phaser.Scene {
 
 		if (type === "jumping_path" && pressedIndex < 3) {
 			this.pressJumpingPathTile(this.jumpingSafeIndex, pressedIndex);
+			return;
+		}
+
+		if (type === "tic_tac_toe" && pressedIndex < 9) {
+			this.pressTicTacToeCell(pressedIndex);
 		}
 	}
 
@@ -2339,6 +2361,7 @@ export class CaveScene extends Phaser.Scene {
 			epic_finale: "Эпический финал",
 			math_puzzle: "Магическая арифметика",
 			simon_says: "Световые кристаллы",
+			tic_tac_toe: "Крестики-Нолики",
 		};
 		return names[this.getPuzzleType()];
 	}
@@ -2373,18 +2396,20 @@ export class CaveScene extends Phaser.Scene {
 				return "Арифметика: реши уравнение на стене и встань на соответствующую плиту.";
 			case "simon_says":
 				return "Кристаллы: повтори последовательность вспышек кристаллов.";
+			case "tic_tac_toe":
+				return "Крестики-Нолики: подходи к клетке и жми E/Space, или клавишами 1-9. Поставь три X в ряд и победи компьютер!";
 		}
 	}
 
 	private getPuzzleType(): PuzzleType {
-		if (this.level <= 14) {
+		if (this.level <= 15) {
 			return PUZZLE_TYPES[this.level - 1];
 		}
-		// Перетасованная нелинейная последовательность для уровней 15-36, чтобы головоломки не повторялись линейно
+		// Перетасованная нелинейная последовательность для уровней 16-36 (включает tic_tac_toe)
 		const SHUFFLED_ORDER: number[] = [
-			4, 0, 7, 1, 10, 2, 8, 3, 11, 5, 9, 6, 12, 13, 5, 8, 2, 11, 0, 13, 12, 7,
+			4, 0, 7, 1, 14, 10, 2, 8, 3, 11, 5, 9, 6, 12, 13, 5, 8, 2, 14, 11, 0, 13,
 		];
-		const index = SHUFFLED_ORDER[(this.level - 15) % SHUFFLED_ORDER.length];
+		const index = SHUFFLED_ORDER[(this.level - 16) % SHUFFLED_ORDER.length];
 		return PUZZLE_TYPES[index];
 	}
 
@@ -2490,6 +2515,221 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		this.time.delayedCall(1000, () => this.showRhythmPattern());
+	}
+
+	// ===== КРЕСТИКИ-НОЛИКИ =====
+
+	private createTicTacToePuzzle(): void {
+		this.ticTacToeLocked = false;
+
+		this.add.text(174, 200, "Крестики-Нолики: победи компьютер!", {
+			fontFamily: "Arial",
+			fontSize: "18px",
+			color: "#f8fafc",
+		});
+		this.add.text(
+			174,
+			228,
+			"Подходи к клетке и жми E/Space, или клавиши 1-9.",
+			{
+				fontFamily: "Arial",
+				fontSize: "14px",
+				color: "#94a3b8",
+			},
+		);
+
+		const STEP = 88;
+		const CX = 420;
+		const CY = 330;
+
+		for (let i = 0; i < 9; i++) {
+			const col = i % 3;
+			const row = Math.floor(i / 3);
+			const x = CX + (col - 1) * STEP;
+			const y = CY + (row - 1) * STEP;
+
+			const rect = this.add
+				.rectangle(x, y, 78, 78, 0x1e293b, 0.95)
+				.setStrokeStyle(2, this.theme.accent);
+			this.ticTacToeRects.push(rect);
+
+			const label = this.add
+				.text(x, y, String(i + 1), {
+					fontFamily: "Arial Black",
+					fontSize: "18px",
+					color: "#475569",
+				})
+				.setOrigin(0.5);
+			this.ticTacToeLabels.push(label);
+
+			const cellIndex = i;
+			this.interactables.push({
+				name: `Клетка ${i + 1}`,
+				object: rect,
+				action: () => this.pressTicTacToeCell(cellIndex),
+			});
+		}
+	}
+
+	private pressTicTacToeCell(index: number): void {
+		if (this.solved || this.ticTacToeLocked) return;
+		if (this.ticTacToeBoard[index] !== "") return;
+
+		// Ход игрока
+		this.ticTacToeBoard[index] = "X";
+		this.ticTacToeRects[index]?.setFillStyle(0x1d4ed8, 0.95);
+		this.ticTacToeLabels[index]?.setText("X").setStyle({
+			color: "#60a5fa",
+			fontSize: "32px",
+			fontFamily: "Arial Black",
+		});
+		this.cameras.main.shake(60, 0.002);
+
+		const result = this.checkTicTacToeWinner();
+		if (result === "X") {
+			this.markSolved("Ты победил в Крестики-Нолики! Опусти рычаг.");
+			return;
+		}
+		if (result === "draw") {
+			this.refreshStatus("Ничья! Доска сбрасывается...");
+			this.ticTacToeLocked = true;
+			this.time.delayedCall(1200, () => this.resetTicTacToeBoard());
+			return;
+		}
+
+		// Ход ИИ с небольшой задержкой для наглядности
+		this.ticTacToeLocked = true;
+		this.time.delayedCall(480, () => {
+			this.aiTicTacToeMove();
+			this.ticTacToeLocked = false;
+
+			const result2 = this.checkTicTacToeWinner();
+			if (result2 === "O") {
+				this.refreshStatus("Компьютер победил! Доска сбрасывается...");
+				this.ticTacToeLocked = true;
+				this.time.delayedCall(1200, () => this.resetTicTacToeBoard());
+			} else if (result2 === "draw") {
+				this.refreshStatus("Ничья! Доска сбрасывается...");
+				this.ticTacToeLocked = true;
+				this.time.delayedCall(1200, () => this.resetTicTacToeBoard());
+			} else {
+				this.refreshStatus("Твой ход! Выбери клетку.");
+			}
+		});
+	}
+
+	private aiTicTacToeMove(): void {
+		const WIN_LINES = [
+			[0, 1, 2],
+			[3, 4, 5],
+			[6, 7, 8],
+			[0, 3, 6],
+			[1, 4, 7],
+			[2, 5, 8],
+			[0, 4, 8],
+			[2, 4, 6],
+		];
+		const b = this.ticTacToeBoard;
+
+		// Попытка выиграть
+		for (const [a, m, c] of WIN_LINES) {
+			if (b[a] === "O" && b[m] === "O" && b[c] === "") {
+				this.placeAiMark(c);
+				return;
+			}
+			if (b[a] === "O" && b[c] === "O" && b[m] === "") {
+				this.placeAiMark(m);
+				return;
+			}
+			if (b[m] === "O" && b[c] === "O" && b[a] === "") {
+				this.placeAiMark(a);
+				return;
+			}
+		}
+
+		// Блокировка игрока
+		for (const [a, m, c] of WIN_LINES) {
+			if (b[a] === "X" && b[m] === "X" && b[c] === "") {
+				this.placeAiMark(c);
+				return;
+			}
+			if (b[a] === "X" && b[c] === "X" && b[m] === "") {
+				this.placeAiMark(m);
+				return;
+			}
+			if (b[m] === "X" && b[c] === "X" && b[a] === "") {
+				this.placeAiMark(a);
+				return;
+			}
+		}
+
+		// Центр
+		if (b[4] === "") {
+			this.placeAiMark(4);
+			return;
+		}
+
+		// Угол
+		for (const i of [0, 2, 6, 8]) {
+			if (b[i] === "") {
+				this.placeAiMark(i);
+				return;
+			}
+		}
+
+		// Любая свободная клетка
+		for (let i = 0; i < 9; i++) {
+			if (b[i] === "") {
+				this.placeAiMark(i);
+				return;
+			}
+		}
+	}
+
+	private placeAiMark(index: number): void {
+		this.ticTacToeBoard[index] = "O";
+		this.ticTacToeRects[index]?.setFillStyle(0x7c2d12, 0.95);
+		this.ticTacToeLabels[index]?.setText("O").setStyle({
+			color: "#f87171",
+			fontSize: "32px",
+			fontFamily: "Arial Black",
+		});
+	}
+
+	private checkTicTacToeWinner(): "X" | "O" | "draw" | null {
+		const WIN_LINES = [
+			[0, 1, 2],
+			[3, 4, 5],
+			[6, 7, 8],
+			[0, 3, 6],
+			[1, 4, 7],
+			[2, 5, 8],
+			[0, 4, 8],
+			[2, 4, 6],
+		];
+		const b = this.ticTacToeBoard;
+		for (const [a, m, c] of WIN_LINES) {
+			if (b[a] && b[a] === b[m] && b[a] === b[c]) {
+				return b[a] as "X" | "O";
+			}
+		}
+		if (b.every((cell) => cell !== "")) return "draw";
+		return null;
+	}
+
+	private resetTicTacToeBoard(): void {
+		if (this.solved) return;
+		this.ticTacToeBoard = Array(9).fill("") as ("X" | "O" | "")[];
+		this.ticTacToeLocked = false;
+		for (let i = 0; i < 9; i++) {
+			this.ticTacToeRects[i]?.setFillStyle(0x1e293b, 0.95);
+			this.ticTacToeLabels[i]?.setText(String(i + 1)).setStyle({
+				color: "#475569",
+				fontSize: "18px",
+				fontFamily: "Arial Black",
+			});
+		}
+		this.refreshStatus("Доска сброшена. Твой ход!");
 	}
 
 	private spawnStepParticle(x: number, y: number): void {
