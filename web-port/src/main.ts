@@ -5,6 +5,7 @@ import { CaveScene } from "./scenes/CaveScene";
 import { MenuScene } from "./scenes/MenuScene";
 import { SpriteHelpScene } from "./scenes/SpriteHelpScene";
 import { TownScene } from "./scenes/TownScene";
+import { TransitionScene } from "./scenes/TransitionScene";
 import { VictoryScene } from "./scenes/VictoryScene";
 
 import "./style.css";
@@ -36,6 +37,7 @@ const config: Phaser.Types.Core.GameConfig = {
 		SpriteHelpScene,
 		TownScene,
 		CaveScene,
+		TransitionScene,
 		VictoryScene,
 	],
 };

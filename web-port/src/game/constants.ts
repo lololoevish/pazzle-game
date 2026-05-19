@@ -40,6 +40,7 @@ export const PUZZLE_TYPES = [
 	"epic_finale",
 	"math_puzzle",
 	"simon_says",
+	"tic_tac_toe",
 ] as const;
 
 export type PuzzleType = (typeof PUZZLE_TYPES)[number];
