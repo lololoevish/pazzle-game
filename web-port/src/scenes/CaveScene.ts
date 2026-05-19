@@ -115,7 +115,7 @@ const MAZE_START_ROW = 13;
 const MAZE_GOAL_COL = 13;
 const MAZE_GOAL_ROW = 13;
 
-const MAZE_GRID = [
+const MAZE_GRID_1 = [
 	"111111111111111",
 	"100010000000001",
 	"101010111011101",
@@ -130,6 +130,42 @@ const MAZE_GRID = [
 	"100000101000101",
 	"101110101110101",
 	"000010000000001",
+	"111111111111111",
+] as const;
+
+const MAZE_GRID_2 = [
+	"111111111111111",
+	"100000001000001",
+	"101111101011101",
+	"101000100010101",
+	"101010111110101",
+	"100010000000001",
+	"111011111011101",
+	"100000001010001",
+	"101111101010101",
+	"101000001000101",
+	"101011111110101",
+	"100010000010101",
+	"111010111010101",
+	"000000100000001",
+	"111111111111111",
+] as const;
+
+const MAZE_GRID_3 = [
+	"111111111111111",
+	"100010000010001",
+	"101010111010101",
+	"101000001000101",
+	"101111101111101",
+	"100000100000101",
+	"111110111110101",
+	"100000000010001",
+	"101111111011101",
+	"100010000000101",
+	"101010111110101",
+	"101010100010001",
+	"101011101011101",
+	"000000001000001",
 	"111111111111111",
 ] as const;
 
@@ -182,6 +218,9 @@ export class CaveScene extends Phaser.Scene {
 	private riddleAnswers: string[] = [];
 	private jumpingPath: number[] = [];
 	private focusRing?: Phaser.GameObjects.Arc;
+	private activeMazeGrid: string[] = [];
+	private wordSearchWords: string[] = [];
+	private riddlesList: { question: string; answer: string }[] = [];
 
 	public constructor() {
 		super("CaveScene");
@@ -228,15 +267,50 @@ export class CaveScene extends Phaser.Scene {
 		this.coyoteTimer = 0;
 		this.jumpBufferTimer = 0;
 		this.riddleIndex = 0;
-		this.soundTrapSequence = [];
-		this.soundTrapInputIndex = 0;
-		this.songSequence = [];
-		this.songInputIndex = 0;
-		this.jumpingSafeIndex = 0;
-		this.finalNextRune = 1;
-		this.riddleAnswers = [];
-		this.jumpingPath = [];
 		this.theme = CAVE_THEMES[(this.level - 1) % CAVE_THEMES.length];
+
+		// Выбор одного из трех лабиринтов
+		const mazeVariants = [MAZE_GRID_1, MAZE_GRID_2, MAZE_GRID_3];
+		this.activeMazeGrid = [...mazeVariants[(this.level - 1) % 3]];
+
+		// Генерация случайной последовательности нот и дорожек
+		this.soundTrapSequence = Array.from({ length: 5 }, () =>
+			Phaser.Math.Between(0, 6),
+		);
+		this.jumpingPath = Array.from({ length: 5 }, () =>
+			Phaser.Math.Between(0, 2),
+		);
+		this.songSequence = this.shuffle([0, 1, 2, 3, 4]);
+
+		// Выбор слов для поиска
+		const wordSearchWordsPool = [
+			["ЛАБИРИНТ", "ПАЗЗЛ", "ПЕЩЕРА", "ГОРОД"],
+			["КРИСТАЛЛ", "ЗОЛОТО", "ПОРТАЛ", "ГЕРОЙ"],
+			["ЗАГАДКА", "ПОБЕДА", "РЫЧАГ", "КАМЕНЬ"],
+		];
+		this.wordSearchWords = wordSearchWordsPool[(this.level - 1) % 3];
+
+		// Выбор случайных трех загадок из пула
+		const ALL_RIDDLES = [
+			{ question: "Что выше леса, но легче пера?", answer: "ДЫМ" },
+			{ question: "Что всегда идёт, но никогда не приходит?", answer: "ВРЕМЯ" },
+			{ question: "Что имеет лицо, но не может видеть?", answer: "МОНЕТА" },
+			{ question: "Без рук, без ног, а рисовать умеет?", answer: "МОРОЗ" },
+			{ question: "Зимой греет, весной тлеет, летом умирает?", answer: "СНЕГ" },
+			{
+				question: "Что можно разбить, даже не прикоснувшись к нему?",
+				answer: "ОБЕЩАНИЕ",
+			},
+			{ question: "Не лает, не кусает, а в дом не пускает?", answer: "ЗАМОК" },
+			{
+				question:
+					"Сидит дед, во сто шуб одет, кто его раздевает, тот слезы проливает?",
+				answer: "ЛУК",
+			},
+		];
+		const shuffledRiddles = this.shuffle(ALL_RIDDLES);
+		this.riddlesList = shuffledRiddles.slice(0, 3);
+		this.riddleAnswers = this.riddlesList.map((r) => r.answer);
 	}
 
 	public create(): void {
@@ -621,7 +695,7 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private isMazeOpen(col: number, row: number): boolean {
-		return MAZE_GRID[row]?.[col] === "0";
+		return this.activeMazeGrid[row]?.[col] === "0";
 	}
 
 	private selectionLine?: Phaser.GameObjects.Graphics;
@@ -1063,7 +1137,7 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createMazePuzzle(): void {
-		const grid = MAZE_GRID;
+		const grid = this.activeMazeGrid;
 		const cell = MAZE_CELL_SIZE;
 		const startX = MAZE_START_X;
 		const startY = MAZE_START_Y;
@@ -1143,18 +1217,53 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createWordSearchPuzzle(): void {
-		const rows = [
-			"КФЛАБИРИНТ",
-			"АЩЦУКЕНГШЗ",
-			"ПАЗЗЛОРПАВ",
-			"ЫВАПРОЛДЖЭ",
-			"ПЕЩЕРАВЫАП",
-			"РОЛДЖЭЯЧСМ",
-			"ГОРОДКЕНГШ",
-			"ЗХЪФЫВАПРО",
-			"ЛДЖЭЯЧСМИТ",
-			"ЬБЮЙЦУКЕНГ",
+		const wordSearchVariants = [
+			{
+				rows: [
+					"КФЛАБИРИНТ",
+					"АЩЦУКЕНГШЗ",
+					"ПАЗЗЛОРПАВ",
+					"ЫВАПРОЛДЖЭ",
+					"ПЕЩЕРАВЫАП",
+					"РОЛДЖЭЯЧСМ",
+					"ГОРОДКЕНГШ",
+					"ЗХЪФЫВАПРО",
+					"ЛДЖЭЯЧСМИТ",
+					"ЬБЮЙЦУКЕНГ",
+				],
+			},
+			{
+				rows: [
+					"КРИСТАЛЛГШ",
+					"АЩЦУКЕНГШЗ",
+					"ЗОЛОТОРАВЗ",
+					"ЫВАПРОЛДЖЭ",
+					"ПОРТАЛАВЫА",
+					"РОЛДЖЭЯЧСМ",
+					"ГЕРОЙКЕНГШ",
+					"ЗХЪФЫВАПРО",
+					"ЛДЖЭЯЧСМИТ",
+					"ЬБЮЙЦУКЕНГ",
+				],
+			},
+			{
+				rows: [
+					"ЗАГАДКАГШЗ",
+					"АЩЦУКЕНГШЗ",
+					"ПОБЕДАРАВЗ",
+					"ЫВАПРОЛДЖЭ",
+					"РЫЧАГАВЫАП",
+					"РОЛДЖЭЯЧСМ",
+					"КАМЕНЬЕНГШ",
+					"ЗХЪФЫВАПРО",
+					"ЛДЖЭЯЧСМИТ",
+					"ЬБЮЙЦУКЕНГ",
+				],
+			},
 		];
+		const variant = wordSearchVariants[(this.level - 1) % 3];
+		const rows = variant.rows;
+
 		const cell = 30;
 		const startX = 190;
 		const startY = 190;
@@ -1186,12 +1295,17 @@ export class CaveScene extends Phaser.Scene {
 				});
 			}
 		}
-		this.add.text(548, 190, "Найди слова:\nЛАБИРИНТ\nПАЗЗЛ\nПЕЩЕРА\nГОРОД", {
-			fontFamily: "Arial",
-			fontSize: "18px",
-			color: "#e0f2fe",
-			lineSpacing: 8,
-		});
+		this.add.text(
+			548,
+			190,
+			`Найди слова:\n${this.wordSearchWords.join("\n")}`,
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: "#e0f2fe",
+				lineSpacing: 8,
+			},
+		);
 	}
 
 	private createRhythmPuzzle(): void {
@@ -1317,13 +1431,25 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createRiddlePuzzle(): void {
-		const riddles = [
-			{ question: "Что выше леса, но легче пера?", answer: "ДЫМ" },
-			{ question: "Что всегда идёт, но никогда не приходит?", answer: "ВРЕМЯ" },
-			{ question: "Что имеет лицо, но не может видеть?", answer: "МОНЕТА" },
+		const riddles = this.riddlesList;
+		const correctAnswers = riddles.map((r) => r.answer);
+		const ALL_ANSWERS = [
+			"ДЫМ",
+			"ВРЕМЯ",
+			"МОНЕТА",
+			"МОРОЗ",
+			"СНЕГ",
+			"ОБЕЩАНИЕ",
+			"ЗАМОК",
+			"ЛУК",
 		];
-		const options = ["ДЫМ", "КАМЕНЬ", "ВРЕМЯ", "МОНЕТА"];
-		this.riddleAnswers = riddles.map((riddle) => riddle.answer);
+		const otherAnswers = ALL_ANSWERS.filter(
+			(ans) => !correctAnswers.includes(ans),
+		);
+		const randomWrong =
+			otherAnswers[Phaser.Math.Between(0, otherAnswers.length - 1)];
+		const options = this.shuffle([...correctAnswers, randomWrong]);
+
 		const questionText = this.add.text(180, 215, "", {
 			fontFamily: "Arial",
 			fontSize: "20px",
@@ -1379,7 +1505,6 @@ export class CaveScene extends Phaser.Scene {
 
 	private createSoundTrapPuzzle(): void {
 		const notes = ["до", "ре", "ми", "фа", "соль", "ля", "си"];
-		this.soundTrapSequence = [0, 2, 4, 1, 5];
 		this.soundTrapInputIndex = 0;
 		this.add.text(
 			160,
@@ -1427,8 +1552,7 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createJumpingPathPuzzle(): void {
-		const path = [0, 1, 0, 2, 1];
-		this.jumpingPath = path;
+		const path = this.jumpingPath;
 		this.jumpingSafeIndex = 0;
 		this.add.text(
 			178,
@@ -1505,7 +1629,6 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createCaveSongPuzzle(): void {
-		this.songSequence = [0, 3, 1, 4, 2];
 		this.songInputIndex = 0;
 		const labels = ["I", "II", "III", "IV", "V"];
 		this.add.text(174, 218, "Песнь пещер: собери мелодию по рунам 1–5.", {
@@ -1665,7 +1788,7 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		const reversed = [...selected.word].reverse().join("");
-		const target = ["ЛАБИРИНТ", "ПАЗЗЛ", "ПЕЩЕРА", "ГОРОД"].find(
+		const target = this.wordSearchWords.find(
 			(word) => word === selected.word || word === reversed,
 		);
 
