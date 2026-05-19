@@ -37,4 +37,4 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 58fe9ba9166655dc1e94732b6cad9b82f2bb6a4b
+- last_checked_commit: bb737330716d1c59cdcec3f3cbee410c115cf8cc
