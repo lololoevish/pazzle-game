@@ -192,6 +192,7 @@ export class CaveScene extends Phaser.Scene {
 	private mathQuestion = "";
 	private mathAnswer = 0;
 	private mathOptions: number[] = [];
+	private soundTrapCorrectSequence: number[] = [];
 	private readonly foundWords = new Set<string>();
 	private wordStart?: WordCell;
 	private rhythmSequence: number[] = [];
@@ -282,10 +283,18 @@ export class CaveScene extends Phaser.Scene {
 		const mazeVariants = [MAZE_GRID_1, MAZE_GRID_2, MAZE_GRID_3];
 		this.activeMazeGrid = [...mazeVariants[(this.level - 1) % 3]];
 
-		// Генерация случайной последовательности нот и дорожек
-		this.soundTrapSequence = Array.from({ length: 5 }, () =>
-			Phaser.Math.Between(0, 6),
-		);
+		// Генерация случайной последовательности нот
+		const rawSoundSeq: number[] = [];
+		while (rawSoundSeq.length < 5) {
+			const randomNote = Phaser.Math.Between(0, 6);
+			if (!rawSoundSeq.includes(randomNote)) {
+				rawSoundSeq.push(randomNote);
+			}
+		}
+		this.soundTrapSequence = [...rawSoundSeq];
+		this.soundTrapCorrectSequence = [...rawSoundSeq].sort((a, b) => a - b);
+
+		// Генерация случайных дорожек
 		this.jumpingPath = Array.from({ length: 5 }, () =>
 			Phaser.Math.Between(0, 2),
 		);
@@ -1642,7 +1651,7 @@ export class CaveScene extends Phaser.Scene {
 		this.add.text(
 			160,
 			210,
-			"Звуковые ловушки: повтори цепочку нот клавишами 1–7 или через E у кнопок.",
+			"Звуковые ловушки: нажми E у кнопок или цифры 1–7, чтобы прослушать ноты.",
 			{
 				fontFamily: "Arial",
 				fontSize: "18px",
@@ -1652,34 +1661,43 @@ export class CaveScene extends Phaser.Scene {
 		);
 		this.add.text(
 			160,
-			258,
-			`Последовательность: ${this.soundTrapSequence.map((i) => notes[i]).join(" → ")}`,
+			252,
+			"Задача: активируй 5 рунных кнопок в порядке ВОЗРАСТАНИЯ высоты их звука.",
 			{
 				fontFamily: "Arial",
-				fontSize: "18px",
+				fontSize: "16px",
 				color: this.theme.labelColor,
+				wordWrap: { width: 520 },
 			},
 		);
-		for (const [index, note] of notes.entries()) {
-			const x = 160 + index * 78;
+		// Выводим только те 5 кнопок нот, которые сгенерированы в soundTrapSequence!
+		for (const [index, noteIndex] of this.soundTrapSequence.entries()) {
+			const x = 200 + index * 105;
+			const note = notes[noteIndex];
 			const button = this.add
 				.sprite(x, 365, "button")
-				.setDisplaySize(62, 52)
+				.setDisplaySize(80, 52)
 				.setTint(this.theme.accent)
 				.setAlpha(0.62);
 			this.add
-				.text(x, 365, `${index + 1}\n${note}`, {
+				.text(x, 365, `Рум ${index + 1}`, {
 					fontFamily: "Arial",
-					fontSize: "14px",
+					fontSize: "15px",
 					color: "#fff",
 					align: "center",
 				})
 				.setOrigin(0.5);
 			this.interactables.push({
-				name: `Нота ${note}`,
+				name: `Кнопка ${index + 1}`,
 				object: button,
-				action: () =>
-					this.pressSequenceButton(index, this.soundTrapSequence, "sound"),
+				action: () => {
+					this.refreshStatus(`Звучит нота: ${note}`);
+					this.pressSequenceButton(
+						noteIndex,
+						this.soundTrapCorrectSequence,
+						"sound",
+					);
+				},
 			});
 		}
 	}
@@ -1690,11 +1708,33 @@ export class CaveScene extends Phaser.Scene {
 		this.add.text(
 			178,
 			212,
-			"Прыгающий путь: нажимай дорожки 1–3 в показанном порядке или выбирай плиты героем.",
+			"Прыгающий путь: сопоставь чертеж на стене и наступай на плиты строго по схеме.",
 			{
 				fontFamily: "Arial",
 				fontSize: "18px",
 				color: "#f8fafc",
+			},
+		);
+
+		// Создаем красивый пиксельный чертеж-карту на стене
+		const schemaRows = ["", "", ""];
+		for (let lane = 0; lane < 3; lane++) {
+			let rowText = `Дорожка ${lane + 1}: `;
+			for (let step = 0; step < path.length; step++) {
+				rowText += path[step] === lane ? " [X] " : " [ ] ";
+			}
+			schemaRows[lane] = rowText;
+		}
+
+		this.add.text(
+			178,
+			242,
+			`Схема прохода на стене:\n${schemaRows.join("\n")}`,
+			{
+				fontFamily: "Courier New",
+				fontSize: "15px",
+				color: this.theme.labelColor,
+				lineSpacing: 4,
 			},
 		);
 		this.add.text(
@@ -1761,22 +1801,42 @@ export class CaveScene extends Phaser.Scene {
 		);
 	}
 
+	private generateSongClues(seq: number[]): string[] {
+		const labels = ["I", "II", "III", "IV", "V"];
+		const clues: string[] = [];
+		clues.push(`1. Руна ${labels[seq[0]]} пробуждается самой первой.`);
+		clues.push(`2. Руна ${labels[seq[4]]} замыкает круг и звучит последней.`);
+		clues.push(`3. Руна ${labels[seq[2]]} находится ровно посередине песни.`);
+		clues.push(
+			`4. Руна ${labels[seq[1]]} поётся раньше, чем руна ${labels[seq[3]]}.`,
+		);
+		return clues;
+	}
+
 	private createCaveSongPuzzle(): void {
 		this.songInputIndex = 0;
 		const labels = ["I", "II", "III", "IV", "V"];
-		this.add.text(174, 218, "Песнь пещер: собери мелодию по рунам 1–5.", {
-			fontFamily: "Arial",
-			fontSize: "19px",
-			color: "#f8fafc",
-		});
 		this.add.text(
 			174,
-			252,
-			`Мелодия: ${this.songSequence.map((i) => labels[i]).join(" → ")}`,
+			218,
+			"Песнь пещер: разгадай логический шифр рун на стене.",
 			{
 				fontFamily: "Arial",
-				fontSize: "18px",
+				fontSize: "19px",
+				color: "#f8fafc",
+			},
+		);
+
+		const clues = this.generateSongClues(this.songSequence);
+		this.add.text(
+			174,
+			246,
+			`Древние рунические манускрипты гласят:\n${clues.join("\n")}`,
+			{
+				fontFamily: "Arial",
+				fontSize: "15px",
 				color: this.theme.labelColor,
+				lineSpacing: 4,
 			},
 		);
 		for (const [index, label] of labels.entries()) {
