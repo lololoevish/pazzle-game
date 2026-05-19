@@ -31,6 +31,10 @@ const PLACEHOLDER_COLORS: Record<SpriteKey, number> = {
 	townPath: 0xb45309,
 	glowMushroom: 0xfb7185,
 	caveCrystalCluster: 0x67e8f9,
+	stalactite: 0x64748b,
+	runeStone: 0x818cf8,
+	gearEmblem: 0xf59e0b,
+	mirrorShard: 0x93c5fd,
 };
 
 export async function fetchSpriteManifest(): Promise<SpriteManifest> {
@@ -132,6 +136,18 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 		} else if (key === "caveCrystalCluster") {
 			width = 72;
 			height = 56;
+		} else if (key === "stalactite") {
+			width = 40;
+			height = 80;
+		} else if (key === "runeStone") {
+			width = 56;
+			height = 56;
+		} else if (key === "gearEmblem") {
+			width = 64;
+			height = 64;
+		} else if (key === "mirrorShard") {
+			width = 56;
+			height = 72;
 		}
 
 		const graphics = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -529,6 +545,56 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 					shard.y + shard.h / 2,
 				);
 			}
+		} else if (key === "stalactite") {
+			graphics.fillStyle(0x000000, 0.18);
+			graphics.fillEllipse(20, 8, 34, 10);
+			graphics.fillGradientStyle(0x94a3b8, color, 0x334155, 0x0f172a, 1);
+			graphics.fillTriangle(4, 4, 36, 4, 20, 78);
+			graphics.lineStyle(1, 0xffffff, 0.18);
+			graphics.lineBetween(20, 6, 17, 66);
+			graphics.lineBetween(28, 10, 22, 54);
+		} else if (key === "runeStone") {
+			graphics.fillStyle(0x000000, 0.22);
+			graphics.fillEllipse(28, 46, 42, 8);
+			graphics.fillGradientStyle(0x475569, 0x334155, 0x1e293b, 0x0f172a, 1);
+			graphics.fillRoundedRect(8, 8, 40, 38, 8);
+			graphics.lineStyle(2, color, 0.9);
+			graphics.lineBetween(28, 15, 20, 31);
+			graphics.lineBetween(28, 15, 36, 31);
+			graphics.lineBetween(20, 31, 36, 31);
+			graphics.fillStyle(color, 0.22);
+			graphics.fillCircle(28, 28, 18);
+		} else if (key === "gearEmblem") {
+			graphics.fillStyle(0x000000, 0.18);
+			graphics.fillCircle(32, 34, 28);
+			graphics.lineStyle(6, color, 0.9);
+			graphics.strokeCircle(32, 32, 20);
+			for (let i = 0; i < 8; i++) {
+				const angle = (i / 8) * Math.PI * 2;
+				graphics.lineBetween(
+					32 + Math.cos(angle) * 18,
+					32 + Math.sin(angle) * 18,
+					32 + Math.cos(angle) * 28,
+					32 + Math.sin(angle) * 28,
+				);
+			}
+			graphics.fillStyle(0x111827, 1);
+			graphics.fillCircle(32, 32, 8);
+		} else if (key === "mirrorShard") {
+			graphics.fillStyle(0x000000, 0.18);
+			graphics.fillEllipse(28, 62, 38, 8);
+			graphics.fillGradientStyle(0xe0f2fe, color, 0x60a5fa, 0x1e3a8a, 1);
+			graphics.beginPath();
+			graphics.moveTo(28, 2);
+			graphics.lineTo(50, 24);
+			graphics.lineTo(38, 66);
+			graphics.lineTo(8, 54);
+			graphics.lineTo(14, 18);
+			graphics.closePath();
+			graphics.fill();
+			graphics.lineStyle(2, 0xffffff, 0.45);
+			graphics.lineBetween(18, 20, 42, 26);
+			graphics.lineBetween(20, 48, 36, 56);
 		} else {
 			graphics.fillStyle(PLACEHOLDER_COLORS[key], 1);
 			graphics.fillRoundedRect(0, 0, width, height, 8);

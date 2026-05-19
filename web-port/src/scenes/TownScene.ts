@@ -1,5 +1,10 @@
 import Phaser from "phaser";
-import { LEVEL_COUNT } from "../game/constants";
+import {
+	GAME_HEIGHT,
+	GAME_WIDTH,
+	LEVEL_COUNT,
+	PLAYER_CONFIG,
+} from "../game/constants";
 import {
 	getCompletedLevelCount,
 	isExpeditionComplete,
@@ -32,6 +37,8 @@ export class TownScene extends Phaser.Scene {
 	private solids?: Phaser.Physics.Arcade.StaticGroup;
 	private dialogue?: DialogueSystem;
 	private statusText?: Phaser.GameObjects.Text;
+	private currentMoveX = 0;
+	private currentMoveY = 0;
 
 	public constructor() {
 		super("TownScene");
@@ -45,9 +52,10 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		this.cameras.main.setBackgroundColor("#16301f");
-		this.add.image(480, 270, "townBackground").setAlpha(0.6);
+		this.physics.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+		this.add.image(400, 300, "townBackground").setAlpha(0.6);
 		this.add
-			.tileSprite(480, 270, 960, 540, "tileFloor")
+			.tileSprite(400, 300, GAME_WIDTH, GAME_HEIGHT, "tileFloor")
 			.setAlpha(0.15)
 			.setTint(0x166534);
 
@@ -62,12 +70,12 @@ export class TownScene extends Phaser.Scene {
 
 		if (hasNineSlice) {
 			mainPanel = (this.add as any).nineslice(
-				480,
-				270,
+				400,
+				300,
 				"uiPanel",
 				undefined,
-				900,
-				470,
+				744,
+				500,
 				20,
 				20,
 				20,
@@ -76,7 +84,7 @@ export class TownScene extends Phaser.Scene {
 			(mainPanel as any).setAlpha(0.85);
 		} else {
 			mainPanel = this.add
-				.rectangle(480, 270, 900, 470, 0x1f5130, 0.85)
+				.rectangle(400, 300, 744, 500, 0x1f5130, 0.85)
 				.setStrokeStyle(3, 0x5fa36f);
 		}
 
@@ -88,7 +96,7 @@ export class TownScene extends Phaser.Scene {
 
 		this.dialogue = new DialogueSystem(this);
 		this.player = this.physics.add
-			.sprite(480, 350, "player")
+			.sprite(400, 400, "player")
 			.setCollideWorldBounds(true);
 		this.player.setDisplaySize(40, 48);
 
@@ -104,7 +112,7 @@ export class TownScene extends Phaser.Scene {
 		this.createTownCollision();
 		this.physics.add.collider(this.player, this.solids);
 
-		this.createNpc(220, 190, "npcElder", "Староста Иара", () => {
+		this.createNpc(200, 300, "npcElder", "Староста Иара", () => {
 			const next = loadProgress();
 			if (!next.npcRewards.elder) {
 				next.npcRewards.elder = true;
@@ -118,7 +126,7 @@ export class TownScene extends Phaser.Scene {
 			this.refreshStatus();
 		});
 
-		this.createNpc(480, 170, "npcMechanic", "Механик Роан", () => {
+		this.createNpc(600, 300, "npcMechanic", "Механик Роан", () => {
 			const next = loadProgress();
 			if (!next.npcRewards.mechanic) {
 				next.npcRewards.mechanic = true;
@@ -132,7 +140,7 @@ export class TownScene extends Phaser.Scene {
 			this.refreshStatus();
 		});
 
-		this.createNpc(740, 190, "npcArchivist", "Архивариус Тель", () => {
+		this.createNpc(400, 200, "npcArchivist", "Архивариус Тель", () => {
 			const next = loadProgress();
 			if (!next.npcRewards.archivist) {
 				next.npcRewards.archivist = true;
@@ -147,16 +155,16 @@ export class TownScene extends Phaser.Scene {
 		});
 
 		const entrance = this.physics.add
-			.staticSprite(480, 455, "caveEntrance")
+			.staticSprite(400, 505, "caveEntrance")
 			.setDisplaySize(72, 72);
 		this.add
-			.sprite(480, 455, "runeGlow")
+			.sprite(400, 505, "runeGlow")
 			.setTint(0x86efac)
 			.setScale(1.35)
 			.setAlpha(0.35)
 			.setDepth(0);
 		this.add
-			.tileSprite(480, 465, 180, 70, "mist")
+			.tileSprite(400, 515, 180, 70, "mist")
 			.setTint(0xbbf7d0)
 			.setAlpha(0.22)
 			.setDepth(1);
@@ -167,7 +175,7 @@ export class TownScene extends Phaser.Scene {
 			triggered: false,
 		});
 		this.add
-			.text(480, 500, "Вход в пещеры", {
+			.text(400, 558, "Вход в пещеры", {
 				fontFamily: "Arial",
 				fontSize: "16px",
 				color: "#f8fafc",
@@ -207,20 +215,38 @@ export class TownScene extends Phaser.Scene {
 		);
 	}
 
-	public update(): void {
+	public update(_time: number, delta: number): void {
 		if (!this.player || !this.cursors || !this.wasd) {
 			return;
 		}
 
-		const speed = 180;
+		const dt = Math.min(delta / 1000, 0.05);
 		const left = this.cursors.left.isDown || this.wasd.A.isDown;
 		const right = this.cursors.right.isDown || this.wasd.D.isDown;
 		const up = this.cursors.up.isDown || this.wasd.W.isDown;
 		const down = this.cursors.down.isDown || this.wasd.S.isDown;
 
+		const inputX = Number(right) - Number(left);
+		const inputY = Number(down) - Number(up);
+		const accel = PLAYER_CONFIG.topdownAcceleration * dt;
+		const decel = PLAYER_CONFIG.topdownDeceleration * dt;
+		this.currentMoveX = this.approach(
+			this.currentMoveX,
+			inputX,
+			inputX === 0 ? decel : accel,
+		);
+		this.currentMoveY = this.approach(
+			this.currentMoveY,
+			inputY,
+			inputY === 0 ? decel : accel,
+		);
+		const diagonal = this.currentMoveX !== 0 && this.currentMoveY !== 0;
+		const speed = diagonal
+			? PLAYER_CONFIG.topdownDiagonalSpeed
+			: PLAYER_CONFIG.topdownSpeed;
 		this.player.setVelocity(
-			(Number(right) - Number(left)) * speed,
-			(Number(down) - Number(up)) * speed,
+			this.currentMoveX * speed,
+			this.currentMoveY * speed,
 		);
 
 		const pressedInteract = this.interactKey
@@ -263,7 +289,7 @@ export class TownScene extends Phaser.Scene {
 		for (const item of [
 			{ x: 190, y: 76, scale: 0.72, alpha: 0.28 },
 			{ x: 520, y: 94, scale: 0.58, alpha: 0.2 },
-			{ x: 790, y: 72, scale: 0.66, alpha: 0.24 },
+			{ x: 708, y: 72, scale: 0.66, alpha: 0.24 },
 		]) {
 			const cloud = this.add
 				.sprite(item.x, item.y, "softCloud")
@@ -282,9 +308,9 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		for (const item of [
-			{ x: 260, y: 345, scaleX: 1.8, scaleY: 0.72, angle: -4 },
-			{ x: 480, y: 402, scaleX: 2.1, scaleY: 0.78, angle: 0 },
-			{ x: 700, y: 345, scaleX: 1.8, scaleY: 0.72, angle: 4 },
+			{ x: 235, y: 384, scaleX: 1.65, scaleY: 0.72, angle: -4 },
+			{ x: 400, y: 430, scaleX: 1.9, scaleY: 0.78, angle: 0 },
+			{ x: 565, y: 384, scaleX: 1.65, scaleY: 0.72, angle: 4 },
 		]) {
 			this.add
 				.sprite(item.x, item.y, "townPath")
@@ -295,8 +321,8 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		for (const item of [
-			{ x: 270, y: 92, scale: 0.8, tint: 0xc4b5fd },
-			{ x: 690, y: 92, scale: 0.8, tint: 0xfde68a },
+			{ x: 210, y: 92, scale: 0.8, tint: 0xc4b5fd },
+			{ x: 590, y: 92, scale: 0.8, tint: 0xfde68a },
 		]) {
 			const banner = this.add
 				.sprite(item.x, item.y, "townBanner")
@@ -317,9 +343,9 @@ export class TownScene extends Phaser.Scene {
 
 		for (const item of [
 			{ x: 96, y: 92, scale: 0.72 },
-			{ x: 864, y: 92, scale: 0.72 },
-			{ x: 96, y: 448, scale: 0.62 },
-			{ x: 864, y: 448, scale: 0.62 },
+			{ x: 704, y: 92, scale: 0.72 },
+			{ x: 96, y: 500, scale: 0.62 },
+			{ x: 704, y: 500, scale: 0.62 },
 		]) {
 			const lantern = this.add
 				.sprite(item.x, item.y, "moonLantern")
@@ -339,10 +365,10 @@ export class TownScene extends Phaser.Scene {
 		}
 
 		for (const item of [
-			{ x: 220, y: 222, scale: 0.86 },
-			{ x: 480, y: 202, scale: 0.9 },
-			{ x: 740, y: 222, scale: 0.86 },
-			{ x: 480, y: 454, scale: 1.05 },
+			{ x: 200, y: 332, scale: 0.86 },
+			{ x: 400, y: 232, scale: 0.9 },
+			{ x: 600, y: 332, scale: 0.86 },
+			{ x: 400, y: 505, scale: 1.05 },
 		]) {
 			this.add
 				.sprite(item.x, item.y, "magicCircle")
@@ -355,8 +381,8 @@ export class TownScene extends Phaser.Scene {
 		const grass = [
 			{ x: 138, y: 132, scale: 0.9 },
 			{ x: 292, y: 408, scale: 1.1 },
-			{ x: 684, y: 412, scale: 1 },
-			{ x: 828, y: 128, scale: 0.8 },
+			{ x: 620, y: 455, scale: 1 },
+			{ x: 708, y: 128, scale: 0.8 },
 			{ x: 432, y: 248, scale: 0.7 },
 		];
 		for (const item of grass) {
@@ -371,7 +397,7 @@ export class TownScene extends Phaser.Scene {
 			{ x: 188, y: 422, tint: 0x94a3b8 },
 			{ x: 392, y: 308, tint: 0x64748b },
 			{ x: 584, y: 316, tint: 0x94a3b8 },
-			{ x: 772, y: 420, tint: 0x64748b },
+			{ x: 692, y: 470, tint: 0x64748b },
 		];
 		for (const item of pebbles) {
 			this.add
@@ -381,7 +407,7 @@ export class TownScene extends Phaser.Scene {
 				.setDepth(2);
 		}
 
-		for (const x of [220, 480, 740]) {
+		for (const x of [200, 400, 600]) {
 			this.add
 				.sprite(x, 136, "starSparkle")
 				.setTint(0xfef3c7)
@@ -392,14 +418,20 @@ export class TownScene extends Phaser.Scene {
 	}
 
 	private createTownCollision(): void {
-		this.createWall(480, 40, 900, 24);
-		this.createWall(480, 510, 900, 24);
-		this.createWall(34, 270, 24, 470);
-		this.createWall(926, 270, 24, 470);
-		this.createWall(350, 250, 130, 28);
-		this.createWall(610, 250, 130, 28);
-		this.createWall(165, 360, 150, 26);
-		this.createWall(795, 360, 150, 26);
+		this.createWall(400, 40, 744, 24);
+		this.createWall(400, 570, 744, 24);
+		this.createWall(34, 300, 24, 500);
+		this.createWall(766, 300, 24, 500);
+		this.createWall(310, 255, 120, 24);
+		this.createWall(490, 255, 120, 24);
+		this.createWall(145, 392, 120, 24);
+		this.createWall(655, 392, 120, 24);
+	}
+
+	private approach(current: number, target: number, amount: number): number {
+		if (current < target) return Math.min(current + amount, target);
+		if (current > target) return Math.max(current - amount, target);
+		return target;
 	}
 
 	private createWall(

@@ -1,4 +1,5 @@
 import type Phaser from "phaser";
+import { GAME_HEIGHT, GAME_WIDTH } from "../game/constants";
 
 export function addTitle(
 	scene: Phaser.Scene,
@@ -6,7 +7,7 @@ export function addTitle(
 	y = 48,
 ): Phaser.GameObjects.Text {
 	return scene.add
-		.text(480, y, text, {
+		.text(GAME_WIDTH / 2, y, text, {
 			fontFamily: "Arial",
 			fontSize: "34px",
 			color: "#f8fafc",
@@ -60,7 +61,7 @@ export function addHelp(
 	scene: Phaser.Scene,
 	text: string,
 ): Phaser.GameObjects.Text {
-	return scene.add.text(24, 496, text, {
+	return scene.add.text(24, GAME_HEIGHT - 44, text, {
 		fontFamily: "Arial",
 		fontSize: "16px",
 		color: "#cbd5e1",

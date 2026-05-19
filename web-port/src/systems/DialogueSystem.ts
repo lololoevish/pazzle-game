@@ -1,4 +1,5 @@
 import type Phaser from "phaser";
+import { GAME_HEIGHT, GAME_WIDTH } from "../game/constants";
 
 type SpeakerInfo = { color: number; letter: string };
 
@@ -51,11 +52,11 @@ export class DialogueSystem {
 		let panelObj: Phaser.GameObjects.GameObject;
 		if ("nineslice" in this.scene.add) {
 			panelObj = (this.scene.add as any).nineslice(
-				480,
-				432,
+				GAME_WIDTH / 2,
+				GAME_HEIGHT - 108,
 				"uiPanel",
 				undefined,
-				860,
+				GAME_WIDTH - 64,
 				130,
 				20,
 				20,
@@ -65,7 +66,13 @@ export class DialogueSystem {
 			(panelObj as any).setDepth(50);
 		} else {
 			panelObj = (this.scene.add as any)
-				.rectangle(480, 432, 860, 130, 0x111827)
+				.rectangle(
+					GAME_WIDTH / 2,
+					GAME_HEIGHT - 108,
+					GAME_WIDTH - 64,
+					130,
+					0x111827,
+				)
 				.setAlpha(0.9)
 				.setStrokeStyle(1, 0x334155)
 				.setDepth(50);
@@ -74,13 +81,13 @@ export class DialogueSystem {
 
 		// Портрет-прямоугольник
 		this.portrait = this.scene.add
-			.rectangle(82, 432, 76, 90, info.color)
+			.rectangle(70, GAME_HEIGHT - 108, 76, 90, info.color)
 			.setStrokeStyle(2, 0xffffff)
 			.setDepth(51);
 
 		// Буква в центре портрета
 		this.portraitLetter = this.scene.add
-			.text(82, 432, info.letter, {
+			.text(70, GAME_HEIGHT - 108, info.letter, {
 				fontFamily: "Arial Black",
 				fontSize: "28px",
 				color: "#0f172a",
@@ -90,7 +97,7 @@ export class DialogueSystem {
 
 		// Имя говорящего
 		this.speakerText = this.scene.add
-			.text(134, 386, speaker, {
+			.text(122, GAME_HEIGHT - 154, speaker, {
 				fontFamily: "Arial",
 				fontSize: "16px",
 				fontStyle: "bold",
@@ -100,17 +107,17 @@ export class DialogueSystem {
 
 		// Текст сообщения (пустой — заполняется typewriter'ом)
 		this.messageText = this.scene.add
-			.text(134, 408, "", {
+			.text(122, GAME_HEIGHT - 132, "", {
 				fontFamily: "Arial",
 				fontSize: "18px",
 				color: "#f8fafc",
-				wordWrap: { width: 690 },
+				wordWrap: { width: GAME_WIDTH - 210 },
 			})
 			.setDepth(51);
 
 		// Подсказка
 		this.hintText = this.scene.add
-			.text(872, 491, "[клик — продолжить]", {
+			.text(GAME_WIDTH - 40, GAME_HEIGHT - 49, "[клик — продолжить]", {
 				fontFamily: "Arial",
 				fontSize: "13px",
 				color: "#475569",
@@ -120,7 +127,7 @@ export class DialogueSystem {
 
 		// Невидимая зона клика
 		this.clickZone = this.scene.add
-			.zone(480, 432, 860, 130)
+			.zone(GAME_WIDTH / 2, GAME_HEIGHT - 108, GAME_WIDTH - 64, 130)
 			.setInteractive()
 			.setDepth(53);
 

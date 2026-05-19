@@ -1,5 +1,12 @@
 import Phaser from "phaser";
-import { LEVEL_COUNT } from "../game/constants";
+import {
+	GAME_HEIGHT,
+	GAME_WIDTH,
+	LEVEL_COUNT,
+	PLAYER_CONFIG,
+	PUZZLE_TYPES,
+	type PuzzleType,
+} from "../game/constants";
 import { completeLevel } from "../game/GameState";
 import { loadProgress, saveProgress } from "../game/SaveSystem";
 import { addHelp, addPanel, addTitle } from "../systems/UiSystem";
@@ -43,11 +50,13 @@ type CaveTheme = {
 	wallStroke: number;
 	accent: number;
 	labelColor: string;
+	name: string;
 };
 
 const CAVE_THEMES: readonly CaveTheme[] = [
 	// 0: Лабиринт — глубокий индиго/фиолетовый
 	{
+		name: "exploration_echo",
 		bgColor: "#1e1b4b",
 		panelFill: 0x2e2669,
 		wallFill: 0x0f172a,
@@ -57,6 +66,7 @@ const CAVE_THEMES: readonly CaveTheme[] = [
 	},
 	// 1: Поиск слов — тёмный океанский синий
 	{
+		name: "ancient_archive",
 		bgColor: "#0c1635",
 		panelFill: 0x1e3a5f,
 		wallFill: 0x0a1628,
@@ -66,6 +76,7 @@ const CAVE_THEMES: readonly CaveTheme[] = [
 	},
 	// 2: Ритм — тёмный багряный
 	{
+		name: "clockwork_mechanism",
 		bgColor: "#1a0505",
 		panelFill: 0x450a0a,
 		wallFill: 0x180404,
@@ -75,6 +86,7 @@ const CAVE_THEMES: readonly CaveTheme[] = [
 	},
 	// 3: Memory Match — тёмный изумруд
 	{
+		name: "mirror_reflection",
 		bgColor: "#041a1a",
 		panelFill: 0x064e3b,
 		wallFill: 0x022c22,
@@ -84,6 +96,7 @@ const CAVE_THEMES: readonly CaveTheme[] = [
 	},
 	// 4: Платформер — тёмный янтарь
 	{
+		name: "crystal_cavern",
 		bgColor: "#1a0c00",
 		panelFill: 0x451a03,
 		wallFill: 0x1c0a00,
@@ -93,10 +106,10 @@ const CAVE_THEMES: readonly CaveTheme[] = [
 	},
 ];
 
-const CAVE_BOUNDS = { x: 72, y: 112, width: 816, height: 340 };
-const MAZE_CELL_SIZE = 20;
-const MAZE_START_X = 270;
-const MAZE_START_Y = 128;
+const CAVE_BOUNDS = { x: 56, y: 112, width: 688, height: 420 };
+const MAZE_CELL_SIZE = 24;
+const MAZE_START_X = 220;
+const MAZE_START_Y = 154;
 const MAZE_START_COL = 0;
 const MAZE_START_ROW = 13;
 const MAZE_GOAL_COL = 13;
@@ -153,6 +166,16 @@ export class CaveScene extends Phaser.Scene {
 	private mazeCol = MAZE_START_COL;
 	private mazeRow = MAZE_START_ROW;
 	private mazeMoveLocked = false;
+	private currentMoveX = 0;
+	private currentMoveY = 0;
+	private coyoteTimer = 0;
+	private jumpBufferTimer = 0;
+	private riddleIndex = 0;
+	private soundTrapSequence: number[] = [];
+	private soundTrapInputIndex = 0;
+	private songSequence: number[] = [];
+	private songInputIndex = 0;
+	private jumpingSafeIndex = 0;
 
 	public constructor() {
 		super("CaveScene");
@@ -182,17 +205,33 @@ export class CaveScene extends Phaser.Scene {
 		this.mazeMoveLocked = false;
 		this.selectionLine = undefined;
 		this.crystalCount = 0;
-		this.theme = CAVE_THEMES[(this.level - 1) % 5];
+		this.currentMoveX = 0;
+		this.currentMoveY = 0;
+		this.coyoteTimer = 0;
+		this.jumpBufferTimer = 0;
+		this.riddleIndex = 0;
+		this.soundTrapSequence = [];
+		this.soundTrapInputIndex = 0;
+		this.songSequence = [];
+		this.songInputIndex = 0;
+		this.jumpingSafeIndex = 0;
+		this.theme = CAVE_THEMES[(this.level - 1) % CAVE_THEMES.length];
 	}
 
 	public create(): void {
 		this.cameras.main.setBackgroundColor(this.theme.bgColor);
 		this.add
-			.image(480, 270, "caveBackground")
+			.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, "caveBackground")
 			.setAlpha(0.4)
 			.setTint(this.theme.panelFill);
 		this.add
-			.tileSprite(480, 270, 960, 540, "tileFloor")
+			.tileSprite(
+				GAME_WIDTH / 2,
+				GAME_HEIGHT / 2,
+				GAME_WIDTH,
+				GAME_HEIGHT,
+				"tileFloor",
+			)
 			.setAlpha(0.2)
 			.setTint(this.theme.wallFill);
 
@@ -206,7 +245,7 @@ export class CaveScene extends Phaser.Scene {
 
 		addTitle(this, `Пещера ${this.level}`, 34);
 		this.add
-			.text(480, 68, this.getPuzzleName(), {
+			.text(400, 68, this.getPuzzleName(), {
 				fontFamily: "Arial",
 				fontSize: "20px",
 				color: this.theme.labelColor,
@@ -216,10 +255,10 @@ export class CaveScene extends Phaser.Scene {
 		// Основная панель пещеры
 		if ("nineslice" in this.add) {
 			(this.add as any)
-				.nineslice(480, 282, "uiPanel", undefined, 850, 350, 20, 20, 20, 20)
+				.nineslice(400, 315, "uiPanel", undefined, 710, 410, 20, 20, 20, 20)
 				.setAlpha(0.6);
 		} else {
-			addPanel(this, 480, 282, 850, 350);
+			addPanel(this, 400, 315, 710, 410);
 		}
 
 		this.add.text(92, 120, this.getPuzzlePrompt(), {
@@ -229,7 +268,7 @@ export class CaveScene extends Phaser.Scene {
 			wordWrap: { width: 760 },
 			lineSpacing: 5,
 		});
-		this.statusText = this.add.text(92, 405, "", {
+		this.statusText = this.add.text(92, 468, "", {
 			fontFamily: "Arial",
 			fontSize: "17px",
 			color: "#fde68a",
@@ -247,13 +286,13 @@ export class CaveScene extends Phaser.Scene {
 		this.player = this.physics.add
 			.sprite(playerStart.x, playerStart.y, "player")
 			.setCollideWorldBounds(true);
-		if ((this.level - 1) % 5 === 0) {
+		if (this.getPuzzleType() === "maze") {
 			this.player.setDisplaySize(16, 16).setDepth(20);
 			this.player.setCircle(7, 1, 1);
 		} else {
 			this.player.setDisplaySize(36, 44).setDepth(20);
 		}
-		if (this.solids && (this.level - 1) % 5 !== 0) {
+		if (this.solids && this.getPuzzleType() !== "maze") {
 			this.physics.add.collider(this.player, this.solids);
 		}
 
@@ -268,9 +307,9 @@ export class CaveScene extends Phaser.Scene {
 		);
 		addHelp(
 			this,
-			(this.level - 1) % 5 === 0
+			this.getPuzzleType() === "maze"
 				? "Лабиринт: стрелки — точное движение, WASD — скольжение до стены, Esc — хаб."
-				: "WASD/стрелки — движение, E/Space — действие, Esc — хаб. Проходы работают автоматически.",
+				: "WASD/стрелки — движение, E/Space/цифры — действие, Esc — хаб. Проходы работают автоматически.",
 		);
 
 		this.cursors = this.input.keyboard?.createCursorKeys();
@@ -294,21 +333,39 @@ export class CaveScene extends Phaser.Scene {
 			return;
 		}
 
-		const isPlatformer = (this.level - 1) % 5 === 4;
-		const speed = 172;
+		const isPlatformer = this.getPuzzleType() === "platformer";
 
 		if (isPlatformer) {
 			this.updatePlatformerMovement();
-		} else if (!this.solved && (this.level - 1) % 5 === 0) {
+		} else if (!this.solved && this.getPuzzleType() === "maze") {
 			this.updateMazeMovement();
 		} else {
+			const dt = 1 / 60;
 			const left = this.cursors.left.isDown || this.wasd.A.isDown;
 			const right = this.cursors.right.isDown || this.wasd.D.isDown;
 			const up = this.cursors.up.isDown || this.wasd.W.isDown;
 			const down = this.cursors.down.isDown || this.wasd.S.isDown;
+			const inputX = Number(right) - Number(left);
+			const inputY = Number(down) - Number(up);
+			const accel = PLAYER_CONFIG.topdownAcceleration * dt;
+			const decel = PLAYER_CONFIG.topdownDeceleration * dt;
+			this.currentMoveX = this.approach(
+				this.currentMoveX,
+				inputX,
+				inputX === 0 ? decel : accel,
+			);
+			this.currentMoveY = this.approach(
+				this.currentMoveY,
+				inputY,
+				inputY === 0 ? decel : accel,
+			);
+			const diagonal = this.currentMoveX !== 0 && this.currentMoveY !== 0;
+			const speed = diagonal
+				? PLAYER_CONFIG.topdownDiagonalSpeed
+				: PLAYER_CONFIG.topdownSpeed;
 			this.player.setVelocity(
-				(Number(right) - Number(left)) * speed,
-				(Number(down) - Number(up)) * speed,
+				this.currentMoveX * speed,
+				this.currentMoveY * speed,
 			);
 		}
 
@@ -330,38 +387,86 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private getPlayerStartPosition(): { x: number; y: number } {
-		if ((this.level - 1) % 5 === 0) {
+		if (this.getPuzzleType() === "maze") {
 			return this.getMazeCellCenter(MAZE_START_COL, MAZE_START_ROW);
 		}
 
-		return { x: 128, y: 382 };
+		return { x: 92, y: 468 };
 	}
 
 	private updatePlatformerMovement(): void {
 		if (!this.player || !this.cursors || !this.wasd) return;
 
-		const speed = 200;
-		const jumpForce = -450;
+		const body = this.player.body as Phaser.Physics.Arcade.Body | undefined;
+		const dt = 1 / 60;
 		const left = this.cursors.left.isDown || this.wasd.A.isDown;
 		const right = this.cursors.right.isDown || this.wasd.D.isDown;
-		const jump =
+		const jumpPressed =
 			Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
 			Phaser.Input.Keyboard.JustDown(this.wasd.W) ||
 			(this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey));
+		const jumpDown =
+			this.cursors.up.isDown ||
+			this.wasd.W.isDown ||
+			Boolean(this.spaceKey?.isDown);
+		const jumpReleased =
+			Phaser.Input.Keyboard.JustUp(this.cursors.up) ||
+			Phaser.Input.Keyboard.JustUp(this.wasd.W) ||
+			Boolean(this.spaceKey && Phaser.Input.Keyboard.JustUp(this.spaceKey));
+		const onGround = Boolean(body?.blocked.down || body?.touching.down);
 
-		this.player.setGravityY(1000);
-		this.player.setVelocityX((Number(right) - Number(left)) * speed);
-
-		if (
-			jump &&
-			(this.player.body?.blocked.down || this.player.body?.touching.down)
-		) {
-			this.player.setVelocityY(jumpForce);
+		if (jumpPressed) {
+			this.jumpBufferTimer = PLAYER_CONFIG.jumpBufferTime;
+		} else {
+			this.jumpBufferTimer = Math.max(0, this.jumpBufferTimer - dt);
 		}
 
+		if (onGround) {
+			this.coyoteTimer = PLAYER_CONFIG.coyoteTime;
+		} else {
+			this.coyoteTimer = Math.max(0, this.coyoteTimer - dt);
+		}
+
+		const inputX = Number(right) - Number(left);
+		const targetVelocity = inputX * PLAYER_CONFIG.platformerMoveSpeed;
+		const accel = onGround
+			? PLAYER_CONFIG.platformerGroundAcceleration
+			: PLAYER_CONFIG.platformerAirAcceleration;
+		const decel = onGround
+			? PLAYER_CONFIG.platformerGroundDeceleration
+			: PLAYER_CONFIG.platformerAirDeceleration;
+		const nextVelocityX = this.approach(
+			this.player.body?.velocity.x ?? 0,
+			targetVelocity,
+			(inputX === 0 ? decel : accel) * dt,
+		);
+
+		this.player.setVelocityX(nextVelocityX);
+
+		if (this.jumpBufferTimer > 0 && (onGround || this.coyoteTimer > 0)) {
+			this.player.setVelocityY(-PLAYER_CONFIG.jumpSpeed);
+			this.jumpBufferTimer = 0;
+			this.coyoteTimer = 0;
+		}
+
+		if (
+			jumpReleased &&
+			(this.player.body?.velocity.y ?? 0) < -PLAYER_CONFIG.jumpCutSpeed
+		) {
+			this.player.setVelocityY(-PLAYER_CONFIG.jumpCutSpeed);
+		}
+
+		const gravity =
+			(this.player.body?.velocity.y ?? 0) < 0
+				? jumpDown
+					? PLAYER_CONFIG.gravityRiseHold
+					: PLAYER_CONFIG.gravityRiseRelease
+				: PLAYER_CONFIG.gravityFall;
+		this.player.setGravityY(gravity);
+
 		// Если упали слишком низко
-		if (this.player.y > 450) {
-			this.player.setPosition(128, 382);
+		if (this.player.y > 560) {
+			this.player.setPosition(92, 468);
 			this.player.setVelocity(0, 0);
 			this.refreshStatus("Ты упал в бездну! Попробуй еще раз.");
 		}
@@ -501,21 +606,21 @@ export class CaveScene extends Phaser.Scene {
 	private createRoomCollision(): void {
 		this.add
 			.rectangle(
-				480,
-				282,
+				400,
+				322,
 				CAVE_BOUNDS.width,
 				CAVE_BOUNDS.height,
 				this.theme.panelFill,
 				0.45,
 			)
 			.setStrokeStyle(2, this.theme.accent);
-		this.createWall(480, 105, 840, 18);
-		this.createWall(480, 460, 840, 18);
-		this.createWall(60, 282, 18, 256);
-		this.createWall(900, 282, 18, 340);
-		this.createWall(190, 208, 150, 20);
-		this.createWall(720, 228, 180, 20);
-		this.createWall(410, 372, 190, 20);
+		this.createWall(400, 105, 710, 18);
+		this.createWall(400, 548, 710, 18);
+		this.createWall(52, 326, 18, 420);
+		this.createWall(748, 326, 18, 420);
+		this.createWall(172, 235, 125, 20);
+		this.createWall(625, 255, 150, 20);
+		this.createWall(392, 420, 160, 20);
 	}
 
 	private createWall(
@@ -544,9 +649,9 @@ export class CaveScene extends Phaser.Scene {
 
 	private createSceneDecorations(): void {
 		for (const item of [
-			{ x: 180, y: 416, scale: 0.65, tint: 0xfb7185 },
-			{ x: 782, y: 414, scale: 0.55, tint: 0xc084fc },
-			{ x: 700, y: 246, scale: 0.44, tint: 0x67e8f9 },
+			{ x: 150, y: 475, scale: 0.65, tint: 0xfb7185 },
+			{ x: 675, y: 475, scale: 0.55, tint: 0xc084fc },
+			{ x: 610, y: 276, scale: 0.44, tint: 0x67e8f9 },
 		]) {
 			const mushroom = this.add
 				.sprite(item.x, item.y, "glowMushroom")
@@ -568,8 +673,8 @@ export class CaveScene extends Phaser.Scene {
 
 		for (const item of [
 			{ x: 248, y: 118, scale: 0.52 },
-			{ x: 636, y: 118, scale: 0.46 },
-			{ x: 558, y: 452, scale: 0.5 },
+			{ x: 560, y: 118, scale: 0.46 },
+			{ x: 508, y: 535, scale: 0.5 },
 		]) {
 			this.add
 				.sprite(item.x, item.y, "caveCrystalCluster")
@@ -580,8 +685,40 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		for (const item of [
+			{ x: 135, y: 114, scale: 0.55 },
+			{ x: 330, y: 116, scale: 0.42 },
+			{ x: 660, y: 114, scale: 0.5 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, "stalactite")
+				.setTint(this.theme.wallStroke)
+				.setScale(item.scale)
+				.setAlpha(0.62)
+				.setDepth(4);
+		}
+
+		const type = this.getPuzzleType();
+		const thematicSprite =
+			type === "rhythm" || type === "sound_trap" || type === "cave_song"
+				? "gearEmblem"
+				: type === "pairs" || type === "memory_advanced"
+					? "mirrorShard"
+					: "runeStone";
+		for (const item of [
+			{ x: 118, y: 292, scale: 0.6 },
+			{ x: 680, y: 292, scale: 0.6 },
+		]) {
+			this.add
+				.sprite(item.x, item.y, thematicSprite)
+				.setTint(this.theme.accent)
+				.setScale(item.scale)
+				.setAlpha(0.55)
+				.setDepth(3);
+		}
+
+		for (const item of [
 			{ x: 112, y: 206, scale: 0.68 },
-			{ x: 852, y: 212, scale: 0.72 },
+			{ x: 705, y: 212, scale: 0.72 },
 			{ x: 248, y: 402, scale: 0.55 },
 		]) {
 			this.add
@@ -593,8 +730,8 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		for (const item of [
-			{ x: 480, y: 284, scale: 3.8, alpha: 0.06 },
-			{ x: 812, y: 382, scale: 1.05, alpha: 0.2 },
+			{ x: 400, y: 322, scale: 3.8, alpha: 0.06 },
+			{ x: 700, y: 468, scale: 1.05, alpha: 0.2 },
 		]) {
 			const circle = this.add
 				.sprite(item.x, item.y, "magicCircle")
@@ -614,8 +751,8 @@ export class CaveScene extends Phaser.Scene {
 		const pebbles = [
 			{ x: 150, y: 430, scale: 0.7 },
 			{ x: 258, y: 150, scale: 0.55 },
-			{ x: 622, y: 428, scale: 0.65 },
-			{ x: 820, y: 254, scale: 0.5 },
+			{ x: 560, y: 490, scale: 0.65 },
+			{ x: 710, y: 284, scale: 0.5 },
 		];
 		for (const item of pebbles) {
 			this.add
@@ -628,7 +765,7 @@ export class CaveScene extends Phaser.Scene {
 
 		for (const item of [
 			{ x: 118, y: 142, scale: 0.9 },
-			{ x: 850, y: 142, scale: 0.9 },
+			{ x: 705, y: 142, scale: 0.9 },
 		]) {
 			this.add
 				.sprite(item.x, item.y, "torchGlow")
@@ -670,16 +807,16 @@ export class CaveScene extends Phaser.Scene {
 
 	private createAutoExit(): void {
 		this.add
-			.rectangle(72, 382, 24, 86, 0x14532d, 0.7)
+			.rectangle(72, 468, 24, 86, 0x14532d, 0.7)
 			.setStrokeStyle(2, 0x86efac);
 		this.add
-			.text(90, 432, "Выход", {
+			.text(90, 518, "Выход", {
 				fontFamily: "Arial",
 				fontSize: "14px",
 				color: "#dcfce7",
 			})
 			.setOrigin(0.5);
-		const exitZone = this.add.zone(72, 382, 28, 92);
+		const exitZone = this.add.zone(72, 468, 28, 92);
 		this.physics.add.existing(exitZone, true);
 		this.autoZones.push({
 			zone: exitZone,
@@ -690,15 +827,15 @@ export class CaveScene extends Phaser.Scene {
 
 	private createAtmosphere(): void {
 		this.add
-			.tileSprite(480, 280, 900, 220, "mist")
+			.tileSprite(400, 320, 730, 260, "mist")
 			.setAlpha(0.28)
 			.setTint(this.theme.accent)
 			.setDepth(1);
 
 		for (const rune of [
 			{ x: 160, y: 150, scale: 0.52 },
-			{ x: 820, y: 170, scale: 0.46 },
-			{ x: 730, y: 400, scale: 0.38 },
+			{ x: 690, y: 170, scale: 0.46 },
+			{ x: 650, y: 470, scale: 0.38 },
 		]) {
 			this.add
 				.sprite(rune.x, rune.y, "runeGlow")
@@ -720,7 +857,7 @@ export class CaveScene extends Phaser.Scene {
 			0.4,
 			0.4,
 		);
-		vignette.fillRect(0, 0, 960, 540);
+		vignette.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
 		// Летающие частицы (пыль/магия)
 		for (let i = 0; i < 20; i++) {
@@ -748,14 +885,14 @@ export class CaveScene extends Phaser.Scene {
 
 	private createLever(): void {
 		this.add
-			.sprite(812, 382, "runeGlow")
+			.sprite(700, 468, "runeGlow")
 			.setTint(this.theme.accent)
 			.setScale(0.7)
 			.setAlpha(0.4)
 			.setDepth(3);
 
 		this.lever = this.physics.add
-			.staticSprite(812, 382, "lever")
+			.staticSprite(700, 468, "lever")
 			.setDisplaySize(42, 50);
 
 		this.tweens.add({
@@ -768,7 +905,7 @@ export class CaveScene extends Phaser.Scene {
 		});
 
 		this.add
-			.text(812, 428, "Рычаг", {
+			.text(700, 518, "Рычаг", {
 				fontFamily: "Arial",
 				fontSize: "14px",
 				color: "#f8fafc",
@@ -782,41 +919,67 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private createPuzzle(): void {
-		switch ((this.level - 1) % 5) {
-			case 0:
+		switch (this.getPuzzleType()) {
+			case "maze":
 				this.createMazePuzzle();
 				break;
-			case 1:
+			case "word_search":
 				this.createWordSearchPuzzle();
 				break;
-			case 2:
+			case "rhythm":
 				this.createRhythmPuzzle();
 				break;
-			case 3:
+			case "pairs":
 				this.createMemoryMatchPuzzle();
 				break;
-			default:
+			case "platformer":
 				this.createPlatformerPuzzle();
+				break;
+			case "final":
+				this.createFinalChallengePuzzle();
+				break;
+			case "riddle":
+				this.createRiddlePuzzle();
+				break;
+			case "sound_trap":
+				this.createSoundTrapPuzzle();
+				break;
+			case "jumping_path":
+				this.createJumpingPathPuzzle();
+				break;
+			case "memory_advanced":
+				this.createAdvancedMemoryPuzzle();
+				break;
+			case "cave_song":
+				this.createCaveSongPuzzle();
+				break;
+			case "epic_finale":
+				this.createEpicFinalePuzzle();
 				break;
 		}
 	}
 
 	private createPlatformerPuzzle(): void {
 		const platforms = [
-			{ x: 300, y: 380, w: 120, h: 20 },
-			{ x: 500, y: 300, w: 120, h: 20 },
-			{ x: 350, y: 220, w: 100, h: 20 },
-			{ x: 650, y: 200, w: 100, h: 20 },
+			{ x: 160, y: 500, w: 100, h: 20 },
+			{ x: 330, y: 450, w: 100, h: 20 },
+			{ x: 520, y: 400, w: 100, h: 20 },
+			{ x: 250, y: 350, w: 100, h: 20 },
+			{ x: 430, y: 300, w: 100, h: 20 },
+			{ x: 620, y: 250, w: 100, h: 20 },
+			{ x: 380, y: 200, w: 100, h: 20 },
 		];
 		for (const p of platforms) {
 			this.createWall(p.x, p.y, p.w, p.h);
 		}
 
 		const crystalPositions = [
-			{ x: 300, y: 340 },
-			{ x: 500, y: 260 },
-			{ x: 350, y: 180 },
-			{ x: 650, y: 160 },
+			{ x: 160, y: 465 },
+			{ x: 330, y: 415 },
+			{ x: 520, y: 365 },
+			{ x: 250, y: 315 },
+			{ x: 430, y: 265 },
+			{ x: 620, y: 215 },
 		];
 		this.crystalCount = 0;
 		for (const pos of crystalPositions) {
@@ -882,34 +1045,48 @@ export class CaveScene extends Phaser.Scene {
 			}
 		}
 		this.add.rectangle(
-			startX + 13 * cell,
-			startY + 13 * cell,
+			startX + MAZE_GOAL_COL * cell,
+			startY + MAZE_GOAL_ROW * cell,
 			26,
 			26,
 			0x22c55e,
 			0.85,
 		);
 		this.add
-			.sprite(startX + 13 * cell, startY + 13 * cell, "runeGlow")
+			.sprite(
+				startX + MAZE_GOAL_COL * cell,
+				startY + MAZE_GOAL_ROW * cell,
+				"runeGlow",
+			)
 			.setTint(0x22c55e)
 			.setAlpha(0.55)
 			.setScale(0.55)
 			.setDepth(7);
 		this.add
-			.text(startX + 13 * cell, startY + 13 * cell, "Ф", {
+			.text(startX + MAZE_GOAL_COL * cell, startY + MAZE_GOAL_ROW * cell, "Ф", {
 				fontFamily: "Arial",
 				fontSize: "16px",
 				color: "#052e16",
 			})
 			.setOrigin(0.5);
 		this.add
-			.text(startX + 13 * cell, startY + 13 * cell + 26, "Финиш", {
-				fontFamily: "Arial",
-				fontSize: "11px",
-				color: "#bbf7d0",
-			})
+			.text(
+				startX + MAZE_GOAL_COL * cell,
+				startY + MAZE_GOAL_ROW * cell + 26,
+				"Финиш",
+				{
+					fontFamily: "Arial",
+					fontSize: "11px",
+					color: "#bbf7d0",
+				},
+			)
 			.setOrigin(0.5);
-		const goal = this.add.zone(startX + 13 * cell, startY + 13 * cell, 28, 28);
+		const goal = this.add.zone(
+			startX + MAZE_GOAL_COL * cell,
+			startY + MAZE_GOAL_ROW * cell,
+			28,
+			28,
+		);
 		this.physics.add.existing(goal, true);
 		this.autoZones.push({
 			zone: goal,
@@ -934,9 +1111,9 @@ export class CaveScene extends Phaser.Scene {
 			"ЛДЖЭЯЧСМИТ",
 			"ЬБЮЙЦУКЕНГ",
 		];
-		const cell = 26;
-		const startX = 248;
-		const startY = 170;
+		const cell = 30;
+		const startX = 190;
+		const startY = 190;
 		for (const [y, row] of rows.entries()) {
 			for (const [x, letter] of [...row].entries()) {
 				const rect = this.add
@@ -965,7 +1142,7 @@ export class CaveScene extends Phaser.Scene {
 				});
 			}
 		}
-		this.add.text(590, 174, "Найди слова:\nЛАБИРИНТ\nПАЗЗЛ\nПЕЩЕРА\nГОРОД", {
+		this.add.text(548, 190, "Найди слова:\nЛАБИРИНТ\nПАЗЗЛ\nПЕЩЕРА\nГОРОД", {
 			fontFamily: "Arial",
 			fontSize: "18px",
 			color: "#e0f2fe",
@@ -977,7 +1154,7 @@ export class CaveScene extends Phaser.Scene {
 		this.rhythmRound = 1;
 		const colors = [0xff4444, 0x44ff44, 0x4444ff, 0xffff44];
 		for (let index = 0; index < 4; index += 1) {
-			const x = 300 + index * 110;
+			const x = 235 + index * 110;
 			const button = this.add
 				.sprite(x, 305, "button")
 				.setDisplaySize(80, 80)
@@ -1010,8 +1187,8 @@ export class CaveScene extends Phaser.Scene {
 		for (const [index, symbol] of shuffled.entries()) {
 			const col = index % 4;
 			const row = Math.floor(index / 4);
-			const x = 330 + col * 100;
-			const y = 238 + row * 86;
+			const x = 250 + col * 100;
+			const y = 275 + row * 86;
 
 			const rect = this.add
 				.sprite(x, y, "uiPanel")
@@ -1039,6 +1216,315 @@ export class CaveScene extends Phaser.Scene {
 				object: rect,
 				action: () => this.flipMemoryCard(card),
 			});
+		}
+	}
+
+	private createFinalChallengePuzzle(): void {
+		this.add.text(
+			210,
+			230,
+			"Финальное испытание арки: активируй 3 руны в порядке 1 → 2 → 3.",
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: "#f8fafc",
+				wordWrap: { width: 430 },
+			},
+		);
+		let nextRune = 1;
+		for (const rune of [
+			{ x: 270, y: 350, id: 1 },
+			{ x: 400, y: 292, id: 2 },
+			{ x: 530, y: 350, id: 3 },
+		]) {
+			const sprite = this.add
+				.sprite(rune.x, rune.y, "magicCircle")
+				.setTint(this.theme.accent)
+				.setScale(0.8)
+				.setAlpha(0.75);
+			this.add
+				.text(rune.x, rune.y, String(rune.id), {
+					fontFamily: "Arial Black",
+					fontSize: "24px",
+					color: "#ffffff",
+				})
+				.setOrigin(0.5);
+			this.interactables.push({
+				name: `Руна ${rune.id}`,
+				object: sprite,
+				action: () => {
+					if (rune.id !== nextRune) {
+						nextRune = 1;
+						this.refreshStatus("Порядок сбился. Начни с первой руны.");
+						return;
+					}
+					sprite.setAlpha(1).setTint(0x86efac);
+					nextRune += 1;
+					if (nextRune > 3) {
+						this.markSolved("Руны активированы. Финальное испытание пройдено.");
+					} else {
+						this.refreshStatus(`Верно. Теперь руна ${nextRune}.`);
+					}
+				},
+			});
+		}
+	}
+
+	private createRiddlePuzzle(): void {
+		const riddles = [
+			{ question: "Что выше леса, но легче пера?", answer: "ДЫМ" },
+			{ question: "Что всегда идёт, но никогда не приходит?", answer: "ВРЕМЯ" },
+			{ question: "Что имеет лицо, но не может видеть?", answer: "МОНЕТА" },
+		];
+		const options = ["ДЫМ", "КАМЕНЬ", "ВРЕМЯ", "МОНЕТА"];
+		const questionText = this.add.text(180, 215, "", {
+			fontFamily: "Arial",
+			fontSize: "20px",
+			color: "#f8fafc",
+			wordWrap: { width: 470 },
+		});
+		const refreshQuestion = () => {
+			const riddle = riddles[this.riddleIndex];
+			questionText.setText(
+				`Загадка ${this.riddleIndex + 1}/${riddles.length}: ${riddle.question}`,
+			);
+		};
+		refreshQuestion();
+		for (const [index, option] of options.entries()) {
+			const x = 210 + (index % 2) * 240;
+			const y = 315 + Math.floor(index / 2) * 70;
+			const button = this.add
+				.sprite(x, y, "button")
+				.setDisplaySize(180, 48)
+				.setTint(this.theme.accent)
+				.setAlpha(0.65);
+			this.add
+				.text(x, y, `${index + 1}. ${option}`, {
+					fontFamily: "Arial",
+					fontSize: "18px",
+					color: "#ffffff",
+				})
+				.setOrigin(0.5);
+			this.interactables.push({
+				name: `Ответ ${option}`,
+				object: button,
+				action: () => {
+					if (option !== riddles[this.riddleIndex].answer) {
+						this.refreshStatus(
+							"Ответ не подходит. Сфинкс ждёт другой вариант.",
+						);
+						return;
+					}
+					this.riddleIndex += 1;
+					if (this.riddleIndex >= riddles.length) {
+						this.markSolved("Все загадки Сфинкса решены.");
+					} else {
+						refreshQuestion();
+						this.refreshStatus("Верно. Следующая загадка.");
+					}
+				},
+			});
+		}
+	}
+
+	private createSoundTrapPuzzle(): void {
+		const notes = ["до", "ре", "ми", "фа", "соль", "ля", "си"];
+		this.soundTrapSequence = [0, 2, 4, 1, 5];
+		this.soundTrapInputIndex = 0;
+		this.add.text(
+			160,
+			210,
+			"Звуковые ловушки: повтори цепочку нот. В GMS2 используются клавиши 1–7.",
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: "#f8fafc",
+				wordWrap: { width: 520 },
+			},
+		);
+		this.add.text(
+			160,
+			258,
+			`Последовательность: ${this.soundTrapSequence.map((i) => notes[i]).join(" → ")}`,
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: this.theme.labelColor,
+			},
+		);
+		for (const [index, note] of notes.entries()) {
+			const x = 160 + index * 78;
+			const button = this.add
+				.sprite(x, 365, "button")
+				.setDisplaySize(62, 52)
+				.setTint(this.theme.accent)
+				.setAlpha(0.62);
+			this.add
+				.text(x, 365, `${index + 1}\n${note}`, {
+					fontFamily: "Arial",
+					fontSize: "14px",
+					color: "#fff",
+					align: "center",
+				})
+				.setOrigin(0.5);
+			this.interactables.push({
+				name: `Нота ${note}`,
+				object: button,
+				action: () =>
+					this.pressSequenceButton(index, this.soundTrapSequence, "sound"),
+			});
+		}
+	}
+
+	private createJumpingPathPuzzle(): void {
+		const path = [0, 1, 0, 2, 1];
+		this.jumpingSafeIndex = 0;
+		this.add.text(
+			178,
+			212,
+			"Прыгающий путь: наступай на безопасные плиты в показанном порядке.",
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: "#f8fafc",
+			},
+		);
+		this.add.text(
+			178,
+			246,
+			`Порядок дорожек: ${path.map((i) => i + 1).join(" → ")}`,
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: this.theme.labelColor,
+			},
+		);
+		for (let step = 0; step < path.length; step += 1) {
+			for (let lane = 0; lane < 3; lane += 1) {
+				const x = 230 + step * 82;
+				const y = 320 + lane * 46;
+				const tile = this.add
+					.rectangle(
+						x,
+						y,
+						62,
+						34,
+						lane === path[step] ? 0x14532d : 0x450a0a,
+						0.8,
+					)
+					.setStrokeStyle(2, this.theme.accent);
+				this.interactables.push({
+					name: `Плита ${step + 1}-${lane + 1}`,
+					object: tile,
+					action: () => {
+						if (step !== this.jumpingSafeIndex || lane !== path[step]) {
+							this.jumpingSafeIndex = 0;
+							this.refreshStatus("Плита провалилась. Начни путь заново.");
+							return;
+						}
+						tile.setFillStyle(0x22c55e, 1);
+						this.jumpingSafeIndex += 1;
+						if (this.jumpingSafeIndex >= path.length)
+							this.markSolved("Прыгающий путь пройден.");
+					},
+				});
+			}
+		}
+	}
+
+	private createAdvancedMemoryPuzzle(): void {
+		this.createMemoryMatchPuzzle();
+		this.add.text(
+			164,
+			205,
+			"Advanced Memory: пары нужно запоминать быстрее — как расширенный GMS2-тип.",
+			{
+				fontFamily: "Arial",
+				fontSize: "16px",
+				color: this.theme.labelColor,
+			},
+		);
+	}
+
+	private createCaveSongPuzzle(): void {
+		this.songSequence = [0, 3, 1, 4, 2];
+		this.songInputIndex = 0;
+		const labels = ["I", "II", "III", "IV", "V"];
+		this.add.text(174, 218, "Песнь пещер: собери мелодию по рунам.", {
+			fontFamily: "Arial",
+			fontSize: "19px",
+			color: "#f8fafc",
+		});
+		this.add.text(
+			174,
+			252,
+			`Мелодия: ${this.songSequence.map((i) => labels[i]).join(" → ")}`,
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: this.theme.labelColor,
+			},
+		);
+		for (const [index, label] of labels.entries()) {
+			const x = 215 + index * 92;
+			const rune = this.add
+				.sprite(x, 365, "runeGlow")
+				.setTint(this.theme.accent)
+				.setScale(0.82);
+			this.add
+				.text(x, 365, label, {
+					fontFamily: "Arial Black",
+					fontSize: "18px",
+					color: "#fff",
+				})
+				.setOrigin(0.5);
+			this.interactables.push({
+				name: `Руна песни ${label}`,
+				object: rune,
+				action: () =>
+					this.pressSequenceButton(index, this.songSequence, "song"),
+			});
+		}
+	}
+
+	private createEpicFinalePuzzle(): void {
+		this.createFinalChallengePuzzle();
+		this.add.text(
+			170,
+			180,
+			"Эпический финал: объединённая проверка порядка, памяти и рун.",
+			{
+				fontFamily: "Arial",
+				fontSize: "18px",
+				color: this.theme.labelColor,
+			},
+		);
+	}
+
+	private pressSequenceButton(
+		index: number,
+		sequence: number[],
+		mode: "sound" | "song",
+	): void {
+		const currentIndex =
+			mode === "sound" ? this.soundTrapInputIndex : this.songInputIndex;
+		if (index !== sequence[currentIndex]) {
+			if (mode === "sound") this.soundTrapInputIndex = 0;
+			else this.songInputIndex = 0;
+			this.refreshStatus("Последовательность сбилась. Повтори сначала.");
+			return;
+		}
+		const nextIndex = currentIndex + 1;
+		if (mode === "sound") this.soundTrapInputIndex = nextIndex;
+		else this.songInputIndex = nextIndex;
+		if (nextIndex >= sequence.length) {
+			this.markSolved(
+				mode === "sound"
+					? "Звуковые ловушки обезврежены."
+					: "Песнь пещер прозвучала верно.",
+			);
+		} else {
+			this.refreshStatus(`Верно. Шаг ${nextIndex + 1}/${sequence.length}.`);
 		}
 	}
 
@@ -1369,29 +1855,60 @@ export class CaveScene extends Phaser.Scene {
 	}
 
 	private getPuzzleName(): string {
-		const names = [
-			"Лабиринт",
-			"Поиск слов",
-			"Ритм/Паттерн",
-			"Memory Match",
-			"Платформер",
-		];
-		return names[(this.level - 1) % names.length];
+		const names: Record<PuzzleType, string> = {
+			maze: "Лабиринт",
+			word_search: "Поиск слов",
+			rhythm: "Ритм/Паттерн",
+			pairs: "Memory Match",
+			platformer: "Платформер",
+			final: "Финальное испытание",
+			riddle: "Загадки Сфинкса",
+			sound_trap: "Звуковые ловушки",
+			jumping_path: "Прыгающий путь",
+			memory_advanced: "Advanced Memory",
+			cave_song: "Песнь пещер",
+			epic_finale: "Эпический финал",
+		};
+		return names[this.getPuzzleType()];
 	}
 
 	private getPuzzlePrompt(): string {
-		switch ((this.level - 1) % 5) {
-			case 0:
+		switch (this.getPuzzleType()) {
+			case "maze":
 				return "Лабиринт: стрелками двигай героя точно, WASD запускает скольжение до стены. Доберись до зелёного финиша; он не двигается.";
-			case 1:
+			case "word_search":
 				return "Поиск слов: выбери первую и последнюю букву слова прямой линией через E/Space. Синяя линия подскажет выбор.";
-			case 2:
+			case "rhythm":
 				return "Ритм: запоминай последовательность цветных кнопок и повторяй её героем.";
-			case 3:
+			case "pairs":
 				return "Memory Match: открывай карты героем, ищи пары и жди, если карты не совпали.";
-			default:
+			case "platformer":
 				return "Платформер: прыгай по парящим островам и собери все кристаллы.";
+			case "final":
+				return "Финальное испытание: активируй руны в правильном порядке, затем опусти рычаг.";
+			case "riddle":
+				return "Загадки: подходи к варианту ответа и нажимай E/Space.";
+			case "sound_trap":
+				return "Звуковые ловушки: повторяй последовательность нот, как в GMS2-версии.";
+			case "jumping_path":
+				return "Прыгающий путь: выбирай безопасные плиты в указанном порядке.";
+			case "memory_advanced":
+				return "Advanced Memory: усложнённая версия поиска пар.";
+			case "cave_song":
+				return "Песнь пещер: нажимай руны в порядке мелодии.";
+			case "epic_finale":
+				return "Эпический финал: заверши комбинированное испытание рун.";
 		}
+	}
+
+	private getPuzzleType(): PuzzleType {
+		return PUZZLE_TYPES[(this.level - 1) % PUZZLE_TYPES.length];
+	}
+
+	private approach(current: number, target: number, amount: number): number {
+		if (current < target) return Math.min(current + amount, target);
+		if (current > target) return Math.max(current - amount, target);
+		return target;
 	}
 
 	private shuffle<T>(items: T[]): T[] {
