@@ -661,9 +661,6 @@ export class CaveScene extends Phaser.Scene {
 		this.createWall(400, 548, 710, 18);
 		this.createWall(52, 326, 18, 420);
 		this.createWall(748, 326, 18, 420);
-		this.createWall(172, 235, 125, 20);
-		this.createWall(625, 255, 150, 20);
-		this.createWall(392, 420, 160, 20);
 	}
 
 	private createWall(
