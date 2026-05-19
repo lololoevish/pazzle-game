@@ -41,6 +41,8 @@ export class TownScene extends Phaser.Scene {
 	private focusRing?: Phaser.GameObjects.Arc;
 	private currentMoveX = 0;
 	private currentMoveY = 0;
+	private isDashing = false;
+	private dashCooldown = 0;
 
 	public constructor() {
 		super("TownScene");
@@ -242,6 +244,10 @@ export class TownScene extends Phaser.Scene {
 			return;
 		}
 
+		if (this.dashCooldown > 0) {
+			this.dashCooldown -= delta;
+		}
+
 		const dt = Math.min(delta / 1000, 0.05);
 		const left = this.cursors.left.isDown || this.wasd.A.isDown;
 		const right = this.cursors.right.isDown || this.wasd.D.isDown;
@@ -267,20 +273,70 @@ export class TownScene extends Phaser.Scene {
 			? PLAYER_CONFIG.topdownDiagonalSpeed
 			: PLAYER_CONFIG.topdownSpeed;
 		const sprint = this.shiftKey?.isDown ? PLAYER_CONFIG.sprintMultiplier : 1;
-		this.player.setVelocity(
-			this.currentMoveX * speed * sprint,
-			this.currentMoveY * speed * sprint,
-		);
+
+		// Запуск рывка (Space)
+		const pressedSpace = this.spaceKey
+			? Phaser.Input.Keyboard.JustDown(this.spaceKey)
+			: false;
+		const isMoving = inputX !== 0 || inputY !== 0;
+
+		if (pressedSpace && !this.isDashing && this.dashCooldown <= 0 && isMoving) {
+			this.isDashing = true;
+			this.dashCooldown = 600; // Кулдаун 0.6 сек
+			this.cameras.main.shake(100, 0.003);
+
+			this.tweens.add({
+				targets: this.player,
+				duration: 150,
+				onUpdate: () => {
+					if (!this.player) return;
+					this.spawnGhostTrail(this.player.x, this.player.y);
+					this.spawnStepParticle(this.player.x, this.player.y);
+				},
+				onComplete: () => {
+					this.isDashing = false;
+				},
+			});
+		}
+
+		let velocityX = this.currentMoveX * speed * sprint;
+		let velocityY = this.currentMoveY * speed * sprint;
+		if (this.isDashing) {
+			velocityX *= 3.2;
+			velocityY *= 3.2;
+		}
+
+		this.player.setVelocity(velocityX, velocityY);
 		this.updateInteractableFocus();
+
+		// Мягкий Squash & Stretch для анимации ГГ
+		if (isMoving && !this.isDashing) {
+			const time = this.time.now;
+			const stretchX = 1 + Math.sin(time / 80) * 0.08;
+			const stretchY = 1 - Math.sin(time / 80) * 0.08;
+			this.player.setScale(stretchX, stretchY);
+
+			// Легкий наклон при движении
+			const angle = velocityX * 0.03;
+			this.player.setAngle(angle);
+
+			// Спавн пылинок
+			if (this.time.now % 6 === 0) {
+				this.spawnStepParticle(this.player.x, this.player.y);
+			}
+		} else if (!this.isDashing) {
+			// Мягкое дыхание стоя
+			const time = this.time.now;
+			const breath = 1 + Math.sin(time / 300) * 0.02;
+			this.player.setScale(1, breath);
+			this.player.setAngle(0);
+		}
 
 		const pressedInteract = this.interactKey
 			? Phaser.Input.Keyboard.JustDown(this.interactKey)
 			: false;
-		const pressedSpace = this.spaceKey
-			? Phaser.Input.Keyboard.JustDown(this.spaceKey)
-			: false;
 
-		if (pressedInteract || pressedSpace) {
+		if (pressedInteract) {
 			this.interact();
 		}
 
@@ -545,5 +601,47 @@ export class TownScene extends Phaser.Scene {
 		}
 		autoZone.triggered = true;
 		autoZone.action();
+	}
+
+	private spawnStepParticle(x: number, y: number): void {
+		const size = Phaser.Math.Between(2, 4);
+		const dust = this.add.rectangle(
+			x + Phaser.Math.Between(-8, 8),
+			y + 20,
+			size,
+			size,
+			0x5fa36f, // Зеленоватая пыль для травы хаба
+			0.7,
+		);
+		dust.setDepth(19);
+
+		this.tweens.add({
+			targets: dust,
+			x: dust.x + Phaser.Math.Between(-15, 15),
+			y: dust.y - Phaser.Math.Between(5, 15),
+			scaleX: 0.1,
+			scaleY: 0.1,
+			alpha: 0,
+			duration: Phaser.Math.Between(300, 600),
+			onComplete: () => dust.destroy(),
+		});
+	}
+
+	private spawnGhostTrail(x: number, y: number): void {
+		if (!this.player) return;
+		const ghost = this.add
+			.sprite(x, y, this.player.texture.key)
+			.setScale(this.player.scaleX, this.player.scaleY)
+			.setAngle(this.player.angle)
+			.setTint(0x38bdf8)
+			.setAlpha(0.5)
+			.setDepth(18);
+
+		this.tweens.add({
+			targets: ghost,
+			alpha: 0,
+			duration: 250,
+			onComplete: () => ghost.destroy(),
+		});
 	}
 }

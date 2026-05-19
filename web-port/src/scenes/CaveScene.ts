@@ -186,6 +186,9 @@ export class CaveScene extends Phaser.Scene {
 	private readonly interactables: Interactable[] = [];
 	private readonly autoZones: AutoZone[] = [];
 	private readonly wordCells: WordCell[] = [];
+	private isDashing = false;
+	private dashCooldown = 0;
+	private jumpCount = 0;
 	private readonly foundWords = new Set<string>();
 	private wordStart?: WordCell;
 	private rhythmSequence: number[] = [];
@@ -232,6 +235,9 @@ export class CaveScene extends Phaser.Scene {
 			Math.max(1, Number(data.level) || loadProgress().currentLevel),
 		);
 		this.solved = false;
+		this.isDashing = false;
+		this.dashCooldown = 0;
+		this.jumpCount = 0;
 		this.statusText = undefined;
 		this.player = undefined;
 		this.cursors = undefined;
@@ -446,6 +452,11 @@ export class CaveScene extends Phaser.Scene {
 		if (!this.player || !this.cursors || !this.wasd) {
 			return;
 		}
+
+		if (this.dashCooldown > 0) {
+			this.dashCooldown -= delta;
+		}
+
 		const dt = Math.min(delta / 1000, 0.05);
 
 		const isPlatformer = this.getPuzzleType() === "platformer";
@@ -478,20 +489,76 @@ export class CaveScene extends Phaser.Scene {
 				? PLAYER_CONFIG.topdownDiagonalSpeed
 				: PLAYER_CONFIG.topdownSpeed;
 			const sprint = this.shiftKey?.isDown ? PLAYER_CONFIG.sprintMultiplier : 1;
-			this.player.setVelocity(
-				this.currentMoveX * speed * sprint,
-				this.currentMoveY * speed * sprint,
-			);
+
+			// Запуск рывка (Space)
+			const pressedSpace = this.spaceKey
+				? Phaser.Input.Keyboard.JustDown(this.spaceKey)
+				: false;
+			const isMoving = inputX !== 0 || inputY !== 0;
+
+			if (
+				pressedSpace &&
+				!this.isDashing &&
+				this.dashCooldown <= 0 &&
+				isMoving
+			) {
+				this.isDashing = true;
+				this.dashCooldown = 600; // Кулдаун 0.6 сек
+				this.cameras.main.shake(100, 0.003);
+
+				this.tweens.add({
+					targets: this.player,
+					duration: 150,
+					onUpdate: () => {
+						if (!this.player) return;
+						this.spawnGhostTrail(this.player.x, this.player.y);
+						this.spawnStepParticle(this.player.x, this.player.y);
+					},
+					onComplete: () => {
+						this.isDashing = false;
+					},
+				});
+			}
+
+			let velocityX = this.currentMoveX * speed * sprint;
+			let velocityY = this.currentMoveY * speed * sprint;
+			if (this.isDashing) {
+				velocityX *= 3.2;
+				velocityY *= 3.2;
+			}
+
+			this.player.setVelocity(velocityX, velocityY);
+
+			// Мягкий Squash & Stretch для анимации ГГ
+			if (isMoving && !this.isDashing) {
+				const time = this.time.now;
+				const stretchX = 1 + Math.sin(time / 80) * 0.08;
+				const stretchY = 1 - Math.sin(time / 80) * 0.08;
+				this.player.setScale(stretchX, stretchY);
+
+				// Наклон
+				const angle = velocityX * 0.03;
+				this.player.setAngle(angle);
+
+				// Пылинки
+				if (this.time.now % 6 === 0) {
+					this.spawnStepParticle(this.player.x, this.player.y);
+				}
+			} else if (!this.isDashing) {
+				// Дыхание стоя стоя
+				const time = this.time.now;
+				const breath = 1 + Math.sin(time / 300) * 0.02;
+				this.player.setScale(1, breath);
+				this.player.setAngle(0);
+			}
 		}
 		this.updateInteractableFocus();
 
 		const pressedInteract = this.interactKey
 			? Phaser.Input.Keyboard.JustDown(this.interactKey)
 			: false;
-		const pressedSpace = this.spaceKey
-			? Phaser.Input.Keyboard.JustDown(this.spaceKey)
-			: false;
-		if (pressedInteract || pressedSpace) {
+
+		if (pressedInteract) {
 			this.interact();
 		}
 		this.handleNumberInput();
@@ -531,16 +598,17 @@ export class CaveScene extends Phaser.Scene {
 			Boolean(this.spaceKey && Phaser.Input.Keyboard.JustUp(this.spaceKey));
 		const onGround = Boolean(body?.blocked.down || body?.touching.down);
 
+		if (onGround) {
+			this.jumpCount = 0;
+			this.coyoteTimer = PLAYER_CONFIG.coyoteTime;
+		} else {
+			this.coyoteTimer = Math.max(0, this.coyoteTimer - dt);
+		}
+
 		if (jumpPressed) {
 			this.jumpBufferTimer = PLAYER_CONFIG.jumpBufferTime;
 		} else {
 			this.jumpBufferTimer = Math.max(0, this.jumpBufferTimer - dt);
-		}
-
-		if (onGround) {
-			this.coyoteTimer = PLAYER_CONFIG.coyoteTime;
-		} else {
-			this.coyoteTimer = Math.max(0, this.coyoteTimer - dt);
 		}
 
 		const inputX = Number(right) - Number(left);
@@ -560,10 +628,25 @@ export class CaveScene extends Phaser.Scene {
 
 		this.player.setVelocityX(nextVelocityX);
 
+		// Механика обычного прыжка
 		if (this.jumpBufferTimer > 0 && (onGround || this.coyoteTimer > 0)) {
 			this.player.setVelocityY(-PLAYER_CONFIG.jumpSpeed);
 			this.jumpBufferTimer = 0;
 			this.coyoteTimer = 0;
+			this.jumpCount = 1;
+			this.player.setScale(0.8, 1.25); // Растяжение при прыжке
+			this.spawnStepParticle(this.player.x, this.player.y);
+		}
+		// Двойной прыжок в воздухе!
+		else if (jumpPressed && !onGround && this.jumpCount < 2) {
+			this.player.setVelocityY(-PLAYER_CONFIG.jumpSpeed * 0.9);
+			this.jumpBufferTimer = 0;
+			this.jumpCount = 2;
+			this.player.setScale(1.25, 0.75); // Сжатие при двойном прыжке
+			this.cameras.main.shake(85, 0.003);
+			for (let i = 0; i < 6; i++) {
+				this.spawnStepParticle(this.player.x, this.player.y);
+			}
 		}
 
 		if (
@@ -581,9 +664,32 @@ export class CaveScene extends Phaser.Scene {
 				: PLAYER_CONFIG.gravityFall;
 		this.player.setGravityY(gravity);
 
+		// Визуальные покачивания в платформере
+		if (onGround) {
+			if (inputX !== 0) {
+				const time = this.time.now;
+				this.player.setScale(
+					1 + Math.sin(time / 70) * 0.07,
+					1 - Math.sin(time / 70) * 0.07,
+				);
+				this.player.setAngle(nextVelocityX * 0.035);
+				if (this.time.now % 6 === 0) {
+					this.spawnStepParticle(this.player.x, this.player.y);
+				}
+			} else {
+				// Плавное возвращение к норме с дыханием
+				const time = this.time.now;
+				this.player.setScale(1, 1 + Math.sin(time / 300) * 0.02);
+				this.player.setAngle(0);
+			}
+		} else {
+			// В воздухе наклоняемся по направлению полета
+			this.player.setAngle(nextVelocityX * 0.045);
+		}
+
 		// Если упали слишком низко
 		if (this.player.y > 560) {
-			this.player.setPosition(92, 468);
+			this.player.setPosition(140, 468);
 			this.player.setVelocity(0, 0);
 			this.refreshStatus("Ты упал в бездну! Попробуй еще раз.");
 		}
@@ -2172,5 +2278,47 @@ export class CaveScene extends Phaser.Scene {
 			[result[index], result[swapIndex]] = [result[swapIndex], result[index]];
 		}
 		return result;
+	}
+
+	private spawnStepParticle(x: number, y: number): void {
+		const size = Phaser.Math.Between(2, 4);
+		const dust = this.add.rectangle(
+			x + Phaser.Math.Between(-8, 8),
+			y + 20,
+			size,
+			size,
+			0x475569, // Серая пыль для пещерной земли
+			0.7,
+		);
+		dust.setDepth(19);
+
+		this.tweens.add({
+			targets: dust,
+			x: dust.x + Phaser.Math.Between(-15, 15),
+			y: dust.y - Phaser.Math.Between(5, 15),
+			scaleX: 0.1,
+			scaleY: 0.1,
+			alpha: 0,
+			duration: Phaser.Math.Between(300, 600),
+			onComplete: () => dust.destroy(),
+		});
+	}
+
+	private spawnGhostTrail(x: number, y: number): void {
+		if (!this.player) return;
+		const ghost = this.add
+			.sprite(x, y, this.player.texture.key)
+			.setScale(this.player.scaleX, this.player.scaleY)
+			.setAngle(this.player.angle)
+			.setTint(this.theme.accent)
+			.setAlpha(0.5)
+			.setDepth(18);
+
+		this.tweens.add({
+			targets: ghost,
+			alpha: 0,
+			duration: 250,
+			onComplete: () => ghost.destroy(),
+		});
 	}
 }
