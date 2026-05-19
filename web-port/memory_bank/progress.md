@@ -20,4 +20,4 @@
 
 ## Контроль изменений
 
-- last_checked_commit: bed9cfb3655af5e9d065ba2d34950056e393a3ec
+- last_checked_commit: da58f615ed055edaa0cf057bf8656d24bdf4966a
