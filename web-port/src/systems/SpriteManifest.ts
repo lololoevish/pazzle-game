@@ -198,195 +198,377 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 				}
 			}
 		} else if (key === "player") {
-			// Тень под ногами
-			graphics.fillStyle(0x000000, 0.3);
-			graphics.fillEllipse(20, 44, 15, 6);
+			// Красивая градиентная тень под ногами
+			graphics.fillStyle(0x000000, 0.4);
+			graphics.fillEllipse(20, 44, 16, 5);
+			graphics.fillStyle(0x000000, 0.25);
+			graphics.fillEllipse(20, 44, 20, 7);
 
-			// Герой с глазами и "рюкзаком"
-			graphics.fillStyle(color, 1);
-			graphics.fillRoundedRect(4, 2, 32, 40, 8);
-			graphics.lineStyle(2, 0xffffff, 0.5);
-			graphics.strokeRoundedRect(4, 2, 32, 40, 8);
+			// Струящийся плащ за спиной
+			graphics.fillStyle(0x7c3aed, 0.95);
+			graphics.fillRoundedRect(2, 8, 36, 32, 6);
+			graphics.fillStyle(0x6d28d9, 1);
+			graphics.fillRect(6, 12, 28, 28);
 
-			// Глаза
+			// Тело с плавным градиентом
+			graphics.fillGradientStyle(color, color, 0x0284c7, 0x0c4a6e, 1);
+			graphics.fillRoundedRect(5, 3, 30, 38, 8);
+			graphics.lineStyle(1.5, 0xe0f2fe, 0.65);
+			graphics.strokeRoundedRect(5, 3, 30, 38, 8);
+
+			// Выразительные глаза с бликами и зрачками
 			graphics.fillStyle(0xffffff, 1);
-			graphics.fillRect(10, 12, 6, 6);
-			graphics.fillRect(24, 12, 6, 6);
-			graphics.fillStyle(0x000000, 1);
-			graphics.fillRect(12, 14, 2, 2);
-			graphics.fillRect(26, 14, 2, 2);
+			graphics.fillCircle(13, 14, 4);
+			graphics.fillCircle(27, 14, 4);
+			graphics.fillStyle(0x0369a1, 1);
+			graphics.fillCircle(13, 14, 2);
+			graphics.fillCircle(27, 14, 2);
+			graphics.fillStyle(0xffffff, 1);
+			graphics.fillCircle(14, 13, 1.2);
+			graphics.fillCircle(28, 13, 1.2);
+
+			// Светящийся амулет на груди
+			graphics.fillStyle(0xfde68a, 1);
+			graphics.fillTriangle(20, 22, 17, 26, 23, 26);
+			graphics.fillStyle(0xf59e0b, 1);
+			graphics.fillTriangle(20, 30, 17, 26, 23, 26);
 		} else if (key.startsWith("npc")) {
-			// Тень
-			graphics.fillStyle(0x000000, 0.3);
-			graphics.fillEllipse(20, 44, 15, 6);
-
-			// NPC с отличительными чертами
-			graphics.fillStyle(color, 1);
-			graphics.fillRoundedRect(4, 2, 32, 40, 10);
-			graphics.lineStyle(2, 0x000000, 0.3);
-			graphics.strokeRoundedRect(4, 2, 32, 40, 10);
-
-			// Глаза
-			graphics.lineStyle(2, 0x000000, 0.6);
-			graphics.lineBetween(10, 16, 16, 16);
-			graphics.lineBetween(24, 16, 30, 16);
+			// Тень под ногами
+			graphics.fillStyle(0x000000, 0.4);
+			graphics.fillEllipse(20, 44, 16, 5);
 
 			if (key === "npcElder") {
-				// Борода
-				graphics.fillStyle(0xffffff, 0.9);
-				graphics.fillTriangle(10, 22, 30, 22, 20, 42);
+				// Староста в мудрой изумрудной мантии
+				graphics.fillGradientStyle(0x047857, 0x047857, 0x064e3b, 0x022c22, 1);
+				graphics.fillRoundedRect(4, 2, 32, 40, 10);
+				graphics.lineStyle(2, 0x10b981, 0.45);
+				graphics.strokeRoundedRect(4, 2, 32, 40, 10);
+
+				// Глаза (прищуренные, мудрые)
+				graphics.lineStyle(2.5, 0x1e293b, 0.8);
+				graphics.lineBetween(10, 15, 15, 14);
+				graphics.lineBetween(25, 14, 30, 15);
+
+				// Пышная прорисованная борода с локонами
+				graphics.fillStyle(0xf1f5f9, 0.95);
+				graphics.fillTriangle(8, 20, 32, 20, 20, 43);
+				graphics.fillStyle(0xe2e8f0, 0.85);
+				graphics.fillTriangle(14, 20, 26, 20, 20, 38);
+
+				// Посох с сияющей сферой
+				graphics.fillStyle(0x78350f, 1);
+				graphics.fillRect(32, 6, 4, 38); // Ручка посоха
+				graphics.fillStyle(0xfbbf24, 1);
+				graphics.fillRect(31, 2, 6, 4); // Золотое навершие
+				graphics.fillStyle(0x60a5fa, 0.9);
+				graphics.fillCircle(34, 0, 5); // Сияющая сфера
+				graphics.fillStyle(0xffffff, 0.85);
+				graphics.fillCircle(33, -1, 2); // Блик на сфере
 			} else if (key === "npcMechanic") {
-				// Пояс с инструментами
+				// Механик в оранжевой куртке и прочном жилете
+				graphics.fillGradientStyle(0xd97706, 0xd97706, 0x7c2d12, 0x451a03, 1);
+				graphics.fillRoundedRect(4, 2, 32, 40, 8);
+				graphics.lineStyle(1.5, 0xf59e0b, 0.5);
+				graphics.strokeRoundedRect(4, 2, 32, 40, 8);
+
+				// Защитный нагрудник
 				graphics.fillStyle(0x4b5563, 1);
-				graphics.fillRect(4, 26, 32, 6);
+				graphics.fillRoundedRect(8, 22, 24, 18, 4);
+
+				// Глаза и защитные очки на лбу
+				graphics.fillStyle(0xffffff, 1);
+				graphics.fillCircle(13, 15, 3.5);
+				graphics.fillCircle(27, 15, 3.5);
+				graphics.fillStyle(0x000000, 1);
+				graphics.fillCircle(13, 15, 1.5);
+				graphics.fillCircle(27, 15, 1.5);
+
+				// Большие очки на лбу
+				graphics.fillStyle(0x1e293b, 0.95);
+				graphics.fillRect(6, 6, 28, 4);
+				graphics.fillStyle(0xfacc15, 0.88);
+				graphics.fillCircle(11, 8, 4);
+				graphics.fillCircle(29, 8, 4);
+
+				// Серебряный гаечный ключ за плечом
 				graphics.fillStyle(0x9ca3af, 1);
-				graphics.fillRect(10, 26, 4, 8); // Инструмент 1
-				graphics.fillRect(26, 26, 4, 8); // Инструмент 2
+				graphics.fillRect(32, 10, 3, 26);
+				graphics.fillStyle(0x6b7280, 1);
+				graphics.fillCircle(33.5, 9, 4);
+				graphics.fillStyle(0x000000, 1);
+				graphics.fillCircle(33.5, 9, 1.5); // Отверстие ключа
 			} else if (key === "npcArchivist") {
-				// Монокль и книга
-				graphics.lineStyle(1, 0xffd700, 1);
-				graphics.strokeCircle(27, 16, 5);
-				graphics.lineBetween(27, 11, 27, 3);
-				graphics.fillStyle(0xffffff, 0.8);
-				graphics.fillRect(8, 28, 12, 10); // Книжка
+				// Архивариус в мистической темной мантии со звездами
+				graphics.fillGradientStyle(0x312e81, 0x312e81, 0x1e1b4b, 0x090514, 1);
+				graphics.fillRoundedRect(4, 2, 32, 40, 9);
+				graphics.lineStyle(2, 0xa78bfa, 0.55);
+				graphics.strokeRoundedRect(4, 2, 32, 40, 9);
+
+				// Золотая вышивка
+				graphics.lineStyle(1.5, 0xfbbf24, 0.7);
+				graphics.lineBetween(8, 22, 32, 22);
+				graphics.lineBetween(8, 32, 32, 32);
+
+				// Глаза и золотой монокль
+				graphics.fillStyle(0xffffff, 1);
+				graphics.fillCircle(13, 15, 3.5);
+				graphics.fillCircle(27, 15, 3.5);
+				graphics.fillStyle(0x000000, 1);
+				graphics.fillCircle(13, 15, 1.5);
+				graphics.fillCircle(27, 15, 1.5);
+
+				// Монокль
+				graphics.lineStyle(1.5, 0xf59e0b, 1);
+				graphics.strokeCircle(13, 15, 5);
+				graphics.lineBetween(8, 15, 4, 24); // Цепочка монокля
+
+				// Левитирующая открытая книга
+				graphics.fillStyle(0x4c1d95, 0.9);
+				graphics.fillRoundedRect(31, 24, 11, 14, 2); // Обложка
+				graphics.fillStyle(0xfef08a, 0.95);
+				graphics.fillRect(32, 25, 9, 12); // Страницы
+				graphics.lineStyle(1, 0x000000, 0.35);
+				graphics.lineBetween(36, 25, 36, 37); // Разворот книги
 			}
 		} else if (key === "crystal") {
-			// Тень
-			graphics.fillStyle(0x000000, 0.2);
-			graphics.fillEllipse(16, 28, 12, 4);
+			// Красивая тень
+			graphics.fillStyle(0x000000, 0.25);
+			graphics.fillEllipse(16, 28, 13, 4.5);
 
-			// Кристалл (многогранный ромб)
-			graphics.fillStyle(color, 1);
+			// Многогранный 3D кристалл
+			// 1. Левая грань (темная)
+			graphics.fillStyle(0x0891b2, 0.95);
 			graphics.beginPath();
-			graphics.moveTo(16, 0);
-			graphics.lineTo(32, 16);
-			graphics.lineTo(16, 32);
-			graphics.lineTo(0, 16);
+			graphics.moveTo(16, 1);
+			graphics.lineTo(4, 16);
+			graphics.lineTo(16, 31);
 			graphics.closePath();
 			graphics.fill();
 
-			// Грани
-			graphics.lineStyle(1, 0xffffff, 0.6);
-			graphics.lineBetween(16, 0, 16, 32);
-			graphics.lineBetween(0, 16, 32, 16);
-			graphics.lineStyle(2, 0xffffff, 0.9);
+			// 2. Правая грань (светлая)
+			graphics.fillStyle(0x22d3ee, 0.95);
+			graphics.beginPath();
+			graphics.moveTo(16, 1);
+			graphics.lineTo(28, 16);
+			graphics.lineTo(16, 31);
+			graphics.closePath();
+			graphics.fill();
+
+			// 3. Центральное светящееся ядро
+			graphics.fillStyle(0xecfeff, 0.7);
+			graphics.beginPath();
+			graphics.moveTo(16, 4);
+			graphics.lineTo(10, 16);
+			graphics.lineTo(16, 28);
+			graphics.lineTo(22, 16);
+			graphics.closePath();
+			graphics.fill();
+
+			// 4. Ослепительные белые грани и блик
+			graphics.lineStyle(1.5, 0xffffff, 0.85);
+			graphics.beginPath();
+			graphics.moveTo(16, 1);
+			graphics.lineTo(4, 16);
+			graphics.lineTo(16, 31);
+			graphics.lineTo(28, 16);
+			graphics.closePath();
 			graphics.strokePath();
 
-			// Блеск
-			graphics.fillStyle(0xffffff, 0.6);
-			graphics.fillTriangle(16, 4, 28, 16, 16, 16);
-			graphics.fillTriangle(16, 28, 4, 16, 16, 16);
+			graphics.lineStyle(1.2, 0xffffff, 0.6);
+			graphics.lineBetween(16, 1, 16, 31);
+			graphics.lineBetween(4, 16, 28, 16);
+
+			// 5. Искры вокруг
+			graphics.fillStyle(0xffffff, 0.8);
+			graphics.fillRect(4, 4, 2, 2);
+			graphics.fillRect(26, 6, 2, 2);
+			graphics.fillRect(5, 25, 2, 2);
+			graphics.fillRect(25, 24, 2, 2);
 		} else if (key === "lever") {
 			// Тень
-			graphics.fillStyle(0x000000, 0.3);
-			graphics.fillEllipse(20, 44, 18, 6);
+			graphics.fillStyle(0x000000, 0.35);
+			graphics.fillEllipse(20, 44, 19, 6.5);
 
-			// Рычаг с основанием
-			graphics.fillStyle(0x374151, 1);
-			graphics.fillRoundedRect(4, 34, 32, 12, 4);
-			graphics.lineStyle(4, 0x9ca3af, 1);
-			graphics.lineBetween(20, 36, 20, 12);
+			// Каменный резной постамент
+			graphics.fillGradientStyle(0x374151, 0x374151, 0x1f2937, 0x111827, 1);
+			graphics.fillRoundedRect(3, 33, 34, 13, 5);
+			graphics.lineStyle(1.5, 0x4b5563, 0.8);
+			graphics.strokeRoundedRect(3, 33, 34, 13, 5);
 
-			// Набалдашник с бликом
+			// Рунический символ на постаменте
+			graphics.lineStyle(1, 0xef4444, 0.85);
+			graphics.strokeCircle(20, 39, 3.5);
+
+			// Металлическая ось
+			graphics.fillStyle(0x9ca3af, 1);
+			graphics.fillCircle(20, 33, 6);
+
+			// Прочный рычаг
+			graphics.lineStyle(4.5, 0x4b5563, 1);
+			graphics.lineBetween(20, 33, 20, 11);
+			graphics.lineStyle(2, 0xd1d5db, 0.8);
+			graphics.lineBetween(20, 32, 20, 12);
+
+			// Светящийся набалдашник с красивой аурой
+			graphics.fillStyle(0xef4444, 0.22);
+			graphics.fillCircle(20, 9, 13); // Аура свечения
 			graphics.fillStyle(0xef4444, 1);
-			graphics.fillCircle(20, 10, 8);
-			graphics.fillStyle(0xffffff, 0.4);
-			graphics.fillCircle(17, 7, 3);
+			graphics.fillCircle(20, 9, 7.5); // Сам шар
+			graphics.fillStyle(0xffffff, 0.8);
+			graphics.fillCircle(17.5, 6.5, 2.5); // Четкий блик
 		} else if (key === "caveEntrance") {
-			// Арка входа
-			graphics.fillStyle(0x111827, 1);
-			graphics.fillEllipse(36, 40, 60, 64);
-			graphics.lineStyle(6, color, 1);
-			graphics.strokeEllipse(36, 40, 60, 64);
-			// Камни вокруг
-			graphics.fillStyle(color, 0.7);
-			for (let i = 0; i < 8; i++) {
-				const ang = (i / 8) * Math.PI * 2;
-				graphics.fillCircle(
-					36 + Math.cos(ang) * 32,
-					40 + Math.sin(ang) * 32,
-					8,
-				);
+			// Величественная каменная арка
+			graphics.fillStyle(0x0f172a, 1); // Темный зев пещеры
+			graphics.fillEllipse(36, 40, 58, 62);
+
+			// Мистический портал с градиентом
+			graphics.fillGradientStyle(0x1e1b4b, 0x1e1b4b, 0x311042, 0x05010a, 0.65);
+			graphics.fillEllipse(36, 40, 50, 54);
+
+			// Левая и правая каменные колонны
+			graphics.fillGradientStyle(0x4b5563, 0x374151, 0x1f2937, 0x111827, 1);
+			graphics.fillRoundedRect(2, 10, 14, 62, 4);
+			graphics.fillRoundedRect(56, 10, 14, 62, 4);
+
+			// Каменное оголовье арки
+			graphics.fillRoundedRect(2, 4, 68, 12, 4);
+
+			// Рельефные швы на камнях
+			graphics.lineStyle(1.5, 0x111827, 0.8);
+			for (let i = 1; i < 4; i++) {
+				graphics.lineBetween(2, 10 + i * 16, 16, 10 + i * 16);
+				graphics.lineBetween(56, 10 + i * 16, 70, 10 + i * 16);
 			}
+
+			// Светящиеся неоновые руны на колоннах
+			graphics.fillStyle(color, 0.85);
+			// Левые руны
+			graphics.fillCircle(9, 20, 2.5);
+			graphics.fillTriangle(9, 36, 6, 41, 12, 41);
+			graphics.fillRect(7, 54, 4, 4);
+			// Правые руны
+			graphics.fillCircle(63, 20, 2.5);
+			graphics.fillTriangle(63, 36, 60, 41, 66, 41);
+			graphics.fillRect(61, 54, 4, 4);
+
+			// Золотая окантовка портала
+			graphics.lineStyle(2, 0xfdba74, 0.8);
+			graphics.strokeEllipse(36, 40, 50, 54);
 		} else if (key === "uiPanel") {
-			// Панель с рамкой
-			graphics.fillStyle(color, 1);
+			// Богатая фэнтезийная панель с золотыми заклепками по углам
+			graphics.fillStyle(0x1e293b, 1); // Внутренний фон кожи
 			graphics.fillRoundedRect(0, 0, width, height, 12);
-			graphics.lineStyle(4, 0x4a5568, 1);
+
+			// Текстура кожи/холста
+			graphics.fillStyle(0x0f172a, 0.2);
+			for (let i = 0; i < 15; i++) {
+				graphics.fillRect(Math.random() * width, Math.random() * height, 4, 4);
+			}
+
+			// Прочная темная рамка
+			graphics.lineStyle(4.5, 0x0f172a, 1);
 			graphics.strokeRoundedRect(2, 2, width - 4, height - 4, 12);
-			graphics.lineStyle(2, 0x718096, 1);
+
+			// Внутренняя изящная золотая каемка
+			graphics.lineStyle(2, 0xd97706, 0.8);
 			graphics.strokeRoundedRect(6, 6, width - 12, height - 12, 8);
+
+			// Золотые заклепки по 4 углам
+			graphics.fillStyle(0xfbbf24, 1);
+			graphics.fillCircle(10, 10, 3);
+			graphics.fillCircle(width - 10, 10, 3);
+			graphics.fillCircle(10, height - 10, 3);
+			graphics.fillCircle(width - 10, height - 10, 3);
 		} else if (key === "button") {
-			// Кнопка с градиентом
-			graphics.fillGradientStyle(color, color, 0x2d3748, 0x2d3748, 1);
+			// Великолепная объемная кнопка
+			graphics.fillGradientStyle(color, color, 0x1e293b, 0x0f172a, 1);
 			graphics.fillRoundedRect(0, 0, width, height, 6);
-			graphics.lineStyle(2, 0xffffff, 0.4);
+
+			// Объемная каемка (блик сверху, тень снизу)
+			graphics.lineStyle(2, 0xffffff, 0.35);
 			graphics.strokeRoundedRect(1, 1, width - 2, height - 2, 6);
+			graphics.lineStyle(1.5, 0x000000, 0.5);
+			graphics.lineBetween(1, height - 2, width - 2, height - 2);
 		} else if (key === "tileFloor") {
-			// Плитка пола
+			// Текстурный плиточный пол (изысканный паркет)
 			graphics.fillStyle(color, 1);
 			graphics.fillRect(0, 0, width, height);
-			graphics.lineStyle(1, 0x000000, 0.3);
+
+			graphics.lineStyle(1, 0x000000, 0.25);
 			graphics.strokeRect(0, 0, width, height);
-			graphics.lineStyle(1, 0xffffff, 0.1);
-			graphics.strokeRect(1, 1, width - 2, height - 2);
+
+			graphics.lineStyle(1, 0xffffff, 0.08);
+			graphics.lineBetween(1, 1, width - 2, 1);
+			graphics.lineBetween(1, 1, 1, height - 2);
 		} else if (key === "caveWall") {
-			// Неровный каменный блок для стен и платформ.
-			graphics.fillGradientStyle(color, color, 0x020617, 0x020617, 1);
+			// Объемный и брутальный каменный блок для пещерных перегородок
+			graphics.fillGradientStyle(color, color, 0x0f172a, 0x020617, 1);
 			graphics.fillRoundedRect(0, 0, width, height, 6);
-			graphics.lineStyle(2, 0x475569, 0.7);
-			graphics.strokeRoundedRect(1, 1, width - 2, height - 2, 6);
-			graphics.lineStyle(1, 0x000000, 0.35);
-			graphics.lineBetween(8, 18, 56, 14);
-			graphics.lineBetween(12, 42, 48, 50);
-			graphics.lineBetween(30, 6, 22, 34);
-			graphics.lineStyle(1, 0xffffff, 0.1);
-			for (let i = 0; i < 12; i++) {
-				graphics.strokeCircle(
-					Phaser.Math.Between(6, width - 6),
-					Phaser.Math.Between(6, height - 6),
-					Phaser.Math.Between(1, 3),
-				);
-			}
+
+			// Грубая фактура камня
+			graphics.lineStyle(2.5, 0x334155, 0.95);
+			graphics.strokeRoundedRect(1.5, 1.5, width - 3, height - 3, 6);
+
+			// Трещины на камне
+			graphics.lineStyle(1.5, 0x020617, 0.6);
+			graphics.lineBetween(8, 16, 42, 12);
+			graphics.lineBetween(42, 12, 54, 32);
+			graphics.lineBetween(14, 46, 48, 50);
+
+			// Светящиеся мелкие частички кристаллов в стене
+			graphics.fillStyle(0x67e8f9, 0.85);
+			graphics.fillRect(14, 26, 2, 2);
+			graphics.fillRect(48, 18, 2, 2);
+			graphics.fillRect(28, 42, 2, 2);
 		} else if (key === "runeGlow") {
-			// Магическая руна с мягким свечением.
-			graphics.fillStyle(color, 0.14);
-			graphics.fillCircle(24, 24, 22);
-			graphics.fillStyle(color, 0.22);
-			graphics.fillCircle(24, 24, 14);
-			graphics.lineStyle(3, color, 0.95);
-			graphics.strokeCircle(24, 24, 10);
-			graphics.lineBetween(24, 10, 24, 38);
-			graphics.lineBetween(12, 24, 36, 24);
-			graphics.lineStyle(2, 0xffffff, 0.7);
-			graphics.strokeCircle(24, 24, 4);
+			// Энергетическая светящаяся руна
+			graphics.fillStyle(color, 0.16);
+			graphics.fillCircle(24, 24, 23);
+			graphics.fillStyle(color, 0.26);
+			graphics.fillCircle(24, 24, 15);
+
+			// Внутренний сияющий контур
+			graphics.lineStyle(2.2, color, 0.9);
+			graphics.strokeCircle(24, 24, 11);
+			graphics.lineStyle(1.5, 0xffffff, 0.7);
+			graphics.strokeCircle(24, 24, 7);
+
+			// Перекрестные рунические лучи
+			graphics.lineStyle(1.8, color, 0.8);
+			graphics.lineBetween(24, 4, 24, 44);
+			graphics.lineBetween(4, 24, 44, 24);
 		} else if (key === "mist") {
-			// Полупрозрачный слой тумана для глубины.
+			// Живой и атмосферный туман
 			graphics.fillStyle(color, 0.08);
 			graphics.fillEllipse(34, 30, 78, 24);
 			graphics.fillStyle(color, 0.06);
 			graphics.fillEllipse(78, 34, 90, 28);
-			graphics.fillStyle(0xffffff, 0.07);
+			graphics.fillStyle(0xffffff, 0.05);
 			graphics.fillEllipse(58, 22, 70, 18);
 		} else if (key === "grassPatch") {
-			// Декоративный пучок травы для хаба.
-			graphics.fillStyle(0x000000, 0.15);
+			// Декоративная живая трава
+			graphics.fillStyle(0x000000, 0.2);
 			graphics.fillEllipse(24, 28, 36, 8);
 			for (let i = 0; i < 9; i++) {
 				const x = 7 + i * 4;
-				const bladeHeight = 10 + (i % 3) * 5;
-				graphics.lineStyle(2, color, 0.9);
+				const bladeHeight = 11 + (i % 3) * 6;
+				graphics.lineStyle(2.5, color, 0.95);
 				graphics.lineBetween(
 					x,
 					27,
-					x + Phaser.Math.Between(-4, 4),
+					x + Phaser.Math.Between(-3, 3),
 					27 - bladeHeight,
 				);
-				graphics.lineStyle(1, 0xbbf7d0, 0.6);
-				graphics.lineBetween(x + 1, 27, x + 2, 20);
+				graphics.lineStyle(1.5, 0xdcfce7, 0.7);
+				graphics.lineBetween(x + 1, 27, x + 2, 18);
 			}
-			graphics.fillStyle(0xfacc15, 0.85);
-			graphics.fillCircle(35, 15, 2);
+			// Маленький цветок
+			graphics.fillStyle(0xfef08a, 0.95);
+			graphics.fillCircle(34, 14, 2.5);
+			graphics.fillStyle(0xef4444, 0.9);
+			graphics.fillCircle(32, 12, 1.5);
+			graphics.fillCircle(36, 12, 1.5);
+			graphics.fillCircle(34, 16, 1.5);
 		} else if (key === "stonePebble") {
 			// Маленький камень/галька для глубины пола.
 			graphics.fillStyle(0x000000, 0.18);
@@ -469,33 +651,72 @@ export function ensureSpriteTextures(scene: Phaser.Scene): void {
 				graphics.fillCircle(leaf.x, leaf.y, 2);
 			}
 		} else if (key === "magicCircle") {
-			// Ритуальный круг для меню, победы и ключевых объектов.
-			graphics.fillStyle(color, 0.08);
+			// Волшебный рунический круг с пентаграммой и лучами
+			graphics.fillStyle(color, 0.1);
 			graphics.fillCircle(48, 48, 46);
-			graphics.lineStyle(3, color, 0.85);
+
+			// Внешнее руническое кольцо
+			graphics.lineStyle(2.5, color, 0.85);
+			graphics.strokeCircle(48, 48, 42);
+			graphics.lineStyle(1.2, color, 0.45);
 			graphics.strokeCircle(48, 48, 38);
-			graphics.lineStyle(2, 0xffffff, 0.45);
-			graphics.strokeCircle(48, 48, 24);
-			for (let i = 0; i < 8; i++) {
-				const angle = (i / 8) * Math.PI * 2;
-				const innerX = 48 + Math.cos(angle) * 18;
-				const innerY = 48 + Math.sin(angle) * 18;
-				const outerX = 48 + Math.cos(angle) * 38;
-				const outerY = 48 + Math.sin(angle) * 38;
-				graphics.lineBetween(innerX, innerY, outerX, outerY);
+
+			// Звезда вписанная
+			graphics.lineStyle(1.8, color, 0.75);
+			graphics.beginPath();
+			for (let i = 0; i <= 5; i++) {
+				const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+				const x = 48 + Math.cos(angle) * 32;
+				const y = 48 + Math.sin(angle) * 32;
+				if (i === 0) graphics.moveTo(x, y);
+				else graphics.lineTo(x, y);
 			}
-			graphics.fillStyle(0xffffff, 0.8);
-			graphics.fillCircle(48, 48, 4);
+			graphics.closePath();
+			graphics.strokePath();
+
+			// Внутреннее светящееся кольцо
+			graphics.lineStyle(2, 0xffffff, 0.65);
+			graphics.strokeCircle(48, 48, 20);
+
+			// 8 рунических лучей с точками
+			for (let i = 0; i < 8; i++) {
+				const angle = (i * Math.PI) / 4;
+				graphics.lineStyle(1, color, 0.35);
+				graphics.lineBetween(
+					48 + Math.cos(angle) * 12,
+					48 + Math.sin(angle) * 12,
+					48 + Math.cos(angle) * 36,
+					48 + Math.sin(angle) * 36,
+				);
+				graphics.fillStyle(0xffffff, 0.85);
+				graphics.fillCircle(
+					48 + Math.cos(angle) * 20,
+					48 + Math.sin(angle) * 20,
+					1.5,
+				);
+			}
+
+			// Центральное ядро
+			graphics.fillStyle(0xffffff, 0.95);
+			graphics.fillCircle(48, 48, 3.5);
 		} else if (key === "softCloud") {
-			// Мягкое облако/дымка для параллакса и глубины.
-			graphics.fillStyle(color, 0.12);
-			graphics.fillEllipse(70, 42, 120, 28);
-			graphics.fillStyle(color, 0.32);
-			graphics.fillEllipse(42, 34, 54, 26);
-			graphics.fillEllipse(72, 28, 70, 34);
-			graphics.fillEllipse(104, 36, 58, 28);
-			graphics.fillStyle(0xffffff, 0.18);
-			graphics.fillEllipse(62, 24, 42, 14);
+			// Роскошное пушистое облако с мягким закатным переливом
+			graphics.fillStyle(color, 0.08);
+			graphics.fillEllipse(70, 42, 120, 26);
+
+			// Левая кучка
+			graphics.fillStyle(0xfda4af, 0.22); // Розоватый
+			graphics.fillEllipse(42, 34, 52, 24);
+			// Центр
+			graphics.fillStyle(color, 0.36); // Голубоватый
+			graphics.fillEllipse(72, 26, 68, 32);
+			// Правая кучка
+			graphics.fillStyle(0xc084fc, 0.25); // Лавандовый
+			graphics.fillEllipse(104, 36, 56, 26);
+
+			// Мягкий золотистый блик от заката сверху
+			graphics.fillStyle(0xfef08a, 0.16);
+			graphics.fillEllipse(64, 20, 40, 14);
 		} else if (key === "townPath") {
 			// Неровная дорожная плитка для хаба.
 			graphics.fillGradientStyle(0x92400e, 0x78350f, color, 0x451a03, 1);
