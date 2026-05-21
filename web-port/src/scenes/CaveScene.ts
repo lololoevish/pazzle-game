@@ -712,7 +712,7 @@ export class CaveScene extends Phaser.Scene {
 			this.player.setVelocityY(-PLAYER_CONFIG.jumpSpeed * 0.9);
 			this.jumpBufferTimer = 0;
 			this.jumpCount = 2;
-			this.player.setScale(1.25, 0.75); // Сжатие при двойном прыжке
+			// Убираем изменение масштаба, чтобы не провалиться сквозь платформы
 			this.cameras.main.shake(85, 0.003);
 			for (let i = 0; i < 6; i++) {
 				this.spawnStepParticle(this.player.x, this.player.y);
