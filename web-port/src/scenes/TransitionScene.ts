@@ -12,7 +12,6 @@ export class TransitionScene extends Phaser.Scene {
 	private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 	private wasd?: Record<string, Phaser.Input.Keyboard.Key>;
 	private spaceKey?: Phaser.Input.Keyboard.Key;
-	private escKey?: Phaser.Input.Keyboard.Key;
 	private shiftKey?: Phaser.Input.Keyboard.Key;
 	private solids?: Phaser.Physics.Arcade.StaticGroup;
 	private jumpCount = 0;
@@ -30,7 +29,6 @@ export class TransitionScene extends Phaser.Scene {
 		this.cursors = undefined;
 		this.wasd = undefined;
 		this.spaceKey = undefined;
-		this.escKey = undefined;
 		this.shiftKey = undefined;
 		this.solids = undefined;
 	}
@@ -82,7 +80,7 @@ export class TransitionScene extends Phaser.Scene {
 			.text(
 				GAME_WIDTH / 2,
 				100,
-				`Пройди три секции паркура до Пещеры ${this.toLevel} ИЛИ вернись в деревню.`,
+				`Пройди три секции паркура до Пещеры ${this.toLevel}!`,
 				{
 					fontFamily: "Arial",
 					fontSize: "16px",
@@ -183,19 +181,6 @@ export class TransitionScene extends Phaser.Scene {
 			})
 			.setOrigin(0.5);
 
-		// Дверь в деревню (слева, рядом со спавном игрока)
-		const townDoor = this.physics.add
-			.staticSprite(80, 380, "runeGlow")
-			.setDisplaySize(48, 48)
-			.setTint(0xf87171);
-		this.add
-			.text(80, 334, "В деревню", {
-				fontFamily: "Arial Black",
-				fontSize: "13px",
-				color: "#f87171",
-			})
-			.setOrigin(0.5);
-
 		// Портал в следующую пещеру (в конце третьей секции)
 		const nextPortal = this.physics.add
 			.staticSprite(2370, 356, "caveEntrance")
@@ -220,13 +205,9 @@ export class TransitionScene extends Phaser.Scene {
 		// Коллизии со стенами/платформами
 		this.physics.add.collider(this.player, this.solids);
 
-		// Триггеры переходов
+		// Триггер перехода в следующую пещеру
 		this.physics.add.overlap(this.player, nextPortal, () => {
 			this.scene.start("CaveScene", { level: this.toLevel });
-		});
-
-		this.physics.add.overlap(this.player, townDoor, () => {
-			this.scene.start("TownScene");
 		});
 
 		// Настройка управления
@@ -237,9 +218,6 @@ export class TransitionScene extends Phaser.Scene {
 		>;
 		this.spaceKey = this.input.keyboard?.addKey(
 			Phaser.Input.Keyboard.KeyCodes.SPACE,
-		);
-		this.escKey = this.input.keyboard?.addKey(
-			Phaser.Input.Keyboard.KeyCodes.ESC,
 		);
 		this.shiftKey = this.input.keyboard?.addKey(
 			Phaser.Input.Keyboard.KeyCodes.SHIFT,
@@ -359,10 +337,6 @@ export class TransitionScene extends Phaser.Scene {
 			this.player.setPosition(80, 440);
 			this.player.setVelocity(0, 0);
 			this.cameras.main.shake(150, 0.006);
-		}
-
-		if (this.escKey && Phaser.Input.Keyboard.JustDown(this.escKey)) {
-			this.scene.start("TownScene");
 		}
 	}
 
