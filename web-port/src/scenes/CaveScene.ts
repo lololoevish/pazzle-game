@@ -236,6 +236,27 @@ export class CaveScene extends Phaser.Scene {
 	private readonly ticTacToeRects: Phaser.GameObjects.Rectangle[] = [];
 	private readonly ticTacToeLabels: Phaser.GameObjects.Text[] = [];
 	private ticTacToeLocked = false;
+	// Tower Defense
+	private tdGold = 100;
+	private tdWave = 0;
+	private tdEnemies: Array<{
+		sprite: Phaser.GameObjects.Rectangle;
+		hp: number;
+		maxHp: number;
+		row: number;
+		speed: number;
+	}> = [];
+	private tdDefenders: Array<{
+		sprite: Phaser.GameObjects.Rectangle;
+		row: number;
+		col: number;
+		type: string;
+		cooldown: number;
+	}> = [];
+	private tdUnlockedDefenders: string[] = ["archer"];
+	private tdSelectedDefender: string | null = null;
+	private tdGoldText?: Phaser.GameObjects.Text;
+	private tdWaveText?: Phaser.GameObjects.Text;
 
 	public constructor() {
 		super("CaveScene");
@@ -612,6 +633,11 @@ export class CaveScene extends Phaser.Scene {
 		}
 
 		this.updateWordSearchLine();
+
+		// Обновление Tower Defense
+		if (this.getPuzzleType() === "tower_defense") {
+			this.updateTowerDefense(delta);
+		}
 	}
 
 	private getPlayerStartPosition(): { x: number; y: number } {
@@ -1232,6 +1258,9 @@ export class CaveScene extends Phaser.Scene {
 				break;
 			case "tic_tac_toe":
 				this.createTicTacToePuzzle();
+				break;
+			case "tower_defense":
+				this.createTowerDefensePuzzle();
 				break;
 		}
 	}
@@ -2366,6 +2395,7 @@ export class CaveScene extends Phaser.Scene {
 			math_puzzle: "Магическая арифметика",
 			simon_says: "Световые кристаллы",
 			tic_tac_toe: "Крестики-Нолики",
+			tower_defense: "Защита деревни",
 		};
 		return names[this.getPuzzleType()];
 	}
@@ -2402,18 +2432,20 @@ export class CaveScene extends Phaser.Scene {
 				return "Кристаллы: повтори последовательность вспышек кристаллов.";
 			case "tic_tac_toe":
 				return "Крестики-Нолики: подходи к клетке и жми E/Space, или клавишами 1-9. Поставь три X в ряд и победи компьютер!";
+			case "tower_defense":
+				return "Защита деревни: размещай защитников (лучники, маги, воины) и отрази 3 волны врагов. Кликай на кнопки справа, затем на клетки сетки.";
 		}
 	}
 
 	private getPuzzleType(): PuzzleType {
-		if (this.level <= 15) {
+		if (this.level <= 16) {
 			return PUZZLE_TYPES[this.level - 1];
 		}
-		// Перетасованная нелинейная последовательность для уровней 16-36 (включает tic_tac_toe)
+		// Перетасованная нелинейная последовательность для уровней 17-36 (включает tic_tac_toe и tower_defense)
 		const SHUFFLED_ORDER: number[] = [
-			4, 0, 7, 1, 14, 10, 2, 8, 3, 11, 5, 9, 6, 12, 13, 5, 8, 2, 14, 11, 0, 13,
+			4, 0, 7, 1, 15, 14, 10, 2, 8, 3, 11, 5, 9, 6, 12, 13, 15, 5, 8, 2,
 		];
-		const index = SHUFFLED_ORDER[(this.level - 16) % SHUFFLED_ORDER.length];
+		const index = SHUFFLED_ORDER[(this.level - 17) % SHUFFLED_ORDER.length];
 		return PUZZLE_TYPES[index];
 	}
 
@@ -2776,5 +2808,299 @@ export class CaveScene extends Phaser.Scene {
 			duration: 250,
 			onComplete: () => ghost.destroy(),
 		});
+	}
+
+	// ===== TOWER DEFENSE (Защита деревни) =====
+
+	private createTowerDefensePuzzle(): void {
+		this.tdGold = 100;
+		this.tdWave = 0;
+		this.tdEnemies = [];
+		this.tdDefenders = [];
+		this.tdUnlockedDefenders = ["archer"];
+		this.tdSelectedDefender = null;
+
+		this.add.text(174, 160, "Защита деревни: отрази 3 волны врагов!", {
+			fontFamily: "Arial Black",
+			fontSize: "18px",
+			color: "#f8fafc",
+		});
+
+		// UI: золото и волна
+		this.tdGoldText = this.add.text(174, 190, `Золото: ${this.tdGold}`, {
+			fontFamily: "Arial",
+			fontSize: "14px",
+			color: "#fbbf24",
+		});
+
+		this.tdWaveText = this.add.text(174, 210, `Волна: ${this.tdWave}/3`, {
+			fontFamily: "Arial",
+			fontSize: "14px",
+			color: "#60a5fa",
+		});
+
+		// Сетка 5 рядов × 8 колонок
+		const GRID_START_X = 200;
+		const GRID_START_Y = 260;
+		const CELL_SIZE = 50;
+
+		// Рисуем сетку
+		for (let row = 0; row < 5; row++) {
+			for (let col = 0; col < 8; col++) {
+				const x = GRID_START_X + col * CELL_SIZE;
+				const y = GRID_START_Y + row * CELL_SIZE;
+				const cell = this.add
+					.rectangle(x, y, CELL_SIZE - 2, CELL_SIZE - 2, 0x1e293b, 0.3)
+					.setStrokeStyle(1, 0x475569);
+
+				// Клик для размещения защитника
+				cell.setInteractive();
+				cell.on("pointerdown", () => this.placeTDDefender(row, col));
+			}
+		}
+
+		// Кнопки выбора защитников
+		const defenderTypes = [
+			{ type: "archer", name: "Лучник", cost: 50, color: 0x10b981 },
+			{ type: "mage", name: "Маг", cost: 80, color: 0x3b82f6 },
+			{ type: "warrior", name: "Воин", cost: 100, color: 0xef4444 },
+		];
+
+		for (let i = 0; i < defenderTypes.length; i++) {
+			const def = defenderTypes[i];
+			const btnX = 580;
+			const btnY = 280 + i * 60;
+			const unlocked = this.tdUnlockedDefenders.includes(def.type);
+
+			const btn = this.add
+				.rectangle(btnX, btnY, 140, 50, unlocked ? def.color : 0x374151, 0.8)
+				.setStrokeStyle(2, 0x94a3b8);
+
+			this.add
+				.text(btnX, btnY - 10, def.name, {
+					fontFamily: "Arial Black",
+					fontSize: "14px",
+					color: unlocked ? "#ffffff" : "#6b7280",
+				})
+				.setOrigin(0.5);
+
+			this.add
+				.text(btnX, btnY + 10, `${def.cost} золота`, {
+					fontFamily: "Arial",
+					fontSize: "12px",
+					color: unlocked ? "#fbbf24" : "#6b7280",
+				})
+				.setOrigin(0.5);
+
+			if (unlocked) {
+				btn.setInteractive();
+				btn.on("pointerdown", () => {
+					this.tdSelectedDefender = def.type;
+					this.refreshStatus(
+						`Выбран: ${def.name}. Кликни на клетку для размещения.`,
+					);
+				});
+			}
+		}
+
+		// Кнопка старта волны
+		const startBtn = this.add
+			.rectangle(580, 480, 140, 50, 0xfbbf24, 0.9)
+			.setStrokeStyle(2, 0xf59e0b)
+			.setInteractive();
+
+		this.add
+			.text(580, 480, "Начать волну", {
+				fontFamily: "Arial Black",
+				fontSize: "14px",
+				color: "#1e293b",
+			})
+			.setOrigin(0.5);
+
+		startBtn.on("pointerdown", () => this.startTDWave());
+
+		this.refreshStatus("Размести защитников и начни волну!");
+	}
+
+	private placeTDDefender(row: number, col: number): void {
+		if (!this.tdSelectedDefender) {
+			this.refreshStatus("Сначала выбери защитника справа!");
+			return;
+		}
+
+		// Проверка, что клетка свободна
+		const occupied = this.tdDefenders.some(
+			(d) => d.row === row && d.col === col,
+		);
+		if (occupied) {
+			this.refreshStatus("Эта клетка уже занята!");
+			return;
+		}
+
+		const costs: Record<string, number> = {
+			archer: 50,
+			mage: 80,
+			warrior: 100,
+		};
+		const cost = costs[this.tdSelectedDefender] || 50;
+
+		if (this.tdGold < cost) {
+			this.refreshStatus("Недостаточно золота!");
+			return;
+		}
+
+		this.tdGold -= cost;
+		this.tdGoldText?.setText(`Золото: ${this.tdGold}`);
+
+		const GRID_START_X = 200;
+		const GRID_START_Y = 260;
+		const CELL_SIZE = 50;
+		const x = GRID_START_X + col * CELL_SIZE;
+		const y = GRID_START_Y + row * CELL_SIZE;
+
+		const colors: Record<string, number> = {
+			archer: 0x10b981,
+			mage: 0x3b82f6,
+			warrior: 0xef4444,
+		};
+
+		const sprite = this.add
+			.rectangle(x, y, 40, 40, colors[this.tdSelectedDefender] || 0x10b981)
+			.setStrokeStyle(2, 0xffffff);
+
+		this.tdDefenders.push({
+			sprite,
+			row,
+			col,
+			type: this.tdSelectedDefender,
+			cooldown: 0,
+		});
+
+		this.refreshStatus(`${this.tdSelectedDefender} размещён!`);
+	}
+
+	private startTDWave(): void {
+		if (this.tdWave >= 3) {
+			this.refreshStatus("Все волны отражены!");
+			return;
+		}
+
+		if (this.tdEnemies.length > 0) {
+			this.refreshStatus("Дождись окончания текущей волны!");
+			return;
+		}
+
+		this.tdWave++;
+		this.tdWaveText?.setText(`Волна: ${this.tdWave}/3`);
+
+		const enemyCount = 3 + this.tdWave * 2;
+		const GRID_START_X = 200;
+		const GRID_START_Y = 260;
+		const CELL_SIZE = 50;
+
+		for (let i = 0; i < enemyCount; i++) {
+			const row = Phaser.Math.Between(0, 4);
+			const x = GRID_START_X + 8 * CELL_SIZE + 50;
+			const y = GRID_START_Y + row * CELL_SIZE;
+
+			const sprite = this.add
+				.rectangle(x, y, 35, 35, 0xdc2626)
+				.setStrokeStyle(2, 0x991b1b);
+
+			this.tdEnemies.push({
+				sprite,
+				hp: 50 + this.tdWave * 20,
+				maxHp: 50 + this.tdWave * 20,
+				row,
+				speed: 15 + this.tdWave * 5,
+			});
+		}
+
+		this.refreshStatus(`Волна ${this.tdWave} началась!`);
+	}
+
+	private updateTowerDefense(delta: number): void {
+		if (this.solved) return;
+
+		const dt = delta / 1000;
+		const GRID_START_X = 200;
+
+		// Движение врагов
+		for (let i = this.tdEnemies.length - 1; i >= 0; i--) {
+			const enemy = this.tdEnemies[i];
+			enemy.sprite.x -= enemy.speed * dt;
+
+			// Враг достиг базы
+			if (enemy.sprite.x < GRID_START_X - 50) {
+				enemy.sprite.destroy();
+				this.tdEnemies.splice(i, 1);
+				this.refreshStatus("Враг прорвался! Игра окончена.");
+				for (const e of this.tdEnemies) {
+					e.sprite.destroy();
+				}
+				this.tdEnemies = [];
+				for (const d of this.tdDefenders) {
+					d.sprite.destroy();
+				}
+				this.tdDefenders = [];
+				this.tdWave = 0;
+				this.tdWaveText?.setText(`Волна: 0/3`);
+				return;
+			}
+		}
+
+		// Атака защитников
+		for (const defender of this.tdDefenders) {
+			defender.cooldown -= dt;
+			if (defender.cooldown <= 0) {
+				// Найти ближайшего врага в том же ряду
+				const target = this.tdEnemies.find((e) => e.row === defender.row);
+				if (target) {
+					const damage =
+						defender.type === "warrior"
+							? 30
+							: defender.type === "mage"
+								? 25
+								: 20;
+					target.hp -= damage;
+
+					// Визуальный эффект атаки
+					const line = this.add.line(
+						0,
+						0,
+						defender.sprite.x,
+						defender.sprite.y,
+						target.sprite.x,
+						target.sprite.y,
+						0xfbbf24,
+						0.8,
+					);
+					line.setLineWidth(2);
+					this.time.delayedCall(100, () => line.destroy());
+
+					if (target.hp <= 0) {
+						target.sprite.destroy();
+						this.tdEnemies.splice(this.tdEnemies.indexOf(target), 1);
+						this.tdGold += 10;
+						this.tdGoldText?.setText(`Золото: ${this.tdGold}`);
+					}
+
+					defender.cooldown =
+						defender.type === "archer" ? 1 : defender.type === "mage" ? 1.5 : 2;
+				}
+			}
+		}
+
+		// Проверка победы
+		if (this.tdWave === 3 && this.tdEnemies.length === 0) {
+			this.markSolved("Все волны отражены! Деревня спасена. Опусти рычаг.");
+			// Разблокировка новых защитников для следующих уровней
+			if (!this.tdUnlockedDefenders.includes("mage")) {
+				this.tdUnlockedDefenders.push("mage");
+			}
+			if (!this.tdUnlockedDefenders.includes("warrior")) {
+				this.tdUnlockedDefenders.push("warrior");
+			}
+		}
 	}
 }
