@@ -114,5 +114,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 233577043080b12063f311a0ca60968df80bed6a
-- Последняя проверка: валидация актуального `AGENTS.md` из `Ravva/projects-tracker`, проверка `## Project Deliverables` (сумма весов = 100, все статусы канонические).
+- last_checked_commit: d7bd1dca4d59db83a8cba7aaa9e682ddb549e42d
+- Последняя проверка: интеграция `TransitionScene` в переходы между пещерами, валидация `AGENTS.md` и `## Project Deliverables`.
