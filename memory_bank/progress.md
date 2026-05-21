@@ -1,7 +1,8 @@
-## Текущий статус (20.05.2026)
+## Текущий статус (21.05.2026)
 
 ### Готово
 
+- 21.05.2026: Скачан и проверен актуальный `AGENTS.md` из `Ravva/projects-tracker`; локальный `AGENTS.md` соответствует удалённому. Проверен `memory_bank/projectbrief.md`: раздел `## Project Deliverables` присутствует, таблица с колонками `ID | Deliverable | Status | Weight`, все статусы канонические (`pending`, `in_progress`, `completed`), арифметическая проверка: 7+9+9+9+7+7+7+7+8+8+8+6+8 = 100. Memory Bank валиден.
 - 19.05.2026: Продолжено улучшение геймплея `web-port`: добавлен `PLAYER_CONFIG.sprintMultiplier`, Shift-ускорение в `TownScene` и `CaveScene` (включая platformer target velocity), ближайшие интерактивные объекты в хабе и пещерах получают пульсирующую focus-подсветку; интеракция теперь использует общий поиск ближайшего объекта вместо первого подходящего элемента. Проверки: `bun run check` успешен с прежними предупреждениями Biome по Phaser/nineslice `any`; `bun run build` успешен с прежним предупреждением Vite о размере Phaser chunk.
 - 19.05.2026: Продолжено улучшение геймплея `web-port`: движение в `CaveScene` переведено с фиксированного `1/60` на фактический Phaser `delta`, platformer coyote/jump buffer теперь масштабируются по реальному кадру; добавлен быстрый ввод цифрами для GMS2-like пазлов (`rhythm` 1–4, `final`/`epic_finale` 1–3, `riddle` 1–4, `sound_trap` 1–7, `jumping_path` 1–3, `cave_song` 1–5), а кликаемые/подходные действия переиспользуют те же обработчики. Проверки: `bun run check` успешен с прежними предупреждениями Biome по Phaser/nineslice `any`; `bun run build` успешен с прежним предупреждением Vite о размере Phaser chunk.
 - 19.05.2026: Графика `web-port` сделана адаптивной под размер монитора: Phaser Scale переведён с `FIT` на `RESIZE`, контейнер `#game` и `canvas` занимают весь viewport, CSS получил min-size/touch-action и фон без полос, `DialogueSystem` переведён на координаты от `GAME_WIDTH/GAME_HEIGHT`, чтобы диалоговая панель корректно ложилась на новую GMS2-like геометрию 800×600. Проверки: `bun run check` успешен с прежними предупреждениями Biome по Phaser/nineslice `any`; `bun run build` успешен с прежним предупреждением Vite о размере Phaser chunk.
@@ -112,5 +113,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 5da57cc114c1158aada487d587fd0292e1c996a7
-- Последняя проверка: реализация `tic_tac_toe` пазла в `CaveScene.ts` с ИИ-противником, валидация `AGENTS.md` и `## Project Deliverables`.
+- last_checked_commit: 7579a9381d212e27c7e7e0de1e0c76c335263112
+- Последняя проверка: валидация актуального `AGENTS.md` из `Ravva/projects-tracker`, проверка `## Project Deliverables` (сумма весов = 100, все статусы канонические).
