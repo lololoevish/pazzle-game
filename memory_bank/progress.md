@@ -115,5 +115,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: d7bd1dca4d59db83a8cba7aaa9e682ddb549e42d
-- Последняя проверка: интеграция `TransitionScene` в переходы между пещерами, валидация `AGENTS.md` и `## Project Deliverables`.
+- last_checked_commit: 6cd216ab94b38d1c43ab193ee7f291d5e77644e0
+- Последняя проверка: исправление расположения порталов в `TransitionScene`, интеграция паркур-сцены в переходы между пещерами.
