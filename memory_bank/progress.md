@@ -118,5 +118,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: bd7634dd8d3e418df5a81eecaa4e7ee3304a6187
-- Последняя проверка: паркур в `TransitionScene` сделан обязательным, удалена дверь в деревню и ESC-выход.
+- last_checked_commit: 3d5f8bc10eab25a128b3629f3c7df9187dce0489
+- Последняя проверка: добавлен новый тип пазла `tower_defense` (защита деревни в стиле Plants vs Zombies).
