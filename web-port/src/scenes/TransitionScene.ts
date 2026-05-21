@@ -99,7 +99,20 @@ export class TransitionScene extends Phaser.Scene {
 		// Финишная платформа
 		this.createPlatform(700, 500, 160, 24);
 
-		// Портал в следующую пещеру (справа)
+		// Дверь в деревню (слева, рядом со спавном игрока)
+		const townDoor = this.physics.add
+			.staticSprite(80, 380, "runeGlow")
+			.setDisplaySize(48, 48)
+			.setTint(0xf87171);
+		this.add
+			.text(80, 334, "В деревню", {
+				fontFamily: "Arial Black",
+				fontSize: "13px",
+				color: "#f87171",
+			})
+			.setOrigin(0.5);
+
+		// Портал в следующую пещеру (справа, цель паркура)
 		const nextPortal = this.physics.add
 			.staticSprite(730, 436, "caveEntrance")
 			.setDisplaySize(64, 64);
@@ -111,20 +124,7 @@ export class TransitionScene extends Phaser.Scene {
 			})
 			.setOrigin(0.5);
 
-		// Дверь в деревню (на центральной платформе)
-		const townDoor = this.physics.add
-			.staticSprite(400, 276, "runeGlow")
-			.setDisplaySize(48, 48)
-			.setTint(0xf87171);
-		this.add
-			.text(400, 230, "В деревню", {
-				fontFamily: "Arial Black",
-				fontSize: "13px",
-				color: "#f87171",
-			})
-			.setOrigin(0.5);
-
-		// Спавн игрока
+		// Спавн игрока (слева)
 		this.player = this.physics.add
 			.sprite(80, 440, "player")
 			.setCollideWorldBounds(true);
