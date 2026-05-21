@@ -113,5 +113,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 7579a9381d212e27c7e7e0de1e0c76c335263112
+- last_checked_commit: 233577043080b12063f311a0ca60968df80bed6a
 - Последняя проверка: валидация актуального `AGENTS.md` из `Ravva/projects-tracker`, проверка `## Project Deliverables` (сумма весов = 100, все статусы канонические).
