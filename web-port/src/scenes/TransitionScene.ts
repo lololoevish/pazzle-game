@@ -38,49 +38,85 @@ export class TransitionScene extends Phaser.Scene {
 	public create(): void {
 		this.cameras.main.setBackgroundColor("#020617");
 
-		// Фон
-		this.add
-			.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, "caveBackground")
-			.setAlpha(0.25)
-			.setTint(0x475569);
+		// Расширяем границы мира для огромной пещеры (2500px в ширину)
+		const WORLD_WIDTH = 2500;
+		this.physics.world.setBounds(0, 0, WORLD_WIDTH, GAME_HEIGHT);
+		this.cameras.main.setBounds(0, 0, WORLD_WIDTH, GAME_HEIGHT);
+
+		// Фон (повторяющийся)
+		for (let i = 0; i < 4; i++) {
+			this.add
+				.image(
+					GAME_WIDTH / 2 + i * GAME_WIDTH,
+					GAME_HEIGHT / 2,
+					"caveBackground",
+				)
+				.setAlpha(0.25)
+				.setTint(0x475569);
+		}
 
 		// Золотая окантовка внешних границ
 		this.add
 			.rectangle(
-				GAME_WIDTH / 2,
+				WORLD_WIDTH / 2,
 				GAME_HEIGHT / 2,
-				GAME_WIDTH - 20,
+				WORLD_WIDTH - 20,
 				GAME_HEIGHT - 20,
 				0x000000,
 				0,
 			)
-			.setStrokeStyle(3, 0xfacc15, 0.4);
+			.setStrokeStyle(3, 0xfacc15, 0.4)
+			.setScrollFactor(0);
 
-		// Тексты инструкций
+		// Тексты инструкций (фиксированные на экране)
 		this.add
 			.text(GAME_WIDTH / 2, 60, "ПРОХОД МЕЖДУ ПЕЩЕРАМИ", {
 				fontFamily: "Arial Black",
 				fontSize: "26px",
 				color: "#fbbf24",
 			})
-			.setOrigin(0.5);
+			.setOrigin(0.5)
+			.setScrollFactor(0);
 
 		this.add
 			.text(
 				GAME_WIDTH / 2,
 				100,
-				`Пройди паркур до следующей Пещеры ${this.toLevel} ИЛИ вернись в деревню.`,
+				`Пройди три секции паркура до Пещеры ${this.toLevel} ИЛИ вернись в деревню.`,
 				{
 					fontFamily: "Arial",
 					fontSize: "16px",
 					color: "#94a3b8",
 				},
 			)
-			.setOrigin(0.5);
+			.setOrigin(0.5)
+			.setScrollFactor(0);
 
 		// Создаем физические платформы
 		this.solids = this.physics.add.staticGroup();
 
+		// Декоративные элементы для атмосферы
+		// Кристаллы в секции 1
+		this.add
+			.image(300, 500, "caveCrystalCluster")
+			.setAlpha(0.6)
+			.setTint(0x60a5fa);
+		this.add
+			.image(450, 420, "caveCrystalCluster")
+			.setAlpha(0.5)
+			.setTint(0x3b82f6);
+
+		// Светящиеся грибы в секции 2
+		this.add.image(1000, 380, "glowMushroom").setAlpha(0.7).setTint(0x34d399);
+		this.add.image(1200, 360, "glowMushroom").setAlpha(0.6).setTint(0x10b981);
+		this.add.image(1350, 380, "glowMushroom").setAlpha(0.7).setTint(0x34d399);
+
+		// Туман в секции 3
+		this.add.image(1700, 450, "mist").setAlpha(0.3).setScale(2);
+		this.add.image(1950, 470, "mist").setAlpha(0.25).setScale(2.5);
+		this.add.image(2200, 480, "mist").setAlpha(0.3).setScale(2);
+
+		// === СЕКЦИЯ 1: ПРЫЖКИ ВВЕРХ (Лестница) ===
 		// Стартовая платформа
 		this.createPlatform(100, 500, 160, 24);
 		this.add
@@ -91,13 +127,61 @@ export class TransitionScene extends Phaser.Scene {
 			})
 			.setOrigin(0.5);
 
-		// Парящие острова-платформы (паркур!)
-		this.createPlatform(260, 420, 100, 24);
-		this.createPlatform(400, 340, 120, 24); // Центральный остров
-		this.createPlatform(540, 420, 100, 24);
+		// Лестница вверх
+		this.createPlatform(220, 460, 80, 20);
+		this.createPlatform(320, 420, 80, 20);
+		this.createPlatform(420, 380, 80, 20);
+		this.createPlatform(520, 340, 80, 20);
+		this.createPlatform(620, 300, 100, 20);
+
+		this.add
+			.text(670, 270, "Секция 1", {
+				fontFamily: "Arial Black",
+				fontSize: "12px",
+				color: "#60a5fa",
+			})
+			.setOrigin(0.5);
+
+		// === СЕКЦИЯ 2: ДЛИННЫЕ ПРЫЖКИ (Пропасти) ===
+		// Переход на вторую секцию
+		this.createPlatform(750, 300, 60, 20);
+
+		// Длинные прыжки через пропасти
+		this.createPlatform(900, 320, 70, 20);
+		this.createPlatform(1080, 300, 70, 20);
+		this.createPlatform(1260, 320, 70, 20);
+		this.createPlatform(1440, 300, 80, 20);
+
+		this.add
+			.text(1480, 270, "Секция 2", {
+				fontFamily: "Arial Black",
+				fontSize: "12px",
+				color: "#34d399",
+			})
+			.setOrigin(0.5);
+
+		// === СЕКЦИЯ 3: ТОЧНЫЕ ПРЫЖКИ (Узкие платформы) ===
+		// Переход на третью секцию
+		this.createPlatform(1580, 300, 60, 20);
+
+		// Узкие платформы на разной высоте
+		this.createPlatform(1680, 360, 50, 20);
+		this.createPlatform(1780, 320, 50, 20);
+		this.createPlatform(1880, 380, 50, 20);
+		this.createPlatform(1980, 340, 50, 20);
+		this.createPlatform(2080, 400, 50, 20);
+		this.createPlatform(2180, 360, 50, 20);
 
 		// Финишная платформа
-		this.createPlatform(700, 500, 160, 24);
+		this.createPlatform(2300, 420, 140, 24);
+
+		this.add
+			.text(2370, 390, "Секция 3", {
+				fontFamily: "Arial Black",
+				fontSize: "12px",
+				color: "#f59e0b",
+			})
+			.setOrigin(0.5);
 
 		// Дверь в деревню (слева, рядом со спавном игрока)
 		const townDoor = this.physics.add
@@ -112,12 +196,12 @@ export class TransitionScene extends Phaser.Scene {
 			})
 			.setOrigin(0.5);
 
-		// Портал в следующую пещеру (справа, цель паркура)
+		// Портал в следующую пещеру (в конце третьей секции)
 		const nextPortal = this.physics.add
-			.staticSprite(730, 436, "caveEntrance")
+			.staticSprite(2370, 356, "caveEntrance")
 			.setDisplaySize(64, 64);
 		this.add
-			.text(730, 390, `Пещера ${this.toLevel}`, {
+			.text(2370, 310, `Пещера ${this.toLevel}`, {
 				fontFamily: "Arial Black",
 				fontSize: "14px",
 				color: "#34d399",
@@ -129,6 +213,9 @@ export class TransitionScene extends Phaser.Scene {
 			.sprite(80, 440, "player")
 			.setCollideWorldBounds(true);
 		this.player.setDisplaySize(36, 44).setDepth(20);
+
+		// Камера следует за игроком
+		this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
 		// Коллизии со стенами/платформами
 		this.physics.add.collider(this.player, this.solids);
