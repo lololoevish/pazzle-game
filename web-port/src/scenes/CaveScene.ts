@@ -2342,7 +2342,11 @@ export class CaveScene extends Phaser.Scene {
 			this.scene.start("VictoryScene");
 			return;
 		}
-		this.scene.start("TownScene");
+		// Переход через паркур-сцену вместо прямого возврата в город
+		this.scene.start("TransitionScene", {
+			fromLevel: this.level,
+			toLevel: this.level + 1,
+		});
 	}
 
 	private getPuzzleName(): string {
