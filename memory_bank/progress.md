@@ -112,5 +112,5 @@
 
 ## Контроль изменений
 
-- last_checked_commit: 1ebda0dec02464c6d96db64de53ae32704693f61
+- last_checked_commit: 5c202fd44cf9e0d89d74dedf8728bcfba8898226
 - Последняя проверка: реализация `tic_tac_toe` пазла в `CaveScene.ts` с ИИ-противником, валидация `AGENTS.md` и `## Project Deliverables`.
